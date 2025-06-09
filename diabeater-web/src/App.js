@@ -1,7 +1,25 @@
 import logo from './logo.svg';
 import './App.css';
 
+import { db } from './firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { useEffect } from 'react';
+
+
 function App() {
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "users"));
+        console.log("Connected! Users:", snapshot.docs.length);
+      } catch (error) {
+        console.error("Firebase connection failed:", error.message);
+      }
+    };
+
+    testConnection();
+  }, []);
+
   return (
     <div className="App">
       <header className="App-header">
@@ -21,5 +39,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
