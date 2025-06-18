@@ -1,0 +1,322 @@
+/* NutritionistDashboard.css */
+
+.logo-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 20px;
+    font-weight: 600; /* Semibold */
+    color: #1E525C; /* Blue color */
+    margin: 0;
+}
+
+#root, .App {
+    height: 100%;
+    width: 100%;
+}
+
+.nutritionist-dashboard-page { /* Changed class name to match component */
+    display: flex;
+    width: 100%; 
+    height: 100vh;
+    min-height: 100vh;
+    background-color: #fffaf3; /* Light background */
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #fffaf3; /* White background for sidebar */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    overflow-y: auto; /* Add scroll if sidebar content exceeds height */
+    z-index: 1000;
+    height: 100vh;
+}
+
+.logo {
+    margin-bottom: 40px;
+    margin-top: 20px;
+    text-align: center;
+    display: flex; /* Make logo and text align nicely */
+    flex-direction: column; /* Stack them vertically */
+    align-items: center; /* Center horizontally */
+}
+
+.logo img {
+    max-width: 50px; /* Adjust as needed, e.g., for blood drop logo */
+    height: auto;
+    margin-bottom: 5px; /* Space between logo and text */
+}
+
+
+.navigation {
+    flex-grow: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #555;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background-color: #ffe0b2; /* Light orange for active/hover */
+    color: #e65100; /* Darker orange text */
+    font-weight: bold;
+}
+
+.nav-item i {
+    margin-right: 15px;
+    font-size: 20px;
+}
+
+.logout-button {
+    background-color: #ff9800; /* Orange color */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 50px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #f79554; /* Darker orange on hover */
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 30px;
+  padding-left: 70px;
+  margin-left: 250px; /* Match exact sidebar width */
+  min-height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 30px;
+    color: #ff9800;
+    margin: 0;
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 30px;
+    color: #ff9800;
+    margin: 0;
+    margin-bottom: 30px;
+}
+
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #d6d6d6;
+    border-radius: 25px;
+    padding: 8px 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    padding: 5px 10px;
+    font-size: 16px;
+    background-color: #d6d6d6;
+    flex: 1;
+    max-width: 100%;
+}
+
+.search-bar i {
+    color: #d6d6d6;
+    margin-left: 10px;
+}
+
+.tabs {
+    margin-bottom: 25px;
+    display: flex;
+    border-bottom: 2px solid #eee;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #777;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.tab-button.active {
+    color: #ff9800; /* Orange for active tab */
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #ff9800; /* Orange underline for active tab */
+}
+
+.meal-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* default: 3 columns on large screens */
+  gap: 25px;
+  align-items: stretch;
+}
+
+@media (max-width: 480px) {
+  .meal-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    align-items: stretch;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .nutritionist-dashboard-page {
+    flex-direction: column;
+  }
+}
+
+.meal-plan-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  background-color: #d6d6d6;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+.meal-plan-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease-in-out;
+    height: 100%;
+    min-height: 100%;
+    /* To ensure image height works, the card needs a flexible or defined height. */
+    /* A common approach is to let the content define the card's height, but set image height directly. */
+}
+
+.meal-plan-card:hover {
+    transform: translateY(-5px);
+}
+
+.meal-plan-info {
+    flex-grow: 1;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.meal-plan-name {
+    font-size: 18px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.meal-plan-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.update-button {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.update-button:hover {
+    background-color: #e65100;
+}
+
+.likes-count {
+    font-size: 15px;
+    color: #777;
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.likes-count i {
+    margin-right: 10px;
+    color: #ff5252; /* Red for heart icon */
+}
+
+.no-meal-plans-message {
+    grid-column: 1 / -1; 
+    text-align: center;
+    padding: 50px 20px;
+    font-size: 18px;
+    color: #666;
+    background-color: #fffaf3;
+    border-radius: 12px;
+}

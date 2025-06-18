@@ -1,0 +1,634 @@
+/* src/Admin/AdminStatDashboard.css */
+
+/* Specific styling for the main content area of the AdminStatDashboard */
+.admin-dashboard-main-content-area {
+    margin-left: 70px;
+    /* This class is used in AdminStatDashboard.js as a wrapper.
+       No specific styles needed here if admin-main-content already provides padding etc.
+       It's more for logical grouping. */
+    /* If you want to differentiate its background or other base styles from other views,
+       you can add them here, e.g.: */
+    /* background-color: #f7f7f7; */
+}
+
+/* Header for the dashboard (STATISTICS title and date) */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Align title and date at the bottom */
+    margin-bottom: 30px;
+    padding-bottom: 10px; /* Space below header */
+    border-bottom: 1px solid #eee; /* Subtle separator */
+}
+
+.admin-page-title {
+    font-size: 28px;
+    color: #ff9800; /* DiaBeater orange */
+    margin: 0; /* Remove default margin */
+}
+
+.data-as-at {
+    font-size: 14px;
+    color: #888;
+}
+.daily-signups-chart-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    flex: 1; /* Allows it to grow and take available space */
+    min-width: 300px; /* Adjust as needed */
+    display: flex;
+    flex-direction: column; /* Arrange content vertically */
+}
+
+.daily-signups-chart-section .section-title {
+    font-size: 22px;
+    color: var(--theme-blue-dark); /* Using variable from :root */
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--theme-orange); /* Using variable from :root */
+}
+
+.chart-placeholder {
+    width: 100%;
+    /* height: 200px; Remove fixed height, let SVG handle it */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px; /* Space between chart and insights */
+}
+
+.chart-placeholder svg {
+    max-width: 100%;
+    height: auto;
+    border: none; /* REMOVE BORDER around the chart area */
+    border-radius: 8px;
+    box-sizing: border-box; /* Ensure padding/border included in width/height */
+}
+
+/* Styling for the chart path and points */
+.chart-line {
+    fill: none;
+    stroke: #ff9800; /* Main line color */
+    stroke-width: 2;
+}
+
+.chart-area {
+    fill: url(#chartGradient); /* Apply the gradient fill */
+}
+
+.chart-point {
+    fill: #ff9800; /* Color for the circles at data points */
+    stroke: #fff; /* White stroke for the circles */
+    stroke-width: 2;
+}
+
+/* Axis labels */
+.chart-x-axis-label {
+    font-size: 10px;
+    fill: #888;
+    text-anchor: middle;
+}
+
+.chart-y-axis-label {
+    font-size: 10px;
+    fill: #888;
+    text-anchor: end;
+}
+
+.chart-insights {
+    display: flex;
+    justify-content: space-around; /* Distribute insights evenly */
+    flex-wrap: wrap; /* Allow insights to wrap on smaller screens */
+    gap: 10px; /* Space between insight items */
+    margin-top: auto; /* Push insights to the bottom of the section */
+    padding-top: 15px;
+    border-top: 1px dashed #eee; /* Separator from the chart */
+}
+
+.chart-insight-item {
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #f7f7f7;
+    flex-grow: 1; /* Allow items to grow to fill space */
+    min-width: 100px; /* Minimum width for each insight item */
+}
+
+.chart-insight-label {
+    font-size: 0.85em;
+    color: #888;
+    display: block; /* Ensure label is on its own line */
+    margin-bottom: 3px;
+}
+
+.chart-insight-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--theme-blue-dark);
+}
+
+/* Ensure dashboard-sections-row is correctly configured to display side-by-side */
+.dashboard-sections-row {
+    display: flex;
+    gap: 30px; /* Space between meal plans and signups sections */
+    margin-bottom: 30px;
+    flex-wrap: wrap; /* Allow sections to wrap on smaller screens */
+}
+
+/* Ensure that AdminInsights also takes up available space as before */
+.admin-insights-section {
+    /* Your existing styles for AdminInsights */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    flex: 1 1 100%; /* Allow it to take full width when needed, or flex as a block */
+    min-width: 300px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-sections-row {
+        flex-direction: column; /* Stack sections vertically on small screens */
+        gap: 20px;
+    }
+    .daily-signups-chart-section,
+    .admin-insights-section {
+        min-width: unset; /* Remove min-width on small screens */
+    }
+    .chart-insights {
+        justify-content: center; /* Center insights on small screens */
+    }
+}
+
+/* Statistics Cards Container */
+.stats-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid for cards */
+    gap: 20px; /* Space between cards */
+    margin-bottom: 40px; /* Space below stat cards */
+}
+
+.stat-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden; /* Hide anything overflowing, like the background graph icon */
+}
+
+.stat-card::after {
+    /* Optional: Add the background graph icon for the cards */
+    content: '\f201'; /* FontAwesome chart-line icon */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: -10px; /* Adjust position as needed */
+    right: -10px; /* Adjust position as needed */
+    font-size: 80px; /* Large icon size */
+    color: rgba(255, 152, 0, 0.1); /* Very light orange, almost transparent */
+    z-index: 0;
+}
+
+.stat-card:nth-child(2)::after {
+    content: '\f155'; /* FontAwesome dollar-sign icon */
+}
+.stat-card:nth-child(3)::after {
+    content: '\f0c0'; /* FontAwesome users icon */
+}
+
+
+.stat-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ff9800; /* Orange color */
+    margin-bottom: 5px;
+    z-index: 1; /* Ensure text is above the background icon */
+}
+
+.stat-label {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 15px;
+    z-index: 1;
+}
+
+.stat-change {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    z-index: 1;
+}
+
+.stat-change.increase {
+    color: #4CAF50; /* Green for increase */
+}
+
+.stat-change.decrease {
+    color: #F44336; /* Red for decrease (though not shown in screenshot, good to have) */
+}
+
+.stat-change i {
+    margin-right: 5px;
+}
+
+/* Dashboard Sections Row (for Weekly Meal Plans and Daily Signups) */
+.dashboard-sections-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(45%, 1fr)); /* Two columns, responsive */
+    gap: 30px; /* Space between sections */
+    margin-bottom: 40px;
+}
+
+/* --- Adjustments for "Weekly Top Meal Plans" height --- */
+.weekly-meal-plans-section {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+    font-size: 22px;
+    color: #1e525c; /* Darker blue/green from logo text */
+    margin-bottom: 20px;
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Weekly Top Meal Plans List */
+.meal-plans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Reduced gap between items from 15px to 10px to save space */
+}
+
+.meal-plan-item {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Reduced gap within item from 15px to 10px */
+    padding: 8px 0; /* Reduced vertical padding from 10px to 8px */
+    border-bottom: 1px solid #eee;
+}
+
+.meal-plan-item:last-child {
+    border-bottom: none; /* No border for the last item */
+}
+
+.meal-plan-rank {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ff9800;
+    min-width: 30px; /* Ensure space for rank */
+    text-align: center;
+}
+
+.admin-meal-plan-image {
+    width: 130px; /* Reduced image size from 100px to 80px */
+    height: 130px; /* Reduced image size from 100px to 80px */
+    object-fit: cover;
+    border-radius: 8px;
+}
+.weekly-meal-plans-section {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Add or modify this style for the title within the weekly-meal-plans-section */
+.weekly-meal-plans-section .section-title { /* Added this specific selector */
+    font-size: 22px;
+    color: #1e525c; /* Darker blue/green from logo text */
+    margin-bottom: 20px;
+    margin-top: 16px;
+    font-weight: 600;
+    padding-bottom: 10px; /* Add padding to the bottom */
+    border-bottom: 2px solid var(--theme-orange); /* Add the orange border line */
+}
+.meal-plan-info {
+    flex-grow: 1;
+}
+.daily-signups-chart-section {
+    position: relative; /* Add this line */
+    /* ... existing styles for this section ... */
+}
+
+/* --- Tooltip Styles --- */
+#chart-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+    white-space: nowrap;
+}
+.meal-plan-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    width: 200px;
+}
+
+.meal-plan-author {
+    font-size: 13px;
+    color: #777;
+}
+
+.meal-plan-views {
+    font-size: 14px;
+    color: #ff9800;
+    font-weight: 500;
+    margin-left: -20px;
+}
+
+/* Daily Signups Chart Placeholder */
+.daily-signups-section .chart-placeholder {
+    width: 100%;
+    height: 200px; /* Fixed height for the SVG */
+    background-color: #fcfcfc; /* Light background for chart area */
+    border-radius: 8px;
+    /* Styles for the SVG itself are in JS, but this holds it */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Subscriptions Section (assuming some styles are already in AdminDashboard.css) */
+.subscriptions-section {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.subscriptions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.subscriptions-header .search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5; /* Lighter background for search bar */
+    border-radius: 25px;
+    padding: 8px 15px;
+    flex-grow: 0.5; /* Allow it to take some space, but not full width */
+    max-width: 350px; /* Limit search bar width */
+}
+
+.subscriptions-header .search-bar input {
+    border: none;
+    outline: none;
+    flex-grow: 1;
+    padding: 5px;
+    font-size: 15px;
+    background-color: transparent; /* Match parent background */
+}
+
+.subscriptions-header .search-bar i {
+    color: #888;
+    margin-left: 10px;
+}
+
+/* Table styling is likely already in AdminDashboard.css, but ensure these are set: */
+.subscriptions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.subscriptions-table th, .subscriptions-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.subscriptions-table th {
+    background-color: #fffaf3; /* Light orange background for header */
+    color: #ff9800;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.subscriptions-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Status dots */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    background-color: currentColor; /* Uses the color of the parent */
+}
+
+.status-active {
+    color: #4CAF50; /* Green */
+}
+
+.status-inactive {
+    color: #F44336; /* Red */
+}
+
+.status-cancelled {
+    color: #F44336; /* Red */
+}
+
+.status-expired {
+    color: #F44336; /* Red */
+}
+
+/* View buttons */
+.action-button.view-button {
+    background-color: #ff9800; /* Primary orange */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-left: 20px;
+}
+
+.deets-action-button.view-button { /* Corrected selector */
+    background-color: #ff9800; /* Primary orange */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-left: -6px; /* This margin might need adjustment, but the selector will now apply */
+}
+.deets-action-button.view-button:hover { /* Corrected selector */
+    background-color: #e65100; /* Darker orange on hover */
+}
+
+.action-button.view-button:hover {
+    background-color: #e65100; /* Darker orange on hover */
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+}
+.premium-plan-section {
+    margin-top: 40px; /* Space from the sections above */
+    margin-bottom: 20px; /* Space before the subscriptions table */
+}
+
+.premium-plan-card {
+    background-color: #fff; /* Light grey background for the card */
+    border-radius: 10px;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 25px; /* Space between elements in the card */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    margin-bottom: 20px; /* Space between the card and the search bar */
+}
+
+.premium-plan-section .section-title {
+    margin-bottom: 20px; /* Adjust margin for the subscriptions title */
+}
+
+.premium-plan-card .plan-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.premium-plan-card .plan-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff9800; /* Orange color */
+}
+
+.premium-plan-card .per-month {
+    font-size: 16px;
+    font-weight: 500;
+    color: #777;
+}
+
+.manage-subscription-button {
+    background-color: #ff9800; /* Light grey background for the button */
+    color: #fff; /* Orange text color */
+    border: 1px solid #e0e0e0; /* Light border */
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    margin-left: auto; /* Push the button to the right */
+}
+
+.manage-subscription-button:hover {
+    background-color: #e6e6e6; /* Slightly darker grey on hover */
+    border-color: #d0d0d0;
+}
+
+
+/* Responsive adjustments for the dashboard content */
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .stats-cards-container {
+        grid-template-columns: 1fr; /* Stack cards on small screens */
+    }
+
+    .dashboard-sections-row {
+        grid-template-columns: 1fr; /* Stack sections on small screens */
+    }
+
+    .subscriptions-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .subscriptions-header .search-bar {
+        width: 100%;
+        max-width: none;
+    }
+
+    .subscriptions-table th, .subscriptions-table td {
+        padding: 10px; /* Reduce padding on small screens */
+        font-size: 13px; /* Smaller font for table content */
+    }
+
+    /* Adjust meal plan item for smaller screens */
+    .meal-plan-item {
+        flex-wrap: wrap; /* Allow items to wrap */
+        justify-content: center; /* Center content if wraps */
+        text-align: center;
+    }
+
+    .meal-plan-item .meal-plan-image {
+        order: -1; /* Move image to top if wrapping */
+    }
+
+    .meal-plan-item .meal-plan-info {
+        flex-basis: 100%; /* Take full width */
+        margin-top: 5px; /* Space between image and info */
+    }
+
+    .meal-plan-views {
+        flex-basis: 100%; /* Take full width */
+        margin-top: 5px;
+    }
+    @media (max-width: 768px) {
+    .premium-plan-card {
+        flex-direction: column; /* Stack items vertically on smaller screens */
+        align-items: flex-start; /* Align items to the start */
+        gap: 15px; /* Adjust gap */
+        padding: 20px;
+    }
+
+    .manage-subscription-button {
+        margin-left: 0; /* Remove auto-margin */
+        width: 100%; /* Make button full width */
+    }
+}
+    
+}
+
+/* Additional styling for the main AdminDashboard.css to support new AdminStatDashboard */
+/* Make sure these are present in your AdminDashboard.css */
+/* If you don't have them, add them to AdminDashboard.css */
+
+/* .admin-main-content {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+    height: 100vh;
+    box-sizing: border-box;
+    background-color: #fffaf3;
+} */

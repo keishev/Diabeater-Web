@@ -1,0 +1,91 @@
+/* src/Admin/components/simulator/FeaturesComparison.css */
+.sim-comparison-section {
+    padding: 60px 20px;
+    background-color: #fff;
+    text-align: center;
+}
+
+.sim-section-heading {
+    font-size: 36px;
+    color: #1e525c;
+    margin-bottom: 50px;
+}
+
+.sim-comparison-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.sim-plan-card {
+    background-color: #f9f9f9;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 300px;
+    max-width: 400px;
+    text-align: left;
+}
+
+.sim-plan-card h3 {
+    font-size: 28px;
+    margin-bottom: 25px;
+    color: #1e525c;
+    text-align: center;
+}
+
+.sim-plan-card ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.sim-plan-card ul li {
+    font-size: 17px;
+    margin-bottom: 15px;
+    color: #555;
+    display: flex;
+    align-items: center;
+}
+
+.sim-plan-card ul li i {
+    color: #28a745; /* Green checkmark */
+    margin-right: 10px;
+}
+
+.premium-plan {
+    background-color: #1e525c; /* Darker background for premium */
+    color: white;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    transform: scale(1.05); /* Slightly larger */
+}
+
+.premium-plan h3 {
+    color: #ff9800; /* Orange for premium header */
+}
+
+.premium-plan ul li {
+    color: #e0e0e0;
+}
+
+.sim-comparison-cta {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.sim-comparison-cta:hover {
+    background-color: #e68900;
+}

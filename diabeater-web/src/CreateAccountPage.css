@@ -1,0 +1,302 @@
+/* src/CreateAccountPage.css */
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #fffaf3; /* Light beige/tan background color from image */
+}
+
+.create-account-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.create-account-card {
+    background-color: #fffaf3;
+    padding: 40px;
+    border-radius: 10px;
+    width: 100%;
+    /* ADJUSTED: Increased max-width to make inputs longer */
+    max-width: 950px; /* Increased from 800px */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: -90px;
+}
+
+.create-account-back-button {
+    position: absolute;
+    top: 20px; /* Adjust as needed for vertical position */
+    left: 20px; /* Adjust as needed for horizontal position */
+    background-color: transparent; /* Or a light background if preferred */
+    color: #1e525c; /* Match your existing theme's text color */
+    border: none;
+    padding: 10px 15px;
+    font-size: 1.1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    gap: 5px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+    z-index: 10; /* Ensure it's above other content */
+}
+
+.create-account-back-button:hover {
+    color: #007bff; /* A subtle hover effect */
+}
+
+
+.create-account-logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.create-account-blood-drop-logo-img {
+    width: 40px;
+    height: 50px;
+    margin-bottom: 10px;
+    margin-left: 160px;
+}
+
+.create-account-logo-text {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #1e525c;
+    margin: 0;
+    margin-left: 160px;
+}
+
+.create-account-title {
+    font-size: 25px;
+    color: #1e525c;
+    margin: 0;
+    margin-bottom: 25px;
+    margin-left: -530px;
+}
+
+.create-account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Spacing between form elements/sections */
+    width: 100%;
+    /* ADJUSTED: Increased max-width to allow inputs to expand */
+    max-width: 850px; /* Increased from 700px */
+
+}
+
+/* Grid for two-column layout */
+.create-account-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 40px; /* Gap between columns */
+    width: 100%;
+}
+
+.create-account-form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Spacing between elements within a column */
+}
+
+.create-account-input-label {
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.create-account-input-field {
+    width: 500px;
+    height: 40px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #fefefe; /* Slightly off-white for inputs */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease;
+}
+
+/* Upload Certificate Section */
+.create-account-upload-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 5px; /* Adjust spacing below label */
+}
+
+.create-account-upload-button {
+    background-color: #5a7d8a; /* Darker blue-green, similar to image */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    width: 500px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+}
+
+.create-account-upload-button:hover {
+    background-color: #4c6a73;
+}
+
+.create-account-file-name {
+    flex-grow: 1; /* Take up remaining space */
+    text-align: left;
+    color: #666;
+    font-size: 0.9em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.create-account-info-button {
+    background: none;
+    border: none;
+    font-size: 1.4em; /* Adjust size of the 'i' icon */
+    color: #888;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-account-info-button:hover {
+    color: #555;
+}
+
+/* Terms and Conditions Checkbox */
+.create-account-terms-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    text-align: left;
+    font-size: 0.95em;
+    color: #444;
+}
+
+.create-account-terms-checkbox input[type="checkbox"] {
+    min-width: 18px;
+    min-height: 18px;
+    cursor: pointer;
+}
+
+.create-account-terms-link {
+    color: #1e525c;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.create-account-terms-link:hover {
+    color: #0056b3;
+}
+
+
+.create-account-submit-button {
+    background-color: #FFA500; /* Orange color from image */
+    color: white;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100;
+    margin-top: 20px; /* Space above submit button */
+    margin-left: 200px;
+}
+
+.create-account-submit-button:hover {
+    background-color: #e69500;
+}
+
+
+.create-account-error-message {
+    color: #e74c3c;
+    margin-top: 10px;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+/* Modal styles */
+.create-account-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.create-account-modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+}
+
+.create-account-modal-content h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.create-account-modal-content p {
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.create-account-modal-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.create-account-modal-button:hover {
+    background-color: #45a049;
+}
+
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .create-account-form-grid {
+        grid-template-columns: 1fr; /* Stack columns vertically on small screens */
+        gap: 15px;
+    }
+
+    .create-account-card {
+        padding: 25px;
+    }
+}

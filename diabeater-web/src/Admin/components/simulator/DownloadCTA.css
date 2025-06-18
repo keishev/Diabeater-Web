@@ -1,0 +1,52 @@
+/* src/Admin/components/simulator/DownloadCTA.css */
+.sim-download-cta-section {
+    padding: 60px 20px;
+    background-color: #1e525c; /* Deep teal/blue */
+    color: white;
+    text-align: center;
+}
+
+.sim-section-heading {
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: white; /* Ensure heading is white on dark background */
+}
+
+.sim-download-subtitle {
+    font-size: 20px;
+    line-height: 1.5;
+    margin-bottom: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sim-app-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.sim-app-button {
+    background-color: white;
+    color: #1e525c;
+    padding: 15px 30px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sim-app-button:hover {
+    background-color: #eee;
+    color: #0e2f36;
+}
+
+.sim-app-button i {
+    font-size: 24px;
+}

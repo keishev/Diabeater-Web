@@ -1,0 +1,64 @@
+/* src/Admin/AdminInsights.css */
+
+.admin-insights-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px; /* Space below this section */
+    flex: 1; /* Allow it to take up available space */
+    min-width: 300px; /* Adjust as needed */
+}
+
+.admin-insights-section .section-title {
+    font-size: 1.5em;
+    color: #ff9800;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid */
+    gap: 20px; /* Space between insight cards */
+}
+
+.insight-card {
+    background-color: #fffaf3; /* Light background for cards */
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-5px);
+}
+
+.insight-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #1e525c; /* Darker blue/green */
+    margin-bottom: 5px;
+}
+
+.insight-label {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.insight-change {
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.insight-change.increase {
+    color: #4CAF50; /* Green */
+}
+
+.insight-change.decrease {
+    color: #F44336; /* Red */
+}

@@ -1,0 +1,42 @@
+/* src/Admin/components/simulator/Hero.css */
+.sim-hero-section {
+    background-color: #ff9800; /* Primary orange */
+    color: white;
+    text-align: center;
+    padding: 80px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sim-hero-content {
+    max-width: 800px;
+}
+
+.sim-hero-title {
+    font-size: 48px;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.sim-hero-subtitle {
+    font-size: 20px;
+    margin-bottom: 40px;
+    line-height: 1.5;
+}
+
+.sim-hero-cta-button {
+    background-color: #1e525c; /* Deep teal/blue */
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.sim-hero-cta-button:hover {
+    background-color: #163e46;
+}

@@ -1,0 +1,30 @@
+.simulator-content-area * {
+    box-sizing: border-box;
+}
+
+.simulator-content-area {
+    font-family: Arial, sans-serif; /* Or your website's actual font-family */
+    line-height: 1.6;
+    color: #333;
+}
+
+/* General section padding/margins for consistency */
+.sim-main-header,
+.sim-hero-section,
+.sim-features-section,
+.sim-testimonials-section,
+.sim-nutritionists-section,
+.sim-gamification-section,
+.sim-comparison-section,
+.sim-download-cta-section,
+.sim-footer-section {
+    /* These paddings are already defined in each component's CSS.
+       This global file can be used for common elements like h1, h2, p if not overridden. */
+}
+
+.sim-section-heading {
+    text-align: center;
+    font-size: 36px;
+    color: #1e525c;
+    margin-bottom: 50px;
+}

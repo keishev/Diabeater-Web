@@ -1,0 +1,107 @@
+/* src/Admin/UserFeedbacksPage.css */
+
+.user-feedbacks-page {
+    padding: 30px;
+    background-color: #fffaf3; /* Light background matching your admin panel */
+    min-height: calc(100vh - 60px); /* Adjust based on your header/footer if any */
+}
+
+.feedbacks-main-title {
+    font-size: 28px;
+    color: #1e525c;
+    margin-bottom: 40px;
+    font-weight: bold;
+    margin-left: 40px;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #ff9800; /* Orange underline */
+    padding-bottom: 10px;
+    display: inline-block; /* To make border-bottom fit content */
+}
+
+.feedbacks-table-container {
+    background-color: #fffaf3;
+    border-radius: 8px;
+    margin-left: 40px;
+    overflow-x: auto; /* For responsiveness on smaller screens */
+}
+
+.feedbacks-table {
+    width: 100%;
+    border-collapse: collapse;
+    width: 1200px;
+    table-layout: fixed; /* Ensures columns have fixed width based on content or defined width */
+}
+
+.feedbacks-table th,
+.feedbacks-table td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1.5px solid #8f8f8f;
+    font-size: 16px;
+    color: #1e525c;
+}
+
+.feedbacks-table th {
+    background-color: #fffaf3;
+    font-weight: bold;
+    color: #1e525c;
+    text-transform: uppercase;
+    font-size: 18px;
+}
+
+/* Column widths - adjust as needed */
+.feedbacks-table th:nth-child(1),
+.feedbacks-table td:nth-child(1) {
+    width: 20%; /* Name */
+}
+.feedbacks-table th:nth-child(2),
+.feedbacks-table td:nth-child(2) {
+    width: 55%; /* Feedback */
+}
+.feedbacks-table th:nth-child(3),
+.feedbacks-table td:nth-child(3) {
+    width: 150px; /* Publish to Website */
+    text-align: center; /* Center the button/status */
+}
+
+.publish-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Ensure content fills cell height */
+}
+
+.approve-button {
+    background-color: #ff9800; /* Orange from your palette */
+    color: white;
+    padding: 8px 18px;
+    border: none;
+
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    min-width: 90px; /* Ensure consistent button size */
+}
+
+.approve-button:hover {
+    background-color: #e68900;
+    transform: translateY(-1px);
+}
+
+.approve-button:active {
+    transform: translateY(0);
+}
+
+.feedback-status.approved {
+    background-color: #d4edda; /* Light green background */
+    color: #155724; /* Dark green text */
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 90px;
+    display: inline-block; /* To allow padding/border-radius */
+    text-align: center;
+}

@@ -1,0 +1,131 @@
+/* src/Admin/UserDetailModal.css */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* High z-index to appear on top of everything */
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px; /* Max width for the modal */
+    position: relative;
+    animation: fadeInScale 0.3s ease-out; /* Simple animation */
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s ease;
+}
+
+.modal-close-button:hover {
+    color: #333;
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-user-icon-container {
+    width: 80px;
+    height: 80px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 15px auto;
+}
+
+.modal-user-icon {
+    font-size: 50px;
+    color: #ccc;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 26px;
+    color: #333;
+}
+
+.modal-body .info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #eee;
+    font-size: 16px;
+}
+
+.modal-body .info-item:last-child {
+    border-bottom: none;
+}
+
+.modal-body .label {
+    font-weight: bold;
+    color: #555;
+    flex-basis: 40%; /* Adjust as needed */
+}
+
+.modal-body .value {
+    color: #333;
+    flex-basis: 60%; /* Adjust as needed */
+    text-align: right;
+}
+
+/* Reusing status styles from AdminDashboard.css for consistency */
+.modal-body .status-active {
+    color: #4CAF50; /* Green for Active */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Align to the right */
+}
+
+.modal-body .status-inactive {
+    color: #F44336; /* Red for Inactive */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Align to the right */
+}
+
+.modal-body .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    background-color: currentColor; /* Uses the color of the parent */
+}

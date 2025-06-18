@@ -1,0 +1,125 @@
+/* src/Admin/AdminExportReport.css */
+
+.admin-export-report-content {
+    padding: 30px; /* Consistent padding with other pages */
+    background-color: #fffaf3;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Horizontally center content */
+    justify-content: center; /* Vertically center content if there's extra space */
+    /* Ensure it takes full viewport height minus header/footer if applicable */
+    height: 100%;
+    margin-left: 10px;
+}
+
+.report-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.report-page-title {
+    font-size: 28px;
+    color: #ff9800; /* Orange color for the title */
+    margin: 0;
+    margin-right: 1000px;
+}
+
+.report-card {
+    background-color: #fFFAF3;
+    padding: 30px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 1000px; /* Adjust max-width as needed for your desired width */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center sections within the card */
+    margin: auto; /* Helps in centering within parent */
+    margin-top: -20px;
+}
+
+.stat-report-section {
+    width: 100%;
+    padding: 20px 0;
+    margin-bottom: 30px;
+    text-align: center; /* Center the grid content */
+}
+
+.section-title {
+    font-size: 22px;
+    color: #1e525c; /* Dark blue/green */
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ff9800;
+    padding-bottom: 10px;
+    text-align: left; /* Keep titles left-aligned within their section */
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive 2-column layout */
+    gap: 20px; /* Space between stat items */
+    padding: 0 10px; /* Some horizontal padding */
+}
+
+.stat-item {
+    background-color: #fFF; /* Light background for each stat */
+    padding: 19px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between; /* Puts label on left, value on right */
+    align-items: center;
+    font-size: 16px;
+}
+
+.stat-label {
+    font-weight: bold;
+    color: #555;
+    margin-right: 10px; /* Space between label and value */
+    margin-top:15px;
+}
+
+.stat-value {
+    color: #1e525c; /* Dark blue/green for values */
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+/* Export Button */
+.export-button {
+    display: block;
+    width: 200px; /* Fixed width for the button */
+    padding: 15px 25px;
+    background-color: #ff9800; /* Orange */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 700px;
+    margin-top: -120px; /* Space above the button */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.export-button:hover {
+    background-color: #e65100; /* Darker orange on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .report-card {
+        padding: 20px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr; /* Single column on small screens */
+    }
+
+    .export-button {
+        width: 100%; /* Full width button on small screens */
+    }
+}

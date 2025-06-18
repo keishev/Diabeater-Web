@@ -1,0 +1,42 @@
+/* src/Admin/components/simulator/Header.css */
+.sim-main-header {
+    background-color: #1e525c; /* Deep teal/blue */
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sim-logo-text {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.sim-nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 25px;
+    font-size: 16px;
+    transition: opacity 0.2s ease;
+}
+
+.sim-nav a:hover {
+    opacity: 0.8;
+}
+
+.sim-header-cta {
+    background-color: #ff9800; /* Primary orange */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.sim-header-cta:hover {
+    background-color: #e68900;
+}

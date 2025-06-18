@@ -1,0 +1,178 @@
+/* src/Admin/MarketingWebsiteEditorPage.css */
+
+.marketing-editor-page {
+    padding: 30px;
+    background-color: #fcf8f3; /* Light background */
+    min-height: calc(100vh - 60px); /* Adjust based on your header/footer */
+    margin-left: 100px; /* To account for the sidebar, assuming AdminDashboard structure */
+}
+
+.editor-main-title {
+    font-size: 32px;
+    color: #ff9800; /* Your primary orange color */
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.editor-sections-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto; /* Center the grid */
+}
+
+.editor-section {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align content to the left within the section */
+}
+
+.editor-section-title {
+    font-size: 20px;
+    color: #1e525c; /* Your secondary color */
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    width: 100%;
+}
+
+.display-content {
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.6;
+    width: 100%;
+    min-height: 50px; /* Ensure space even if content is short */
+    word-wrap: break-word; /* Prevent long words from overflowing */
+}
+
+.editor-input,
+.editor-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    box-sizing: border-box; /* Include padding in width */
+    font-family: inherit; /* Inherit font from body */
+}
+
+.editor-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%; /* Ensure buttons take full width if needed */
+    justify-content: flex-end; /* Align buttons to the right */
+}
+
+.edit-button,
+.save-button,
+.cancel-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.edit-button {
+    background-color: #1e525c; /* Your secondary color */
+    color: white;
+    align-self: flex-end; /* Align edit button to the right when not editing */
+}
+
+.edit-button:hover {
+    background-color: #153a42;
+}
+
+.save-button {
+    background-color: #ff9800; /* Your primary orange color */
+    color: white;
+    margin-top: 17px;
+}
+.save-button:hover {
+    background-color: #e65100;
+}
+
+.cancel-button {
+    background-color: #ccc;
+    color: #333;
+}
+
+.cancel-button:hover {
+    background-color: #bbb;
+}
+
+.marketing-editor-page .website-simulator {
+    margin-top: 60px; /* Provides space between the editor sections and the simulator */
+    width: 100%;
+    width: 1000px; /* Optional: Constrain width to mimic a typical website view, adjust as needed */
+    margin-left: auto; /* Centers the simulator container */
+    margin-right: auto;
+    /* The height and scrollability of the *preview content* itself are managed by
+       .simulator-content-area inside MarketingWebsiteSimulator.css */
+}
+.stop-hosting-section {
+    margin-top: 50px;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #eee; /* A subtle separator */
+}
+
+.stop-hosting-button {
+    background-color: #dc3545; /* Red for destructive action */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.stop-hosting-button:hover {
+    background-color: #c82333; /* Darker red on hover */
+    transform: translateY(-2px);
+}
+
+.stop-hosting-button:active {
+    transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .marketing-editor-page {
+        margin-left: 80px; /* Adjust for collapsed sidebar */
+        padding: 15px;
+    }
+
+    .editor-sections-container {
+        grid-template-columns: 1fr; /* Stack sections on small screens */
+    }
+
+    .editor-section {
+        padding: 20px;
+    }
+
+    .editor-actions {
+        flex-direction: column; /* Stack action buttons */
+        align-items: stretch; /* Stretch buttons to full width */
+    }
+
+    .edit-button {
+        align-self: stretch; /* Stretch button when not editing too */
+    }
+}

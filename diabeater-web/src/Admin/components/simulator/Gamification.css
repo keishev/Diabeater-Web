@@ -1,0 +1,41 @@
+/* src/Admin/components/simulator/Gamification.css */
+.sim-gamification-section {
+    padding: 60px 20px;
+    background-color: #ffe0b2; /* Light orange/peach */
+    text-align: center;
+    color: #1e525c;
+}
+
+.sim-section-heading {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.sim-gamification-description {
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto 40px auto;
+}
+
+.sim-gamification-features {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.sim-game-feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e525c;
+}
+
+.sim-game-feature-item i {
+    font-size: 60px;
+    color: #ff9800;
+    margin-bottom: 15px;
+}
