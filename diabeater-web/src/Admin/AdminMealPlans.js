@@ -423,7 +423,7 @@ const AdminMealPlans = ({ onViewDetails }) => {
     return (
         <div className="admin-meal-plans-container">
             <div className="admin-meal-plans-header"> {/* New div for header content */}
-                <h1 className="admin-meal-plans-title">APPROVE MEAL PLANS</h1>
+                <h1 className="admin-meal-plans-title">VERIFY MEAL PLANS</h1>
                 <div className="search-controls">
                     <input
                         type="text"
@@ -487,7 +487,7 @@ const AdminMealPlans = ({ onViewDetails }) => {
                                     className="approve-button"
                                     onClick={() => handleApproveClick(plan.id)}
                                 >
-                                    APPROVE
+                                    VERIFY
                                 </button>
                                 <button
                                     className="reject-button"

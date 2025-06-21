@@ -275,7 +275,7 @@ const MyMealPlansContent = ({
                     className={`tab-button ${activeTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
                     onClick={() => setActiveTab('PENDING_APPROVAL')}
                 >
-                    PENDING APPROVAL
+                    PENDING VERIFICATION
                 </button>
             </div>
 
