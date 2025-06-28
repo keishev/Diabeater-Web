@@ -1,10 +1,9 @@
 // src/LoginPage.js
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase Auth
-// CORRECTED PATHS: Go up one level (..) to src/, then into firebaseConfig or assets
-import app from '../firebase'; // Corrected path
-import loginImage from '../assets/login_image.jpg'; // Corrected path
-import bloodDropLogo from '../assets/blood_drop_logo.png'; // Corrected path
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import app from '../firebase'; 
+import loginImage from '../assets/login_image.jpg'; 
+import bloodDropLogo from '../assets/blood_drop_logo.png';
 import './LoginPage.css';
 
 // Initialize Firebase Auth
@@ -181,7 +180,7 @@ function LoginPage({ onLoginSuccess, onResetPasswordRequest, onCreateAccountRequ
                     onClick={handleCreateAccountClick}
                     style={{ cursor: 'pointer' }}
                 >
-                    create account (for nutritionist)
+                    Create Account (Nutritionist)
                 </span>
             </div>
         </div>

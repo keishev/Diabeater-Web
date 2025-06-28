@@ -286,7 +286,10 @@ const AdminDashboard = observer(() => { // Make it an observer
     return (
         <div className="admin-dashboard-page">
             {/* Pass setCurrentView directly from the ViewModel instance */}
-            <AdminSidebar onNavigate={AdminDashboardViewModel.setCurrentView} currentView={currentView} />
+            <AdminSidebar
+            onNavigate={(view) => AdminDashboardViewModel.setCurrentView(view)}
+            currentView={currentView}
+            />
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
