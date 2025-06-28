@@ -1,73 +1,31 @@
 // src/CreateAccountPage.js
-import React, { useState, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
+import CreateAccountViewModel from './ViewModels/CreateAccountViewModel';
 import bloodDropLogo from './assets/blood_drop_logo.png';
 import './CreateAccountPage.css'; // Link to the CSS file
 
+// Instantiate the ViewModel outside the component to persist its state
+// or within a React Context if you need to pass it down the component tree.
+// For this single page, a direct import is fine.
+const viewModel = new CreateAccountViewModel();
+
 function CreateAccountPage({ onBackToLogin }) {
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [dob, setDob] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [certificateFile, setCertificateFile] = useState(null);
-    const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-    const [error, setError] = useState('');
-    const [showInfoModal, setShowInfoModal] = useState(false);
-    const [showPendingApprovalModal, setShowPendingApprovalModal] = useState(false);
-
     const fileInputRef = useRef(null);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        if (!firstName || !lastName || !email || !dob || !password || !confirmPassword) {
-            setError('All fields are required.');
-            return;
-        }
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters long.');
-            return;
-        }
-        if (password !== confirmPassword) {
-            setError('Passwords do not match.');
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            setError('Please enter a valid email address.');
-            return;
-        }
-        if (!certificateFile) {
-            setError('Please upload your certificate.');
-            return;
-        }
-        if (!agreedToTerms) {
-            setError('You must agree to the terms and conditions.');
-            return;
-        }
-
-        console.log('Create Account Attempt:', { firstName, lastName, email, dob, certificateFile: certificateFile.name });
-
-        setTimeout(() => {
-            setShowPendingApprovalModal(true);
-        }, 1000);
-    };
+    // Use useEffect to react to changes in viewModel's state for modal visibility
+    useEffect(() => {
+        // This effect can be used for any side effects based on viewModel state
+        // The direct use of viewModel.showInfoModal and viewModel.showPendingApprovalModal
+        // in JSX via `observer` handles rendering updates.
+    }, []);
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file && file.type === 'application/pdf') {
-            setCertificateFile(file);
-            setError('');
-        } else {
-            setCertificateFile(null);
-            setError('Please upload a valid PDF file for your certificate.');
-        }
+        viewModel.setCertificateFile(e.target.files[0]);
     };
 
     const handleBackToLoginFromModal = () => {
-        setShowPendingApprovalModal(false);
+        viewModel.setShowPendingApprovalModal(false);
         if (onBackToLogin) {
             onBackToLogin();
         }
@@ -91,7 +49,10 @@ function CreateAccountPage({ onBackToLogin }) {
 
                 <h2 className="create-account-title">Create Nutritionist Account</h2>
 
-                <form onSubmit={handleSubmit} className="create-account-form">
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    viewModel.handleSubmit();
+                }} className="create-account-form">
                     <div className="create-account-form-grid">
                         {/* Left Column Inputs */}
                         <div className="create-account-form-column">
@@ -100,8 +61,8 @@ function CreateAccountPage({ onBackToLogin }) {
                                 id="first-name-input"
                                 type="text"
                                 placeholder=""
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
+                                value={viewModel.firstName}
+                                onChange={(e) => viewModel.setFirstName(e.target.value)}
                                 className="create-account-input-field"
                                 required
                             />
@@ -111,8 +72,8 @@ function CreateAccountPage({ onBackToLogin }) {
                                 id="email-input"
                                 type="email"
                                 placeholder=""
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={viewModel.email}
+                                onChange={(e) => viewModel.setEmail(e.target.value)}
                                 className="create-account-input-field"
                                 required
                             />
@@ -123,8 +84,8 @@ function CreateAccountPage({ onBackToLogin }) {
                                     id="password-input"
                                     type="password"
                                     placeholder=""
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    value={viewModel.password}
+                                    onChange={(e) => viewModel.setPassword(e.target.value)}
                                     className="create-account-input-field"
                                     required
                                 />
@@ -136,8 +97,8 @@ function CreateAccountPage({ onBackToLogin }) {
                                     id="confirm-password-input"
                                     type="password"
                                     placeholder=""
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    value={viewModel.confirmPassword}
+                                    onChange={(e) => viewModel.setConfirmPassword(e.target.value)}
                                     className="create-account-input-field"
                                     required
                                 />
@@ -151,8 +112,8 @@ function CreateAccountPage({ onBackToLogin }) {
                                 id="last-name-input"
                                 type="text"
                                 placeholder=""
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
+                                value={viewModel.lastName}
+                                onChange={(e) => viewModel.setLastName(e.target.value)}
                                 className="create-account-input-field"
                                 required
                             />
@@ -162,8 +123,8 @@ function CreateAccountPage({ onBackToLogin }) {
                             <input
                                 id="dob-input"
                                 type="date"
-                                value={dob}
-                                onChange={(e) => setDob(e.target.value)}
+                                value={viewModel.dob}
+                                onChange={(e) => viewModel.setDob(e.target.value)}
                                 className="create-account-input-field"
                                 required
                             />
@@ -186,12 +147,12 @@ function CreateAccountPage({ onBackToLogin }) {
                                     Upload
                                 </button>
                                 <span className="create-account-file-name">
-                                    {certificateFile ? certificateFile.name : ''}
+                                    {viewModel.certificateFile ? viewModel.certificateFile.name : ''}
                                 </span>
                                 <button
                                     type="button"
                                     className="create-account-info-button"
-                                    onClick={() => setShowInfoModal(true)}
+                                    onClick={() => viewModel.setShowInfoModal(true)}
                                 >
                                     &#9432;
                                 </button>
@@ -203,33 +164,33 @@ function CreateAccountPage({ onBackToLogin }) {
                         <input
                             type="checkbox"
                             id="terms-checkbox"
-                            checked={agreedToTerms}
-                            onChange={(e) => setAgreedToTerms(e.target.checked)}
+                            checked={viewModel.agreedToTerms}
+                            onChange={(e) => viewModel.setAgreedToTerms(e.target.checked)}
                         />
                         <label htmlFor="terms-checkbox">I agree to the <span className="create-account-terms-link">Terms and Conditions</span></label>
                     </div>
 
-                    {error && <p className="create-account-error-message">{error}</p>}
+                    {viewModel.error && <p className="create-account-error-message">{viewModel.error}</p>}
 
-                    <button type="submit" className="create-account-submit-button">
-                        SUBMIT
+                    <button type="submit" className="create-account-submit-button" disabled={viewModel.isLoading}>
+                        {viewModel.isLoading ? 'SUBMITTING...' : 'SUBMIT'}
                     </button>
                 </form>
 
-                {showInfoModal && (
+                {viewModel.showInfoModal && (
                     <div className="create-account-modal-overlay">
                         <div className="create-account-modal-content">
                             <h3>Certificate Requirements</h3>
                             <p>Please upload a valid PDF document of your nutritionist certification or degree.</p>
                             <p>File size should not exceed 5MB.</p>
-                            <button className="create-account-modal-button" onClick={() => setShowInfoModal(false)}>
+                            <button className="create-account-modal-button" onClick={() => viewModel.setShowInfoModal(false)}>
                                 Got It
                             </button>
                         </div>
                     </div>
                 )}
 
-                {showPendingApprovalModal && (
+                {viewModel.showPendingApprovalModal && (
                     <div className="create-account-modal-overlay">
                         <div className="create-account-modal-content">
                             <h3>Account Pending Approval</h3>
@@ -245,4 +206,5 @@ function CreateAccountPage({ onBackToLogin }) {
     );
 }
 
-export default CreateAccountPage;
+// Wrap the component with observer to enable MobX reactivity
+export default observer(CreateAccountPage);

@@ -1,54 +1,24 @@
 // src/Admin/AdminDashboard.js
-import React, { useState } from 'react';
-import './AdminDashboard.css'; // Your main layout CSS
-import './AdminStatDashboard.css'; // Add this line for dashboard-specific styles
+import React, { useState, useEffect } from 'react';
+import { observer } from 'mobx-react-lite'; // Import observer
+import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Import the ViewModel (it's a singleton)
 import UserDetailModal from './UserDetailModal';
 import AdminProfile from './AdminProfile';
-import AdminStatDashboard from './AdminStatDashboard'; // Ensure this is imported
+import AdminStatDashboard from './AdminStatDashboard';
 import AdminMealPlans from './AdminMealPlans';
-import AdminMealPlanDetail from './AdminMealPlanDetail'; // This might be used inside AdminMealPlans, not directly here
 import AdminExportReport from './AdminExportReport';
-import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage'; // <--- NEW: Import the Marketing Editor Page
+import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
 
-
-// Mock data - Ensure your existing mock data includes all fields you need for ALL_ACCOUNTS
-const initialUserAccounts = [
-    { id: '1', name: 'John Doe', email: 'johndoe@gmail.com', accountType: 'System Admin', status: 'Active', userSince: '01/01/2025', uid: 'ADMN001' },
-    { id: '2', name: 'Matilda Swayne', email: 'matildaswayne@gmail.com', accountType: 'Premium User', status: 'Active', userSince: '01/01/2025', uid: 'PREM002' },
-    { id: '3', name: 'David Brown', email: 'david.b@gmail.com', accountType: 'Premium User', status: 'Active', userSince: '02/05/2025', uid: 'PREM003' },
-    { id: '4', name: 'Timothy Young', email: 'timothy_young@gmail.com', accountType: 'Basic User', status: 'Active', userSince: '04/05/2025', uid: 'BASIC004' },
-    { id: '5', name: 'Rachel Allen', email: 'rachelallen@gmail.com', accountType: 'Premium User', status: 'Inactive', userSince: '05/05/2025', uid: 'PREM005' },
-    { id: '6', name: 'Andrew Gonzales', email: 'andrew_gonzales@gmail.com', accountType: 'Premium User', status: 'Inactive', userSince: '05/05/2025', uid: 'PREM006' },
-    { id: '7', name: 'Steven Walker', email: 'stevenwalker.2@gmail.com', accountType: 'Premium User', status: 'Active', userSince: '06/05/2025', uid: 'PREM007' },
-    { id: '8', name: 'Jason Scott', email: 'jasonscott231@gmail.com', accountType: 'Basic User', status: 'Active', userSince: '07/05/2025', uid: 'BASIC008' },
-    { id: '9', name: 'Ryan Mitchell', email: 'ryan.mitchell@gmail.com', accountType: 'Basic User', status: 'Active', userSince: '07/05/2025', uid: 'BASIC009' },
-    { id: '10', name: 'Rebecca Perez', email: 'rebecca_perez3@gmail.com', accountType: 'Nutritionist', status: 'Active', userSince: '08/05/2025', uid: 'NUTR10' },
-];
-
-// NEW MOCK DATA FOR PENDING APPROVAL ACCOUNTS
-const pendingApprovalAccounts = [
-    { id: '11', name: 'Samantha Joe', email: 'samantha@gmail.com', status: 'Active', renewalDate: '01/02/2025' },
-    { id: '12', name: 'Matilda Swayne', email: 'matildaswayne@gmail.com', status: 'Active', renewalDate: '01/03/2025' },
-    { id: '13', name: 'David Brown', email: 'david.b@gmail.com', status: 'Active', renewalDate: '02/03/2025' },
-    { id: '14', name: 'Timothy Young', email: 'timothy_young@gmail.com', status: 'Active', renewalDate: '04/01/2025' },
-    { id: '15', name: 'Rachel Allen', email: 'rachelallen@gmail.com', status: 'Active', renewalDate: '05/04/2025' },
-    { id: '16', name: 'Andrew Gonzales', email: 'andrew_gonzales@gmail.com', status: 'Cancelled', renewalDate: '05/03/2025' },
-    { id: '17', name: 'Steven Walker', email: 'stevenwalker.2@gmail.com', status: 'Active', renewalDate: '06/02/2025' },
-    { id: '18', name: 'Jason Scott', email: 'jasonscott231@gmail.com', status: 'Expired', renewalDate: '07/04/2025' },
-    { id: '19', name: 'Ryan Mitchell', email: 'ryan.mitchell@gmail.com', status: 'Active', renewalDate: '07/04/2025' },
-    { id: '20', name: 'Beatrice Lim', email: 'beatrice_lim23@gmail.com', status: 'Active', renewalDate: '01/05/2025' },
-];
-
+import './AdminDashboard.css';
+import './AdminStatDashboard.css';
 
 // Admin Sidebar Component
-const AdminSidebar = ({ currentView, onNavigate }) => {
-    // Assuming onLogout is passed down from App.js to AdminDashboard,
-    // and then to AdminSidebar if you want to handle it from App.js's state.
-    // If not, this hardcoded window.location.href works but bypasses React state.
+const AdminSidebar = observer(({ onNavigate, currentView }) => {
     const handleLogout = () => {
-        window.location.href = '/login'; // This will refresh the page and go to login
-        // Alternatively, if onLogout is passed as a prop: onLogout();
+        // In a real app, you'd call a logout function from an Auth service
+        // For now, redirect.
+        window.location.href = '/login';
     };
 
     return (
@@ -59,145 +29,138 @@ const AdminSidebar = ({ currentView, onNavigate }) => {
             </div>
             <nav className="navigation">
                 <div
-                    className={`nav-item ${currentView === 'myProfile' ? 'active' : ''}`}
+                    className={`nav-item ${currentView === 'myProfile' ? 'active' : ''}`} // Use prop here
                     onClick={() => onNavigate('myProfile')}
                 >
                     <i className="fas fa-user"></i>
                     <span>My Profile</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
+                    className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`} // Use prop here
                     onClick={() => onNavigate('dashboard')}
                 >
                     <i className="fas fa-home"></i>
                     <span>Dashboard</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'userAccounts' ? 'active' : ''}`}
+                    className={`nav-item ${currentView === 'userAccounts' ? 'active' : ''}`} // Use prop here
                     onClick={() => onNavigate('userAccounts')}
                 >
                     <i className="fas fa-users"></i>
                     <span>User Accounts</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`}
+                    className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`} // Use prop here
                     onClick={() => onNavigate('mealPlans')}
                 >
                     <i className="fas fa-clipboard-list"></i>
                     <span>Meal Plans</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'exportReport' ? 'active' : ''}`}
+                    className={`nav-item ${currentView === 'exportReport' ? 'active' : ''}`} // Use prop here
                     onClick={() => onNavigate('exportReport')}
                 >
                     <i className="fas fa-file-export"></i>
                     <span>Export Report</span>
                 </div>
-                {/* <--- NEW: Add Nav Item for Marketing Website Editor */}
                 <div
-                    className={`nav-item ${currentView === 'editWebsite' ? 'active' : ''}`}
+                    className={`nav-item ${currentView === 'editWebsite' ? 'active' : ''}`} // Use prop here
                     onClick={() => onNavigate('editWebsite')}
                 >
-                    <i className="fas fa-globe"></i> {/* Globe icon */}
+                    <i className="fas fa-globe"></i>
                     <span>Edit Website</span>
                 </div>
                 <div
-    className={`nav-item ${currentView === 'userFeedbacks' ? 'active' : ''}`}
-    onClick={() => onNavigate('userFeedbacks')}
->
-    <i className="fas fa-comments"></i> {/* You might need to install and use Font Awesome for this icon */}
-    <span>User Feedbacks</span>
-</div>
-                {/* END NEW Nav Item */}
+                    className={`nav-item ${currentView === 'userFeedbacks' ? 'active' : ''}`} // Use prop here
+                    onClick={() => onNavigate('userFeedbacks')}
+                >
+                    <i className="fas fa-comments"></i>
+                    <span>User Feedbacks</span>
+                </div>
             </nav>
             <button className="logout-button" onClick={handleLogout}>Log out</button>
         </div>
     );
-};
+});
 
-// User Account Table Row Component - Now handles rendering based on account type
-const UserAccountRow = ({ user, onAction, onNameClick, type }) => {
-    const statusClass = user.status === 'Active' ? 'status-active' : (user.status === 'Inactive' || user.status === 'Cancelled' || user.status === 'Expired' ? 'status-inactive' : '');
+// User Account Table Row Component - Renders based on ViewModel data
+const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
+    // Determine status class based on the 'status' property from Firestore
+    const statusClass = user.status === 'approved' || user.status === 'Active' ? 'status-active' : 'status-inactive';
 
     return (
         <tr>
             <td>
                 <span className="user-name-clickable" onClick={() => onNameClick(user)}>
-                    <i className="fas fa-user-circle user-icon"></i>{user.name}
+                    <i className="fas fa-user-circle user-icon"></i>{user.firstName ? `${user.firstName} ${user.lastName}` : user.name}
                 </span>
             </td>
             <td>{user.email}</td>
-            {type === 'all' && <td>{user.accountType}</td>} {/* Render Account Type only for 'all' tab */}
+            {type === 'all' && <td>{user.accountType || 'Nutritionist'}</td>} {/* Use accountType from mock, or default to Nutritionist */}
             <td className={statusClass}>
-                <span className="status-dot"></span>{user.status}
+                <span className="status-dot"></span>{user.status === 'approved' ? 'Active' : user.status} {/* Display 'Active' for 'approved' status */}
             </td>
-            {type === 'all' && <td>{user.userSince}</td>} {/* Render User Since only for 'all' tab */}
-            {type === 'pending' && <td>{user.renewalDate}</td>} {/* Render Renewal Date only for 'pending' tab */}
-            {type === 'pending' && ( // Render Documents and Transactions only for 'pending' tab
-                <>
-                    <td><button className="doc-action-button view-button">VIEW</button></td>
-                    <td><button className="action-button view-button">VIEW</button></td>
-                </>
-            )}
-            {type === 'all' && ( // Render Action button only for 'all' tab
+            {type === 'all' && <td>{user.userSince || (user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A')}</td>}
+            {type === 'pending' && <td>{user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A'}</td>} {/* Display creation date for pending */}
+            {type === 'pending' && (
                 <td>
+                    <button className="doc-action-button view-button" onClick={() => AdminDashboardViewModel.viewCertificate(user.id)} disabled={AdminDashboardViewModel.isLoading}>
+                        VIEW
+                    </button>
+                </td>
+            )}
+            {type === 'all' && (
+                <td>
+                    {/* Placeholder for suspend/unsuspend action for 'all' accounts */}
                     <button
-                        className={`action-button ${user.status === 'Active' ? 'suspend-button' : 'unsuspend-button'}`}
+                        className={`action-button ${user.status === 'Active' || user.status === 'approved' ? 'suspend-button' : 'unsuspend-button'}`}
                         onClick={() => onAction(user.id, user.status)}
                     >
-                        {user.status === 'Active' ? 'Suspend' : 'Unsuspend'}
+                        {(user.status === 'Active' || user.status === 'approved') ? 'Suspend' : 'Unsuspend'}
                     </button>
                 </td>
             )}
         </tr>
     );
-};
+});
 
-// User Accounts Content Component - MANAGE MODAL STATE AND TAB CONTENT HERE
-const UserAccountsContent = () => {
-    const [accounts, setAccounts] = useState(initialUserAccounts);
-    const [pendingAccounts, setPendingAccounts] = useState(pendingApprovalAccounts); // Use NEW mock data
-    const [activeTab, setActiveTab] = useState('ALL_ACCOUNTS');
-    const [searchTerm, setSearchTerm] = useState('');
+// User Accounts Content Component
+const UserAccountsContent = observer(() => { // Make it an observer
+    // Use ViewModel state directly
+    const {
+        activeTab,
+        searchTerm,
+        filteredAllAccounts,
+        filteredPendingAccounts,
+        showUserDetailModal,
+        selectedUser,
+        // No need to destructure setActiveTab, setSearchTerm, setSelectedUser, setShowUserDetailModal here
+        fetchAccounts, // Function to re-fetch data
+        isLoading,
+        error
+    } = AdminDashboardViewModel; // Access the singleton ViewModel directly
 
-    const [showModal, setShowModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-
-    const handleAction = (userId, currentStatus) => {
-        setAccounts(prevAccounts =>
-            prevAccounts.map(user =>
-                user.id === userId
-                    ? { ...user, status: currentStatus === 'Active' ? 'Inactive' : 'Active' }
-                    : user
-            )
-        );
-        console.log(`Action: User ${userId} status changed to ${currentStatus === 'Active' ? 'Inactive' : 'Active'}`);
-    };
-
-    const handleSearchChange = (event) => {
-        setSearchTerm(event.target.value);
-    };
-
-    // Filter logic for ALL ACCOUNTS
-    const filteredAllAccounts = accounts.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Filter logic for PENDING APPROVAL ACCOUNTS
-    const filteredPendingAccounts = pendingAccounts.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Fetch accounts on component mount
+      useEffect(() => {
+        AdminDashboardViewModel.fetchAccounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Added because fetchAccounts is a stable reference from the singleton
 
     const handleOpenModal = (user) => {
-        setSelectedUser(user);
-        setShowModal(true);
+        AdminDashboardViewModel.setSelectedUser(user);
+        AdminDashboardViewModel.setShowUserDetailModal(true);
     };
 
     const handleCloseModal = () => {
-        setShowModal(false);
-        setSelectedUser(null);
+        AdminDashboardViewModel.setShowUserDetailModal(false);
+        AdminDashboardViewModel.setSelectedUser(null);
+        AdminDashboardViewModel.fetchAccounts(); // Refresh accounts after modal closes, in case changes were made
+    };
+
+    // Placeholder for suspend/unsuspend (not integrated with Firestore in this example)
+    const handleSuspendUnsuspend = (userId, currentStatus) => {
+        console.log(`Action: User ${userId} status changed to ${currentStatus === 'Active' ? 'Inactive' : 'Active'}`);
+        // Implement Firestore update here if needed, or trigger a Cloud Function
     };
 
     return (
@@ -210,7 +173,7 @@ const UserAccountsContent = () => {
                             type="text"
                             placeholder="Search by username, email, or name"
                             value={searchTerm}
-                            onChange={handleSearchChange}
+                            onChange={(e) => AdminDashboardViewModel.setSearchTerm(e.target.value)} // Call method directly
                         />
                         <i className="fas fa-search"></i>
                     </div>
@@ -220,17 +183,20 @@ const UserAccountsContent = () => {
             <div className="admin-tabs">
                 <button
                     className={`tab-button ${activeTab === 'ALL_ACCOUNTS' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('ALL_ACCOUNTS')}
+                    onClick={() => AdminDashboardViewModel.setActiveTab('ALL_ACCOUNTS')} // Call method directly
                 >
                     ALL ACCOUNTS
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('PENDING_APPROVAL')}
+                    onClick={() => AdminDashboardViewModel.setActiveTab('PENDING_APPROVAL')} // Call method directly
                 >
                     PENDING APPROVAL
                 </button>
             </div>
+
+            {isLoading && <p>Loading accounts...</p>}
+            {error && <p className="error-message">{error}</p>}
 
             <div className="table-container">
                 <table>
@@ -238,13 +204,12 @@ const UserAccountsContent = () => {
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
-                            {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>} {/* Conditional Header */}
+                            {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
                             <th>Status</th>
-                            {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>} {/* Conditional Header */}
-                            {activeTab === 'PENDING_APPROVAL' && <th>Renewal Date</th>} {/* Conditional Header */}
-                            {activeTab === 'PENDING_APPROVAL' && <th>Documents</th>} {/* Conditional Header */}
-                            {activeTab === 'PENDING_APPROVAL' && <th>Transactions</th>} {/* Conditional Header */}
-                            {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>} {/* Conditional Header */}
+                            {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
+                            {activeTab === 'PENDING_APPROVAL' && <th>Applied Date</th>} {/* Changed renewalDate to Applied Date */}
+                            {activeTab === 'PENDING_APPROVAL' && <th>Documents</th>}
+                            {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -253,24 +218,24 @@ const UserAccountsContent = () => {
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
-                                    onAction={handleAction}
+                                    onAction={handleSuspendUnsuspend}
                                     onNameClick={handleOpenModal}
-                                    type="all" // Pass type to row component
+                                    type="all"
                                 />
                             ))
-                        ) : activeTab === 'PENDING_APPROVAL' && filteredPendingAccounts.length > 0 ? ( // Use filteredPendingAccounts
+                        ) : activeTab === 'PENDING_APPROVAL' && filteredPendingAccounts.length > 0 ? (
                             filteredPendingAccounts.map(user => (
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
-                                    onAction={handleAction} // Still pass, though not used for current actions in 'pending'
+                                    onAction={() => {}} // No suspend/unsuspend for pending
                                     onNameClick={handleOpenModal}
-                                    type="pending" // Pass type to row component
+                                    type="pending"
                                 />
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message"> {/* Adjust colspan */}
+                                <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message">
                                     {activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.'}
                                 </td>
                             </tr>
@@ -284,37 +249,55 @@ const UserAccountsContent = () => {
                 </div>
             </div>
 
-            {showModal && (
+            {showUserDetailModal && selectedUser && (
                 <UserDetailModal
-                    user={selectedUser}
                     onClose={handleCloseModal}
                 />
             )}
         </>
     );
-};
+});
 
 
 // AdminDashboard Main Component
-const AdminDashboard = () => {
-    // Set initial view to 'dashboard' or 'userAccounts' based on your preference.
-    // 'myProfile' might be a good default too.
-    const [currentView, setCurrentView] = useState('dashboard');
+const AdminDashboard = observer(() => { // Make it an observer
+    // Use ViewModel state for currentView
+    const { currentView } = AdminDashboardViewModel; // Only destructure currentView
+
+    console.log('AdminDashboard component rendered.');
+    console.log('   - Imported AdminDashboardViewModel (singleton):', AdminDashboardViewModel);
+    console.log('   - currentView from ViewModel:', currentView);
+    console.log('   - setCurrentView from ViewModel:', AdminDashboardViewModel.setCurrentView); // Log the function reference
+
+    // Check admin status on mount
+    useEffect(() => {
+        const check = async () => {
+            const isAdmin = await AdminDashboardViewModel.checkAdminStatus();
+            if (!isAdmin) {
+                // If not admin, redirect to login or show an error
+                alert("Access Denied: You must be an administrator to view this page.");
+                window.location.href = '/login'; // Or handle more gracefully
+            }
+        };
+        check();
+    }, []);
+
 
     return (
         <div className="admin-dashboard-page">
-            <AdminSidebar currentView={currentView} onNavigate={setCurrentView} />
+            {/* Pass setCurrentView directly from the ViewModel instance */}
+            <AdminSidebar onNavigate={AdminDashboardViewModel.setCurrentView} currentView={currentView} />
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
                 {currentView === 'userAccounts' && <UserAccountsContent />}
                 {currentView === 'mealPlans' && <AdminMealPlans />}
                 {currentView === 'exportReport' && <AdminExportReport />}
-                {currentView === 'editWebsite' && <MarketingWebsiteEditorPage />} {/* <--- NEW: Render MarketingWebsiteEditorPage */}
+                {currentView === 'editWebsite' && <MarketingWebsiteEditorPage />}
                 {currentView === 'userFeedbacks' && <UserFeedbacksPage />}
             </div>
         </div>
     );
-};
+});
 
 export default AdminDashboard;
