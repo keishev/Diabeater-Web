@@ -1,10 +1,11 @@
 // src/ViewModels/AdminDashboardViewModel.js
+
 import { makeAutoObservable, runInAction } from 'mobx';
 import nutritionistRepository from '../Repositories/NutritionistRepository';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth'; // Ensure getAuth is imported
 
 class AdminDashboardViewModel {
-    allAccounts = []; // This will be populated from Firestore or combined with other data
+    allAccounts = [];
     pendingAccounts = [];
     activeTab = 'ALL_ACCOUNTS';
     searchTerm = '';
@@ -16,11 +17,16 @@ class AdminDashboardViewModel {
     error = '';
     currentView = 'dashboard';
 
+    mockNonNutritionistUsers = [
+        { id: 'user_john_doe', name: 'John Doe', email: 'johndoe@gmail.com', accountType: 'System Admin', status: 'Active', userSince: 'Jan 1, 2024' },
+        { id: 'user_matilda_s', name: 'Matilda Swayne', email: 'matildaswayne@gmail.com', accountType: 'Premium User', status: 'Active', userSince: 'Jan 15, 2024' },
+        { id: 'user_sarah_c', name: 'Sarah Connor', email: 'sarah.c@example.com', accountType: 'Basic User', status: 'Active', userSince: 'Feb 1, 2024' },
+        { id: 'user_mike_r', name: 'Mike Ross', email: 'mike.r@example.com', accountType: 'Basic User', status: 'Active', userSince: 'Mar 10, 2024' },
+        { id: 'user_lisa_d', name: 'Lisa Davis', email: 'lisa.d@example.com', accountType: 'Premium User', status: 'Inactive', userSince: 'Apr 5, 2024' },
+    ];
+
     constructor() {
         makeAutoObservable(this);
-        // We will fetch initial data when the AdminDashboard component mounts
-        // rather than directly in the constructor, allowing for more control
-        // and potential dependency injection of mock data if needed for testing.
     }
 
     setAllAccounts(accounts) {
@@ -41,14 +47,23 @@ class AdminDashboardViewModel {
 
     setSelectedUser(user) {
         this.selectedUser = user;
+        this.error = '';
+        this.rejectionReason = '';
     }
 
     setShowUserDetailModal(value) {
         this.showUserDetailModal = value;
+        if (!value) {
+            this.selectedUser = null;
+            this.setError('');
+        }
     }
 
     setShowRejectionReasonModal(value) {
         this.showRejectionReasonModal = value;
+        if (!value) {
+            this.rejectionReason = '';
+        }
     }
 
     setRejectionReason(reason) {
@@ -67,131 +82,170 @@ class AdminDashboardViewModel {
         this.currentView = view;
     }
 
-    // --- Data Fetching ---
+    get filteredAllAccounts() {
+        const lowerCaseSearchTerm = this.searchTerm.toLowerCase();
+        return this.allAccounts.filter(user =>
+            (user.name?.toLowerCase().includes(lowerCaseSearchTerm) ||
+            user.firstName?.toLowerCase().includes(lowerCaseSearchTerm) ||
+            user.lastName?.toLowerCase().includes(lowerCaseSearchTerm) ||
+            user.email.toLowerCase().includes(lowerCaseSearchTerm))
+        );
+    }
+
+    get filteredPendingAccounts() {
+        const lowerCaseSearchTerm = this.searchTerm.toLowerCase();
+        return this.pendingAccounts.filter(user =>
+            (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm) ||
+            user.lastName?.toLowerCase().includes(lowerCaseSearchTerm) ||
+            user.email.toLowerCase().includes(lowerCaseSearchTerm))
+        );
+    }
+
     async fetchAccounts() {
         this.setLoading(true);
         this.setError('');
         try {
-            // Fetch all nutritionists (including pending, approved, rejected)
-            const allNutritionistsFromFirestore = await nutritionistRepository.firestoreService.getAllNutritionists();
+            const allNutritionistsFromFirestore = await nutritionistRepository.getAllNutritionists();
 
             runInAction(() => {
-                // Set pending accounts directly from Firestore results
-                this.setPendingAccounts(allNutritionistsFromFirestore.filter(n => n.status === 'pending'));
+                const pending = allNutritionistsFromFirestore.filter(n => n.status === 'pending').map(n => ({
+                    ...n,
+                    id: n.id,
+                    name: `${n.firstName} ${n.lastName}`,
+                    appliedDate: n.createdAt ? n.createdAt.toLocaleDateString('en-SG', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A',
+                }));
+                this.setPendingAccounts(pending);
 
-                // Transform approved nutritionists for the 'ALL_ACCOUNTS' tab display
-                const approvedNutritionistsDisplay = allNutritionistsFromFirestore
-                    .filter(n => n.status === 'approved')
+                const approvedAndOtherStatusNutritionists = allNutritionistsFromFirestore
+                    .filter(n => n.status !== 'pending')
                     .map(n => ({
                         id: n.id,
-                        name: `${n.firstName} ${n.lastName}`, // Combine first and last name
+                        name: `${n.firstName} ${n.lastName}`,
                         email: n.email,
-                        accountType: 'Nutritionist', // Explicitly set type for display
-                        status: 'Active', // Approved nutritionists are 'Active' from admin's perspective
-                        userSince: n.createdAt ? n.createdAt.toLocaleDateString('en-SG') : 'N/A', // Format date, consider locale
-                        uid: n.id,
+                        accountType: 'Nutritionist',
+                        status: n.status === 'approved' ? 'Active' : n.status,
+                        userSince: n.createdAt ? n.createdAt.toLocaleDateString('en-SG', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A',
+                        ...n
                     }));
 
-                // For 'ALL_ACCOUNTS', you currently have a static `initialUserAccounts` in AdminDashboard.js.
-                // You need to decide how to merge this.
-                // Option 1 (Better long-term): Fetch ALL non-nutritionist users from THEIR Firestore collection too.
-                // Option 2 (Temp fix): Keep `initialUserAccounts` in AdminDashboard.js and pass it,
-                // or define a minimal set of mock non-nutritionists here.
-                // Let's assume you'll eventually fetch *all* user types from Firestore.
-                // For now, we'll simulate by filtering out nutritionist types from the *original mock data* if it was passed in.
-                // **However, the ViewModel should ideally be self-contained for its data.**
-                // Let's simplify for the ViewModel: `allAccounts` will be composed *only* of approved nutritionists
-                // for now, unless you pass in other mock data or fetch it.
-
-                // To resolve the `initialUserAccounts` error directly in this ViewModel:
-                // If you intend for `allAccounts` to *only* show approved nutritionists, then:
-                this.setAllAccounts(approvedNutritionistsDisplay);
-                // If you need to combine it with other mock data, you'd need to either:
-                // A) Import `initialUserAccounts` from a shared mock data file.
-                // B) Define a separate mock data source (e.g., `mockNonNutritionistUsers`) here.
-                // For this scenario, let's assume `allAccounts` will primarily be *dynamically fetched*.
-                // If the `initialUserAccounts` (non-nutritionists) are still needed for display,
-                // you will need to manage that data source appropriately, perhaps passing it into the ViewModel
-                // during its creation in `AdminDashboard.js` or having the ViewModel fetch it from a "users" collection.
-
-                // Given the error, the simplest *immediate* fix without breaking too much logic is to
-                // ensure `initialUserAccounts` is accessible or `allAccounts` is correctly built.
-                // I will add a placeholder mock data within the ViewModel for `nonNutritionistUsers` to ensure `allAccounts` can be built.
-                // In a real app, these would come from Firestore.
-                const mockNonNutritionistUsers = [
-                    { id: '1', name: 'John Doe', email: 'johndoe@gmail.com', accountType: 'System Admin', status: 'Active', userSince: '01/01/2025', uid: 'ADMN001' },
-                    { id: '2', name: 'Matilda Swayne', email: 'matildaswayne@gmail.com', accountType: 'Premium User', status: 'Active', userSince: '01/01/2025', uid: 'PREM002' },
-                    // ... include other non-nutritionist mock data you want to display initially if not coming from Firestore
+                const combinedAllAccounts = [
+                    ...this.mockNonNutritionistUsers,
+                    ...approvedAndOtherStatusNutritionists,
                 ];
-
-                // Combine mock non-nutritionists with dynamically fetched approved nutritionists
-                this.setAllAccounts([...mockNonNutritionistUsers, ...approvedNutritionistsDisplay]);
-
+                this.setAllAccounts(combinedAllAccounts);
             });
 
-        } catch (e) {
-            runInAction(() => {
-                this.setError(`Failed to fetch accounts: ${e.message}`);
-                console.error("Error fetching accounts:", e);
-            });
+        } catch (error) {
+            console.error("Error fetching accounts:", error);
+            this.setError(`Failed to fetch accounts: ${error.message}`);
         } finally {
-            runInAction(() => {
-                this.setLoading(false);
-            });
+            this.setLoading(false);
         }
     }
 
-    // --- Admin Actions ---
     async approveNutritionist(userId) {
         this.setLoading(true);
         this.setError('');
         try {
-            await nutritionistRepository.approveNutritionist(userId);
+            // --- ADDED AUTHENTICATION CHECKS ---
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.error("APPROVE_NUTRITIONIST_CALL: No user logged in when attempting to approve nutritionist.");
+                runInAction(() => {
+                    this.setError("Failed to approve: No user logged in. Please log in.");
+                    alert("Please log in as an administrator to approve.");
+                });
+                return;
+            }
+
+            const idTokenResult = await user.getIdTokenResult(true); // Force refresh token
+            if (idTokenResult.claims.admin !== true) {
+                console.warn("APPROVE_NUTRITIONIST_CALL: User does NOT have admin claims. Access denied.");
+                runInAction(() => {
+                    this.setError("Access Denied: You must be an administrator to approve accounts.");
+                    alert("Access Denied: You must be an administrator to approve accounts.");
+                });
+                return;
+            }
+            // --- END ADDED AUTHENTICATION CHECKS ---
+
+            const result = await nutritionistRepository.approveNutritionist(userId);
             runInAction(() => {
-                // Remove from pending, add to all accounts (or re-fetch)
-                this.pendingAccounts = this.pendingAccounts.filter(n => n.id !== userId);
-                this.fetchAccounts(); // Re-fetch all accounts to reflect changes
-                alert('Nutritionist approved and email sent!');
+                this.setPendingAccounts(this.pendingAccounts.filter(user => user.id !== userId));
+
+                const approvedNutIndex = this.allAccounts.findIndex(u => u.id === userId);
+                if (approvedNutIndex !== -1) {
+                    const updatedAllAccounts = [...this.allAccounts];
+                    updatedAllAccounts[approvedNutIndex] = { ...updatedAllAccounts[approvedNutIndex], status: 'Active' };
+                    this.setAllAccounts(updatedAllAccounts);
+                } else {
+                    const newlyApproved = this.pendingAccounts.find(u => u.id === userId);
+                    if (newlyApproved) {
+                        const updatedAllAccounts = [...this.allAccounts, { ...newlyApproved, status: 'Active', accountType: 'Nutritionist' }];
+                        this.setAllAccounts(updatedAllAccounts);
+                    }
+                }
+                this.setShowUserDetailModal(false);
+                alert("User account has been approved!");
             });
-        } catch (e) {
-            runInAction(() => {
-                this.setError(`Failed to approve nutritionist: ${e.message}`);
-            });
-            alert(`Failed to approve: ${e.message}`);
+            console.log("Approved nutritionist:", userId, result);
+        } catch (error) {
+            console.error("Error approving nutritionist:", error);
+            this.setError(`Failed to approve: ${error.message}`);
+            alert(`Failed to approve user: ${error.message}`);
         } finally {
-            runInAction(() => {
+            runInAction(() => { // Ensure MobX actions are within runInAction
                 this.setLoading(false);
-                this.setShowUserDetailModal(false); // Close modal
             });
         }
     }
 
     async rejectNutritionist(userId) {
-        if (!this.rejectionReason) {
-            this.setError('Please provide a reason for rejection.');
-            return;
-        }
         this.setLoading(true);
         this.setError('');
         try {
-            await nutritionistRepository.rejectNutritionist(userId, this.rejectionReason);
+            // --- ADDED AUTHENTICATION CHECKS ---
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.error("REJECT_NUTRITIONIST_CALL: No user logged in when attempting to reject nutritionist.");
+                runInAction(() => {
+                    this.setError("Failed to reject: No user logged in. Please log in.");
+                    alert("Please log in as an administrator to reject.");
+                });
+                return;
+            }
+
+            const idTokenResult = await user.getIdTokenResult(true); // Force refresh token
+            if (idTokenResult.claims.admin !== true) {
+                console.warn("REJECT_NUTRITIONIST_CALL: User does NOT have admin claims. Access denied.");
+                runInAction(() => {
+                    this.setError("Access Denied: You must be an administrator to reject accounts.");
+                    alert("Access Denied: You must be an administrator to reject accounts.");
+                });
+                return;
+            }
+            // --- END ADDED AUTHENTICATION CHECKS ---
+
+            const result = await nutritionistRepository.rejectNutritionist(userId, this.rejectionReason);
             runInAction(() => {
-                // Remove from pending (or re-fetch)
-                this.pendingAccounts = this.pendingAccounts.filter(n => n.id !== userId);
-                this.fetchAccounts(); // Re-fetch all accounts
-                alert('Nutritionist rejected and email sent!');
-            });
-        } catch (e) {
-            runInAction(() => {
-                this.setError(`Failed to reject nutritionist: ${e.message}`);
-            });
-            alert(`Failed to reject: ${e.message}`);
-        } finally {
-            runInAction(() => {
-                this.setLoading(false);
-                this.setShowUserDetailModal(false); // Close modal
-                this.setShowRejectionReasonModal(false); // Close rejection modal
+                this.setPendingAccounts(this.pendingAccounts.filter(user => user.id !== userId));
+                this.setShowRejectionReasonModal(false);
+                this.setShowUserDetailModal(false);
                 this.setRejectionReason('');
+                alert("User account has been rejected!");
+            });
+            console.log("Rejected nutritionist:", userId, result);
+        } catch (error) {
+            console.error("Error rejecting nutritionist:", error);
+            this.setError(`Failed to reject: ${error.message}`);
+            alert(`Failed to reject user: ${error.message}`);
+        } finally {
+            runInAction(() => { // Ensure MobX actions are within runInAction
+                this.setLoading(false);
             });
         }
     }
@@ -199,18 +253,49 @@ class AdminDashboardViewModel {
     async viewCertificate(userId) {
         this.setLoading(true);
         this.setError('');
+
         try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.error("VIEW_CERTIFICATE_CALL: No user logged in when attempting to view certificate.");
+                runInAction(() => {
+                    this.setError("Failed to fetch certificate: No user logged in. Please log in.");
+                    alert("Please log in to view the certificate.");
+                });
+                return;
+            }
+
+            // Force a refresh of the ID token to ensure custom claims are up-to-date.
+            const idTokenResult = await user.getIdTokenResult(true);
+
+            // Double-check admin status right before calling the function
+            if (idTokenResult.claims.admin !== true) {
+                console.warn("VIEW_CERTIFICATE_CALL: User does NOT have admin claims despite being logged in. Access denied.");
+                runInAction(() => {
+                    this.setError("Access Denied: You must be an administrator to view this certificate.");
+                    alert("Access Denied: You must be an administrator to view this certificate.");
+                });
+                return;
+            }
+
+            // If we reach here, user is logged in and has admin claims. Proceed with the call.
             const url = await nutritionistRepository.getNutritionistCertificateUrl(userId);
             if (url) {
-                window.open(url, '_blank'); // Open PDF in a new tab
+                window.open(url, '_blank'); // Open the URL directly in a new tab
             } else {
-                alert('Certificate not found.');
+                runInAction(() => {
+                    this.setError("Certificate URL not found.");
+                    alert("Certificate URL not found for this user.");
+                });
             }
-        } catch (e) {
+        } catch (error) {
+            console.error("Error fetching certificate URL:", error);
             runInAction(() => {
-                this.setError(`Failed to retrieve certificate: ${e.message}`);
+                this.setError(`Failed to fetch certificate: ${error.message}`);
+                alert(`Failed to fetch certificate: ${error.message}`);
             });
-            alert(`Failed to retrieve certificate: ${e.message}`);
         } finally {
             runInAction(() => {
                 this.setLoading(false);
@@ -218,58 +303,72 @@ class AdminDashboardViewModel {
         }
     }
 
-    // --- Authentication related logic for Admin Login ---
-    async checkAdminStatus() {
-        const auth = getAuth();
-        return new Promise((resolve) => {
-            const unsubscribe = auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    try {
-                        const idTokenResult = await user.getIdTokenResult(true);
-                        runInAction(() => {
-                            if (idTokenResult.claims.admin) {
-                                console.log('Admin user logged in:', user.email);
-                                resolve(true); // Is an admin
-                            } else {
-                                console.log('User is not an admin:', user.email);
-                                resolve(false); // Not an admin
-                            }
-                        });
-                    } catch (error) {
-                        console.error("Error getting ID token result:", error);
-                        runInAction(() => {
-                            this.setError("Authentication error: Could not verify admin status.");
-                            resolve(false);
-                        });
-                    }
-                } else {
-                    console.log('No user logged in.');
-                    runInAction(() => {
-                        this.setError("No user logged in. Please log in as an admin.");
-                        resolve(false); // No user
-                    });
+    async suspendUser(userId) {
+        this.setLoading(true);
+        this.setError('');
+        try {
+            console.log(`Simulating suspend for user: ${userId}`);
+            runInAction(() => {
+                const userToUpdate = this.allAccounts.find(user => user.id === userId);
+                if (userToUpdate) {
+                    userToUpdate.status = 'Inactive';
+                    alert(`User ${userToUpdate.name} has been suspended.`);
                 }
-                unsubscribe(); // Stop listening after initial check
             });
-        });
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+            console.error("Error suspending user:", error);
+            this.setError(`Failed to suspend user: ${error.message}`);
+        } finally {
+            this.setLoading(false);
+        }
     }
 
-    // Filtered lists for the UI
-    get filteredAllAccounts() {
-        return this.allAccounts.filter(user =>
-            user.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(this.searchTerm.toLowerCase())
-        );
+    async unsuspendUser(userId) {
+        this.setLoading(true);
+        this.setError('');
+        try {
+            console.log(`Simulating unsuspend for user: ${userId}`);
+            runInAction(() => {
+                const userToUpdate = this.allAccounts.find(user => user.id === userId);
+                if (userToUpdate) {
+                    userToUpdate.status = 'Active';
+                    alert(`User ${userToUpdate.name} has been unsuspended.`);
+                }
+            });
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+            console.error("Error unsuspending user:", error);
+            this.setError(`Failed to unsuspend user: ${error.message}`);
+        } finally {
+            this.setLoading(false);
+        }
     }
 
-    get filteredPendingAccounts() {
-        return this.pendingAccounts.filter(user =>
-            user.firstName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-            user.lastName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(this.searchTerm.toLowerCase())
-        );
+    async checkAdminStatus() {
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.log("AdminDashboardViewModel: No user logged in. Admin access denied.");
+                return false;
+            }
+
+            const idTokenResult = await user.getIdTokenResult(true);
+
+            if (idTokenResult.claims.admin === true) {
+                console.log("AdminDashboardViewModel: User is authenticated as an admin.");
+                return true;
+            } else {
+                console.log("AdminDashboardViewModel: User is logged in but does not have admin claims.", idTokenResult.claims);
+                return false;
+            }
+        } catch (error) {
+            console.error("AdminDashboardViewModel: Error checking admin status:", error);
+            return false;
+        }
     }
 }
 
-// Instantiate the ViewModel
 export default new AdminDashboardViewModel();

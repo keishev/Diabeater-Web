@@ -2,42 +2,34 @@
 import AuthService from '../Services/AuthService';
 import StorageService from '../Services/StorageService';
 import FirestoreService from '../Services/FirestoreService';
-import AdminService from '../Services/AdminService'; // NEW
-import Nutritionist from '../Models/Nutritionist';
+import AdminService from '../Services/AdminService'; // Ensure this is imported
+import Nutritionist from '../Models/Nutritionist'; // Ensure this is imported
 
 class NutritionistRepository {
-    constructor(authService, storageService, firestoreService, adminService) { // Add adminService
+    constructor(authService, storageService, firestoreService, adminService) {
         this.authService = authService;
         this.storageService = storageService;
         this.firestoreService = firestoreService;
-        this.adminService = adminService; // Assign
+        this.adminService = adminService;
     }
 
     async createNutritionistAccount(userData, certificateFile) {
         try {
-            // 1. Register user with Firebase Authentication
             const user = await this.authService.registerUser(userData.email, userData.password);
-
-            // 2. Upload certificate to Firebase Storage
             const certificateUrl = await this.storageService.uploadCertificate(user.uid, certificateFile);
-
-            // 3. Save nutritionist data to Firestore (status automatically set to 'pending' by Cloud Function)
             const newNutritionist = new Nutritionist(
-                user.uid, // Use Firebase Auth UID as the document ID
+                user.uid,
                 userData.firstName,
                 userData.lastName,
                 userData.email,
                 userData.dob,
                 certificateUrl,
-                'pending' // Explicitly set or let Cloud Function handle
+                'pending'
             );
             await this.firestoreService.saveNutritionistData(user.uid, newNutritionist.toFirestore());
-
             return newNutritionist;
-
         } catch (error) {
             console.error("Error creating nutritionist account:", error);
-            // In a real app, you might want to clean up partially created data (e.g., delete auth user if Firestore fails)
             throw error;
         }
     }
@@ -72,23 +64,32 @@ class NutritionistRepository {
         }
     }
 
+    // Now correctly fetches the URL via AdminService
     async getNutritionistCertificateUrl(userId) {
         try {
             const url = await this.adminService.getNutritionistCertificateUrl(userId);
             return url;
         } catch (error) {
-            console.error("Repository: Error fetching certificate URL:", error);
+            console.error("Repository: Error fetching certificate URL from AdminService:", error);
+            throw error;
+        }
+    }
+
+    async getAllNutritionists() {
+        try {
+            return await this.firestoreService.getAllNutritionists();
+        } catch (error) {
+            console.error("Repository: Error getting all nutritionists:", error);
             throw error;
         }
     }
 }
 
-// Instantiate the repository with its dependencies
 const nutritionistRepository = new NutritionistRepository(
     AuthService,
     StorageService,
     FirestoreService,
-    AdminService // Pass the new AdminService
+    AdminService
 );
 
 export default nutritionistRepository;

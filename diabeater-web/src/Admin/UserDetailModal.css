@@ -1,131 +1,283 @@
 /* src/Admin/UserDetailModal.css */
 
-.modal-overlay {
+/* Overlay for the main modal */
+.user-detail-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10000; /* High z-index to appear on top of everything */
+    z-index: 1000; /* Ensure it's above other content */
 }
 
-.modal-content {
-    background-color: #fff;
+/* Content box for the main modal */
+.user-detail-modal-content {
+    background-color: #fffaf3; /* Light orange background */
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 500px; /* Max width for the modal */
+    max-width: 500px; /* Max width for readability */
     position: relative;
-    animation: fadeInScale 0.3s ease-out; /* Simple animation */
+    max-height: 90vh; /* Limit height for scrollable content */
+    overflow-y: auto; /* Enable scrolling if content is too tall */
 }
 
-@keyframes fadeInScale {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.modal-close-button {
+.user-detail-modal-close-button {
     position: absolute;
     top: 15px;
     right: 15px;
     background: none;
     border: none;
-    font-size: 28px;
+    font-size: 24px;
     cursor: pointer;
     color: #888;
     transition: color 0.2s ease;
 }
 
-.modal-close-button:hover {
-    color: #333;
+.user-detail-modal-close-button:hover {
+    color: #ff9800; /* Orange on hover */
 }
 
-.modal-header {
-    text-align: center;
+.user-detail-modal-content h2 {
+    color: #ff9800; /* Orange title */
+    margin-top: 0;
     margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.modal-user-icon-container {
-    width: 80px;
-    height: 80px;
-    background-color: #f0f0f0;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 auto 15px auto;
-}
-
-.modal-user-icon {
-    font-size: 50px;
-    color: #ccc;
-}
-
-.modal-header h2 {
-    margin: 0;
+    text-align: center;
     font-size: 26px;
-    color: #333;
+    font-weight: bold;
 }
 
-.modal-body .info-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px dashed #eee;
+.user-detail-modal-info p {
+    margin-bottom: 10px;
     font-size: 16px;
-}
-
-.modal-body .info-item:last-child {
-    border-bottom: none;
-}
-
-.modal-body .label {
-    font-weight: bold;
-    color: #555;
-    flex-basis: 40%; /* Adjust as needed */
-}
-
-.modal-body .value {
     color: #333;
-    flex-basis: 60%; /* Adjust as needed */
-    text-align: right;
-}
-
-/* Reusing status styles from AdminDashboard.css for consistency */
-.modal-body .status-active {
-    color: #4CAF50; /* Green for Active */
-    font-weight: bold;
-    display: flex;
+    display: flex; /* For status dot alignment */
     align-items: center;
-    justify-content: flex-end; /* Align to the right */
 }
 
-.modal-body .status-inactive {
-    color: #F44336; /* Red for Inactive */
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end; /* Align to the right */
+.user-detail-modal-info p strong {
+    color: #1e525c; /* Darker text for labels */
+    margin-right: 5px;
+    min-width: 100px; /* Align labels */
 }
 
-.modal-body .status-dot {
+/* Status dots - reused from AdminDashboard.css for consistency */
+.status-dot {
     display: inline-block;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    margin-right: 5px;
-    background-color: currentColor; /* Uses the color of the parent */
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.status-active {
+    background-color: #fff; /* Green */
+    color: #4CAF50; /* Text color if needed, but primarily for dot */
+}
+
+.status-inactive {
+    background-color: #fff;
+    color: #F44336;
+}
+
+/* Certificate Section */
+.certificate-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+
+.certificate-section p {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.doc-action-button.view-button {
+    background-color: #ff9800; /* Use primary orange */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-left: 10px;
+}
+
+.doc-action-button.view-button:hover {
+    background-color: #e65100; /* Darker orange on hover */
+}
+
+.doc-action-button.view-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.user-detail-modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.user-detail-modal-actions button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.approve-button {
+    background-color: #4CAF50; /* Green for approve */
+    color: white;
+    border: 1px solid #4CAF50;
+}
+
+.approve-button:hover {
+    background-color: #388E3C;
+    border-color: #388E3C;
+}
+
+.reject-button {
+    background-color: #F44336; /* Red for reject */
+    color: white;
+    border: 1px solid #F44336;
+}
+
+.reject-button:hover {
+    background-color: #D32F2F;
+    border-color: #D32F2F;
+}
+
+.user-detail-modal-actions button:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+    color: #666;
+}
+
+/* Rejection Reason Modal Specific Styles */
+.rejection-modal-overlay {
+    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for nested modal */
+}
+
+.rejection-modal-content {
+    padding: 25px;
+    max-width: 400px;
+    background-color: #fff; /* White background for the nested modal */
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.rejection-modal-content h3 {
+    text-align: center;
+    color: #ff9800;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.rejection-modal-content textarea {
+    width: calc(100% - 20px); /* Adjust for padding */
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 80px;
+    background-color: #fffaf3; /* Match theme */
+}
+
+.rejection-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: none; /* No extra border for this action section */
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.rejection-modal-actions button {
+    padding: 8px 15px;
+    font-size: 15px;
+}
+
+.rejection-modal-actions .cancel-button {
+    background-color: #ccc;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.rejection-modal-actions .cancel-button:hover {
+    background-color: #bbb;
+    border-color: #bbb;
+}
+
+.rejection-modal-actions .confirm-reject-button {
+    background-color: #F44336;
+    color: white;
+    border: 1px solid #F44336;
+}
+
+.rejection-modal-actions .confirm-reject-button:hover {
+    background-color: #D32F2F;
+    border-color: #D32F2F;
+}
+
+/* Error Message inside modal */
+.user-detail-modal-info .error-message {
+    color: #F44336;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+    .user-detail-modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .user-detail-modal-content h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .user-detail-modal-info p {
+        font-size: 15px;
+    }
+
+    .user-detail-modal-info p strong {
+        min-width: 80px;
+    }
+
+    .user-detail-modal-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .user-detail-modal-actions button {
+        width: 100%;
+    }
+
+    .rejection-modal-content {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .rejection-modal-actions {
+        flex-direction: column;
+    }
 }

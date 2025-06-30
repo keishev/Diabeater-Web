@@ -6,58 +6,56 @@
     min-height: 100vh;
 }
 
-/* Admin Sidebar Styling - similar to NutritionistSidebar but with admin-specific class */
+/* Admin Sidebar Styling */
 .admin-sidebar {
-    width: 250px; /* This is the fixed width of your sidebar */
+    width: 250px;
     background-color: #fffaf3;
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    position: fixed; /* Keeps sidebar in place */
+    position: fixed;
     top: 0;
     left: 0;
-    height: 100vh; /* Takes full viewport height */
+    height: 100vh;
     z-index: 1000;
     overflow-y: auto;
 }
 
-/* Admin Main Content Area - similar to NutritionistMainContent */
+/* Admin Main Content Area */
 .admin-main-content {
-    /* *** IMPORTANT CHANGE HERE *** */
-    /* This margin-left MUST match the width of your fixed sidebar */
-    margin-left: 250px; /* Adjusted to match sidebar width */
+    margin-left: 250px; /* Matches sidebar width */
     width: calc(100% - 250px);
-    padding: 30px; /* Keep this padding for overall content spacing */
-    overflow-y: auto; /* Allows vertical scrolling for content if it overflows */
+    padding: 30px;
+    overflow-y: auto;
     overflow-x: hidden;
-    height: 100vh; /* Ensure it also takes full viewport height */
-    box-sizing: border-box; /* Include padding in the height calculation */
-    background-color: #fffaf3; /* Light background for the content area */
+    height: 100vh;
+    box-sizing: border-box;
+    background-color: #f7f3ed; /* Slightly different background for content */
     flex: 1;
 }
 
-/* Logo in Sidebar (reused from nutritionist) */
+/* Logo in Sidebar */
 .admin-sidebar .logo {
     margin-bottom: 40px;
     margin-top: 20px;
     text-align: center;
-    display: flex; /* Make logo and text align nicely */
-    flex-direction: column; /* Stack them vertically */
-    align-items: center; /* Center horizontally */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .admin-sidebar .logo img {
-    max-width: 50px; /* Adjust as needed, e.g., for blood drop logo */
+    max-width: 50px;
     height: auto;
-    margin-bottom: 5px; /* Space between logo and text */
+    margin-bottom: 5px;
 }
 
 .admin-sidebar .logo-text {
     font-size: 24px;
     font-weight: bold;
-    color: #1e525c; /* DiaBeater orange color */
+    color: #ff9800; /* DiaBeater orange color */
 }
 
-/* Navigation in Sidebar (reused from nutritionist) */
+/* Navigation in Sidebar */
 .admin-sidebar .navigation {
     display: flex;
     flex-direction: column;
@@ -86,7 +84,7 @@
 }
 
 .admin-sidebar .nav-item.active {
-  background-color: #ffe0b2; /* Light orange for active/hover */
+    background-color: #ffe0b2; /* Light orange for active */
     color: #e65100; /* Darker orange text */
     font-weight: bold;
 }
@@ -95,7 +93,7 @@
     color: #e65100;
 }
 
-/* Logout Button (reused from nutritionist) */
+/* Logout Button */
 .admin-sidebar .logout-button {
     background-color: #ff9800;
     color: white;
@@ -104,8 +102,8 @@
     border-radius: 20px;
     font-size: 16px;
     cursor: pointer;
-    width: calc(100% - 40px); /* Account for padding */
-    position: absolute; /* Position at the bottom */
+    width: calc(100% - 40px);
+    position: absolute;
     bottom: 60px;
     left: 20px;
     margin-bottom: 20px;
@@ -116,19 +114,19 @@
     background-color: #e65100;
 }
 
-
-/* Header for User Accounts Content (and My Profile, etc.) */
+/* Header for User Accounts Content */
 .admin-header {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 10px 20px;
-    gap: 10px; 
+    padding: 10px 0; /* Adjusted padding */
+    gap: 20px; /* Increased gap */
+    margin-left: 20px; /* Adjusted to align with table */
 }
 
 .admin-page-title {
     font-size: 28px;
-    color: #ff9800; /* Orange color for the title */
+    color: #ff9800;
     white-space: nowrap;
 }
 
@@ -144,6 +142,7 @@
     font-size: 16px;
     border-radius: 4px;
     border: 1px solid #ccc;
+    background-color: #fffaf3; /* Match sidebar background */
 }
 
 .admin-search-bar i {
@@ -154,44 +153,21 @@
     color: #888;
 }
 
-.add-button {
-    background-color: #ff9800;
-    color: white;
-    border: none;
-    border-radius: 50%; /* Make it circular */
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease;
-    padding: 6px 10px;
-    margin-left: auto;
-}
-
-.add-button:hover {
-    background-color: #e65100;
-}
-
-
 /* Tabs Styling */
 .admin-tabs {
     display: flex;
-    gap: 10px;
-    margin: 10px 0 10px 250px;
-    /* border-bottom: 2px solid #eee; */ /* Comment this out */
-    border-bottom: none; /* Or set it to none */
-    margin-left: 150px;
+    gap: 20px; /* Increased gap between tabs */
+    margin: 10px 0 20px 40px; /* Adjusted margin to match image */
+    border-bottom: 2px solid #eee; /* Light line below tabs */
 }
+
 .admin-tabs .tab-button {
     background-color: transparent;
     border: none;
-    padding: 6px 12px;
+    padding: 8px 0; /* Reduced vertical padding */
     font-size: 16px;
-    font-weight: bold;
-    color: transparent;
+    font-weight: 500; /* Slightly less bold */
+    color: #888; /* Default tab color */
     cursor: pointer;
     transition: color 0.2s ease, border-bottom 0.2s ease;
 }
@@ -199,6 +175,7 @@
 .admin-tabs .tab-button.active {
     color: #ff9800;
     border-bottom: 2px solid #ff9800;
+    font-weight: bold;
 }
 
 
@@ -207,10 +184,9 @@
     background-color: #fff;
     border-radius: 12px;
     overflow-x: auto;
-    /* Make the table smaller by limiting its max-width and centering it */
-    max-width: calc(100% - 270px);
-    margin-left: 150px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); /* Add a subtle shadow for definition */
+    max-width: calc(100% - 60px); /* Adjusted width to leave more space */
+    margin: 0 30px; /* Centered with consistent side margins */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
 table {
@@ -220,19 +196,19 @@ table {
 }
 
 table th, table td {
-    padding: 6px 10px;
+    padding: 12px 15px; /* Increased padding for better spacing */
     text-align: left;
     border-bottom: 1px solid #eee;
     font-size: 15px;
     white-space: nowrap;
-    max-width: 160px; /* optional: limit cell width */
+    max-width: 200px; /* Allow cells to grow a bit */
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 table th {
     background-color: #fffaf3; /* Light orange background for header */
-    color: #ff9800;
+    color: #ff9800; /* Orange color for header text */
     font-weight: bold;
     text-transform: uppercase;
 }
@@ -252,7 +228,6 @@ table tbody tr:last-child td {
     font-weight: bold;
     display: flex;
     align-items: center;
-    margin-top: 10px;
 }
 
 .status-inactive {
@@ -268,7 +243,7 @@ table tbody tr:last-child td {
     height: 8px;
     border-radius: 50%;
     margin-right: 5px;
-    background-color: currentColor; /* Uses the color of the parent (.status-active/.status-inactive) */
+    background-color: currentColor;
 }
 
 
@@ -300,11 +275,37 @@ table tbody tr:last-child td {
     background-color: #388E3C;
 }
 
+.doc-action-button.view-button {
+    background-color: #ff9800; /* Primary orange color */
+    color: white;
+    border: 1px solid #ff9800;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-left: 0; /* Remove extra margin if any */
+}
+
+.doc-action-button.view-button:hover {
+    background-color: #e65100; /* Darker orange on hover */
+    border-color: #e65100;
+}
+
 .no-data-message {
     text-align: center;
     padding: 20px;
     color: #888;
     font-style: italic;
+}
+
+.loading-message, .error-message {
+    text-align: center;
+    padding: 10px;
+    margin: 20px;
+    font-weight: bold;
+}
+
+.error-message {
+    color: #F44336;
 }
 
 /* Pagination */
@@ -316,30 +317,22 @@ table tbody tr:last-child td {
     gap: 10px;
 }
 .user-name-clickable {
-    cursor: pointer; /* Indicates it's clickable */
-    color: #555; /* Default color for the name */
-    font-weight: normal; /* Default font weight */
-    display: flex; /* To align the icon and text properly */
+    cursor: pointer;
+    color: #555;
+    font-weight: normal;
+    display: flex;
     align-items: center;
-    transition: color 0.2s ease, text-decoration 0.2s ease, font-weight 0.2s ease; /* Smooth transition for hover effects */
+    transition: color 0.2s ease, text-decoration 0.2s ease, font-weight 0.2s ease;
 }
 
 .user-name-clickable:hover {
-    color: #ff9800; /* Change color on hover to the orange primary color */
-    text-decoration: underline; /* Add underline on hover */
-    font-weight: bold; /* Make it bold on hover */
+    color: #ff9800;
+    text-decoration: underline;
+    font-weight: bold;
 }
 
-/* Ensure the user-icon color is consistent or adjust it */
-.user-icon {
-    margin-right: 10px;
-    color: #ccc; /* Default color for the icon */
-    font-size: 18px;
-}
-
-/* If you want the icon to change color with the text on hover */
 .user-name-clickable:hover .user-icon {
-    color: #ff9800; /* Match the text color on hover */
+    color: #ff9800;
 }
 
 .pagination button {
@@ -364,76 +357,6 @@ table tbody tr:last-child td {
 .pagination span {
     font-size: 16px;
     color: #555;
-}
-.action-button.view-button {
-    background-color: #ff9800; /* Use your primary orange color */
-    color: white;
-    border: 1px solid #ff9800;
-    padding: 8px 15px; /* Adjust padding as needed */
-    border-radius: 5px;
-    font-size: 14px;
-    margin-left: 19px;
-}
-.doc-action-button.view-button{ 
-    background-color: #ff9800; /* Use your primary orange color */
-    color: white;
-    border: 1px solid #ff9800;
-    padding: 8px 15px; /* Adjust padding as needed */
-    border-radius: 5px;
-    font-size: 14px;
-    margin-left: 8px;
-
-}
-
-.doc-action-button.view-button:hover{ 
-    background-color: #e65100; /* Darker orange on hover */
-    border-color: #e65100;
-
-}
-
-.action-button.view-button:hover {
-    background-color: #e65100; /* Darker orange on hover */
-    border-color: #e65100;
-}
-.user-name-clickable {
-    cursor: pointer; /* Indicates it's clickable */
-    color: #555; /* Default color for the name */
-    font-weight: normal; /* Default font weight */
-    display: flex; /* To align the icon and text properly */
-    align-items: center;
-    transition: color 0.2s ease, text-decoration 0.2s ease, font-weight 0.2s ease; /* Smooth transition for hover effects */
-}
-
-.user-name-clickable:hover {
-    color: #ff9800; /* Change color on hover to the orange primary color */
-    text-decoration: underline; /* Add underline on hover */
-    font-weight: bold; /* Make it bold on hover */
-}
-
-/* Ensure the user-icon color is consistent or adjust it */
-.user-icon {
-    margin-right: 10px;
-    color: #ccc; /* Default color for the icon */
-    font-size: 18px;
-}
-
-/* If you want the icon to change color with the text on hover */
-.user-name-clickable:hover .user-icon {
-    color: #ff9800; /* Match the text color on hover */
-}
-
-.action-button.view-button {
-    background-color: #ff9800; /* Use your primary orange color */
-    color: white;
-    border: 1px solid #ff9800;
-    padding: 8px 15px; /* Adjust padding as needed */
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-.action-button.view-button:hover {
-    background-color: #e65100; /* Darker orange on hover */
-    border-color: #e65100;
 }
 
 /* Responsive adjustments */
@@ -488,7 +411,7 @@ table tbody tr:last-child td {
         margin-left: 0;
     }
 
-    .add-button {
+    .add-button { /* If you add one in the future */
         position: absolute;
         top: 15px;
         right: 15px;
@@ -496,10 +419,17 @@ table tbody tr:last-child td {
 
     .admin-tabs {
         flex-direction: column;
+        margin-left: 15px; /* Adjust margin for collapsed sidebar */
+        gap: 10px;
     }
 
     .admin-tabs .tab-button {
         width: 100%;
         text-align: center;
+    }
+
+    .table-container {
+        max-width: calc(100% - 30px); /* Adjust table width for smaller screens */
+        margin: 0 15px;
     }
 }

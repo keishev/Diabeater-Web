@@ -24,7 +24,8 @@ class AdminService {
 
     async rejectNutritionist(userId, reason) {
         try {
-            const result = await this.rejectNutritionistCallable({ userId, reason });
+            // *** MODIFICATION HERE: Change 'reason' to 'rejectionReason' to match Cloud Function ***
+            const result = await this.rejectNutritionistCallable({ userId, rejectionReason: reason });
             return result.data;
         } catch (error) {
             console.error("Error calling rejectNutritionist function:", error);
@@ -35,7 +36,9 @@ class AdminService {
     async getNutritionistCertificateUrl(userId) {
         try {
             const result = await this.getNutritionistCertificateUrlCallable({ userId });
-            return result.data.certificateUrl; // Assuming the function returns { success: true, certificateUrl: '...' }
+            // The Cloud Function returns { success: true, certificateUrl: '...' }
+            // Ensure you're returning just the URL, as expected by the ViewModel
+            return result.data.certificateUrl; 
         } catch (error) {
             console.error("Error calling getNutritionistCertificateUrl function:", error);
             throw error;

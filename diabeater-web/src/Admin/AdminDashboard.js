@@ -1,4 +1,3 @@
-// src/Admin/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite'; // Import observer
 import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Import the ViewModel (it's a singleton)
@@ -11,7 +10,7 @@ import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
 
 import './AdminDashboard.css';
-import './AdminStatDashboard.css';
+import './AdminStatDashboard.css'; // Assuming this has general dashboard styles
 
 // Admin Sidebar Component
 const AdminSidebar = observer(({ onNavigate, currentView }) => {
@@ -29,49 +28,49 @@ const AdminSidebar = observer(({ onNavigate, currentView }) => {
             </div>
             <nav className="navigation">
                 <div
-                    className={`nav-item ${currentView === 'myProfile' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'myProfile' ? 'active' : ''}`}
                     onClick={() => onNavigate('myProfile')}
                 >
                     <i className="fas fa-user"></i>
                     <span>My Profile</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
                     onClick={() => onNavigate('dashboard')}
                 >
                     <i className="fas fa-home"></i>
                     <span>Dashboard</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'userAccounts' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'userAccounts' ? 'active' : ''}`}
                     onClick={() => onNavigate('userAccounts')}
                 >
                     <i className="fas fa-users"></i>
                     <span>User Accounts</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`}
                     onClick={() => onNavigate('mealPlans')}
                 >
                     <i className="fas fa-clipboard-list"></i>
                     <span>Meal Plans</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'exportReport' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'exportReport' ? 'active' : ''}`}
                     onClick={() => onNavigate('exportReport')}
                 >
                     <i className="fas fa-file-export"></i>
                     <span>Export Report</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'editWebsite' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'editWebsite' ? 'active' : ''}`}
                     onClick={() => onNavigate('editWebsite')}
                 >
                     <i className="fas fa-globe"></i>
                     <span>Edit Website</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'userFeedbacks' ? 'active' : ''}`} // Use prop here
+                    className={`nav-item ${currentView === 'userFeedbacks' ? 'active' : ''}`}
                     onClick={() => onNavigate('userFeedbacks')}
                 >
                     <i className="fas fa-comments"></i>
@@ -85,38 +84,43 @@ const AdminSidebar = observer(({ onNavigate, currentView }) => {
 
 // User Account Table Row Component - Renders based on ViewModel data
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
-    // Determine status class based on the 'status' property from Firestore
-    const statusClass = user.status === 'approved' || user.status === 'Active' ? 'status-active' : 'status-inactive';
+    // Determine status class based on the 'status' property
+    const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
     return (
         <tr>
             <td>
                 <span className="user-name-clickable" onClick={() => onNameClick(user)}>
-                    <i className="fas fa-user-circle user-icon"></i>{user.firstName ? `${user.firstName} ${user.lastName}` : user.name}
+                    <i className="fas fa-user-circle user-icon"></i>
+                    {user.firstName ? `${user.firstName} ${user.lastName}` : user.name}
                 </span>
             </td>
             <td>{user.email}</td>
-            {type === 'all' && <td>{user.accountType || 'Nutritionist'}</td>} {/* Use accountType from mock, or default to Nutritionist */}
+            {type === 'all' && <td>{user.accountType || 'N/A'}</td>} {/* Display Account Type only for 'all' accounts */}
             <td className={statusClass}>
-                <span className="status-dot"></span>{user.status === 'approved' ? 'Active' : user.status} {/* Display 'Active' for 'approved' status */}
+                <span className="status-dot"></span>{user.status === 'approved' ? 'Active' : user.status}
             </td>
-            {type === 'all' && <td>{user.userSince || (user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A')}</td>}
-            {type === 'pending' && <td>{user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A'}</td>} {/* Display creation date for pending */}
+            {type === 'all' && <td>{user.userSince || 'N/A'}</td>}
+            {type === 'pending' && <td>{user.appliedDate || 'N/A'}</td>} {/* Display Applied Date for pending */}
             {type === 'pending' && (
                 <td>
-                    <button className="doc-action-button view-button" onClick={() => AdminDashboardViewModel.viewCertificate(user.id)} disabled={AdminDashboardViewModel.isLoading}>
+                    <button
+                        className="doc-action-button view-button"
+                        onClick={() => AdminDashboardViewModel.viewCertificate(user.id)}
+                        disabled={AdminDashboardViewModel.isLoading}
+                    >
                         VIEW
                     </button>
                 </td>
             )}
             {type === 'all' && (
                 <td>
-                    {/* Placeholder for suspend/unsuspend action for 'all' accounts */}
                     <button
-                        className={`action-button ${user.status === 'Active' || user.status === 'approved' ? 'suspend-button' : 'unsuspend-button'}`}
+                        className={`action-button ${user.status === 'Active' ? 'suspend-button' : 'unsuspend-button'}`}
                         onClick={() => onAction(user.id, user.status)}
+                        disabled={AdminDashboardViewModel.isLoading}
                     >
-                        {(user.status === 'Active' || user.status === 'approved') ? 'Suspend' : 'Unsuspend'}
+                        {user.status === 'Active' ? 'Suspend' : 'Unsuspend'}
                     </button>
                 </td>
             )}
@@ -125,8 +129,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
 });
 
 // User Accounts Content Component
-const UserAccountsContent = observer(() => { // Make it an observer
-    // Use ViewModel state directly
+const UserAccountsContent = observer(() => {
     const {
         activeTab,
         searchTerm,
@@ -134,17 +137,14 @@ const UserAccountsContent = observer(() => { // Make it an observer
         filteredPendingAccounts,
         showUserDetailModal,
         selectedUser,
-        // No need to destructure setActiveTab, setSearchTerm, setSelectedUser, setShowUserDetailModal here
-        fetchAccounts, // Function to re-fetch data
         isLoading,
         error
-    } = AdminDashboardViewModel; // Access the singleton ViewModel directly
+    } = AdminDashboardViewModel;
 
     // Fetch accounts on component mount
-      useEffect(() => {
+    useEffect(() => {
         AdminDashboardViewModel.fetchAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Added because fetchAccounts is a stable reference from the singleton
+    }, []); // Empty dependency array means this runs once on mount
 
     const handleOpenModal = (user) => {
         AdminDashboardViewModel.setSelectedUser(user);
@@ -154,14 +154,31 @@ const UserAccountsContent = observer(() => { // Make it an observer
     const handleCloseModal = () => {
         AdminDashboardViewModel.setShowUserDetailModal(false);
         AdminDashboardViewModel.setSelectedUser(null);
-        AdminDashboardViewModel.fetchAccounts(); // Refresh accounts after modal closes, in case changes were made
+        AdminDashboardViewModel.fetchAccounts(); // Refresh accounts after modal closes
     };
 
-    // Placeholder for suspend/unsuspend (not integrated with Firestore in this example)
-    const handleSuspendUnsuspend = (userId, currentStatus) => {
-        console.log(`Action: User ${userId} status changed to ${currentStatus === 'Active' ? 'Inactive' : 'Active'}`);
-        // Implement Firestore update here if needed, or trigger a Cloud Function
+    const handleSuspendUnsuspend = async (userId, currentStatus) => {
+        console.log(`Attempting to change status for User ${userId} from ${currentStatus}`);
+        AdminDashboardViewModel.setLoading(true);
+        try {
+            if (currentStatus === 'Active') {
+                // Assuming 'suspend' logic might set status to 'suspended' or 'inactive'
+                await AdminDashboardViewModel.suspendUser(userId);
+            } else {
+                // Assuming 'unsuspend' logic might set status back to 'active'
+                await AdminDashboardViewModel.unsuspendUser(userId);
+            }
+            // Re-fetch accounts to update the UI
+            await AdminDashboardViewModel.fetchAccounts();
+            console.log(`Status change successful for user ${userId}`);
+        } catch (error) {
+            console.error("Error changing user status:", error);
+            AdminDashboardViewModel.setError(`Failed to change status: ${error.message}`);
+        } finally {
+            AdminDashboardViewModel.setLoading(false);
+        }
     };
+
 
     return (
         <>
@@ -173,7 +190,7 @@ const UserAccountsContent = observer(() => { // Make it an observer
                             type="text"
                             placeholder="Search by username, email, or name"
                             value={searchTerm}
-                            onChange={(e) => AdminDashboardViewModel.setSearchTerm(e.target.value)} // Call method directly
+                            onChange={(e) => AdminDashboardViewModel.setSearchTerm(e.target.value)}
                         />
                         <i className="fas fa-search"></i>
                     </div>
@@ -183,19 +200,19 @@ const UserAccountsContent = observer(() => { // Make it an observer
             <div className="admin-tabs">
                 <button
                     className={`tab-button ${activeTab === 'ALL_ACCOUNTS' ? 'active' : ''}`}
-                    onClick={() => AdminDashboardViewModel.setActiveTab('ALL_ACCOUNTS')} // Call method directly
+                    onClick={() => AdminDashboardViewModel.setActiveTab('ALL_ACCOUNTS')}
                 >
                     ALL ACCOUNTS
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
-                    onClick={() => AdminDashboardViewModel.setActiveTab('PENDING_APPROVAL')} // Call method directly
+                    onClick={() => AdminDashboardViewModel.setActiveTab('PENDING_APPROVAL')}
                 >
                     PENDING APPROVAL
                 </button>
             </div>
 
-            {isLoading && <p>Loading accounts...</p>}
+            {isLoading && <p className="loading-message">Loading accounts...</p>}
             {error && <p className="error-message">{error}</p>}
 
             <div className="table-container">
@@ -207,7 +224,7 @@ const UserAccountsContent = observer(() => { // Make it an observer
                             {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
                             <th>Status</th>
                             {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
-                            {activeTab === 'PENDING_APPROVAL' && <th>Applied Date</th>} {/* Changed renewalDate to Applied Date */}
+                            {activeTab === 'PENDING_APPROVAL' && <th>Applied Date</th>}
                             {activeTab === 'PENDING_APPROVAL' && <th>Documents</th>}
                             {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
                         </tr>
@@ -236,7 +253,7 @@ const UserAccountsContent = observer(() => { // Make it an observer
                         ) : (
                             <tr>
                                 <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message">
-                                    {activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.'}
+                                    {isLoading ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
                                 </td>
                             </tr>
                         )}
@@ -244,7 +261,7 @@ const UserAccountsContent = observer(() => { // Make it an observer
                 </table>
                 <div className="pagination">
                     <button>&lt;</button>
-                    <span>Page 1/5</span>
+                    <span>Page 1/5</span> {/* This needs to be dynamic with actual pagination logic */}
                     <button>&gt;</button>
                 </div>
             </div>
@@ -260,35 +277,26 @@ const UserAccountsContent = observer(() => { // Make it an observer
 
 
 // AdminDashboard Main Component
-const AdminDashboard = observer(() => { // Make it an observer
-    // Use ViewModel state for currentView
-    const { currentView } = AdminDashboardViewModel; // Only destructure currentView
-
-    console.log('AdminDashboard component rendered.');
-    console.log('   - Imported AdminDashboardViewModel (singleton):', AdminDashboardViewModel);
-    console.log('   - currentView from ViewModel:', currentView);
-    console.log('   - setCurrentView from ViewModel:', AdminDashboardViewModel.setCurrentView); // Log the function reference
+const AdminDashboard = observer(() => {
+    const { currentView } = AdminDashboardViewModel;
 
     // Check admin status on mount
     useEffect(() => {
         const check = async () => {
             const isAdmin = await AdminDashboardViewModel.checkAdminStatus();
             if (!isAdmin) {
-                // If not admin, redirect to login or show an error
                 alert("Access Denied: You must be an administrator to view this page.");
-                window.location.href = '/login'; // Or handle more gracefully
+                window.location.href = '/login';
             }
         };
         check();
     }, []);
 
-
     return (
         <div className="admin-dashboard-page">
-            {/* Pass setCurrentView directly from the ViewModel instance */}
             <AdminSidebar
-            onNavigate={(view) => AdminDashboardViewModel.setCurrentView(view)}
-            currentView={currentView}
+                onNavigate={(view) => AdminDashboardViewModel.setCurrentView(view)}
+                currentView={currentView}
             />
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}
