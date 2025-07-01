@@ -1,7 +1,7 @@
 // src/Repositories/NutritionistRepository.js
 import AuthService from '../Services/NutritionistService';
 import StorageService from '../Services/StorageService';
-import FirestoreService from '../Services/FirestoreService';
+import NutritionistService from '../Services/NutritionistService';
 import AdminService from '../Services/AdminService'; // Ensure this is imported
 import Nutritionist from '../Models/Nutritionist'; // Ensure this is imported
 
@@ -9,16 +9,15 @@ class NutritionistRepository {
     constructor(authService, storageService, firestoreService, adminService) {
         this.authService = authService;
         this.storageService = storageService;
-        this.firestoreService = firestoreService;
+        this.NutritionistService = NutritionistService;
         this.adminService = adminService;
     }
 
-    async createNutritionistAccount(userData, certificateFile) {
+    async submitNutritionistApplication(userData, certificateFile) {
         try {
-            const user = await this.authService.registerUser(userData.email, userData.password);
-            const certificateUrl = await this.storageService.uploadCertificate(user.uid, certificateFile);
+            const certificateUrl = await this.storageService.uploadCertificate(userData.email, certificateFile); 
             const newNutritionist = new Nutritionist(
-                user.uid,
+                null, 
                 userData.firstName,
                 userData.lastName,
                 userData.email,
@@ -26,17 +25,18 @@ class NutritionistRepository {
                 certificateUrl,
                 'pending'
             );
-            await this.firestoreService.saveNutritionistData(user.uid, newNutritionist.toFirestore());
+            await this.NutritionistService.saveNutritionistData(userData.email, newNutritionist.toFirestore()); // Use email as doc ID
             return newNutritionist;
         } catch (error) {
-            console.error("Error creating nutritionist account:", error);
+            console.error("Error submitting nutritionist application:", error);
             throw error;
         }
     }
 
+
     async getPendingNutritionistsForApproval() {
         try {
-            const pending = await this.firestoreService.getPendingNutritionists();
+            const pending = await this.NutritionistService.getPendingNutritionists();
             return pending;
         } catch (error) {
             console.error("Error getting pending nutritionists:", error);
@@ -77,7 +77,7 @@ class NutritionistRepository {
 
     async getAllNutritionists() {
         try {
-            return await this.firestoreService.getAllNutritionists();
+            return await this.NutritionistService.getAllNutritionists();
         } catch (error) {
             console.error("Repository: Error getting all nutritionists:", error);
             throw error;
@@ -88,7 +88,7 @@ class NutritionistRepository {
 const nutritionistRepository = new NutritionistRepository(
     AuthService,
     StorageService,
-    FirestoreService,
+    NutritionistService,
     AdminService
 );
 

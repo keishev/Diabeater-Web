@@ -3,10 +3,10 @@ import { db } from '../firebase';
 import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import Nutritionist from '../Models/Nutritionist'; // Import the Nutritionist model
 
-class FirestoreService {
+class NutritionistService {
     async saveNutritionistData(userId, data) {
         try {
-            await setDoc(doc(db, "nutritionists", userId), data);
+            await setDoc(doc(db, "nutritionist_application", userId), data);
             console.log("Nutritionist data saved successfully for user:", userId);
         } catch (error) {
             console.error("Error saving nutritionist data:", error);
@@ -16,7 +16,7 @@ class FirestoreService {
 
     async getPendingNutritionists() {
         try {
-            const q = query(collection(db, "nutritionists"), where("status", "==", "pending"));
+            const q = query(collection(db, "nutritionist_application"), where("status", "==", "pending"));
             const querySnapshot = await getDocs(q);
             const pendingNutritionists = querySnapshot.docs.map(doc => Nutritionist.fromFirestore(doc));
             return pendingNutritionists;
@@ -28,7 +28,7 @@ class FirestoreService {
 
     async getAllNutritionists() {
         try {
-            const q = query(collection(db, "nutritionists"));
+            const q = query(collection(db, "nutritionist_application"));
             const querySnapshot = await getDocs(q);
             const allNutritionists = querySnapshot.docs.map(doc => Nutritionist.fromFirestore(doc));
             return allNutritionists;
@@ -38,8 +38,6 @@ class FirestoreService {
         }
     }
 
-    // You might also need methods to fetch regular users if they are in a different collection
-    // For now, assuming your `initialUserAccounts` handles them.
 }
 
-export default new FirestoreService();
+export default new NutritionistService();

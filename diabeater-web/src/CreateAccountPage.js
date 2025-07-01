@@ -1,14 +1,14 @@
 // src/CreateAccountPage.js
 import React, { useRef, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import CreateAccountViewModel from './ViewModels/CreateAccountViewModel';
+import NutritionistApplicationViewModel from './ViewModels/NutritionistApplicationViewModel';
 import bloodDropLogo from './assets/blood_drop_logo.png';
 import './CreateAccountPage.css'; // Link to the CSS file
 
 // Instantiate the ViewModel outside the component to persist its state
 // or within a React Context if you need to pass it down the component tree.
 // For this single page, a direct import is fine.
-const viewModel = new CreateAccountViewModel();
+const viewModel = new NutritionistApplicationViewModel();
 
 function CreateAccountPage({ onBackToLogin }) {
     const fileInputRef = useRef(null);
@@ -21,7 +21,7 @@ function CreateAccountPage({ onBackToLogin }) {
     }, []);
 
     const handleFileChange = (e) => {
-        viewModel.setCertificateFile(e.target.files[0]);
+        viewModel.setDocument(e.target.files[0]);
     };
 
     const handleBackToLoginFromModal = () => {
@@ -51,7 +51,7 @@ function CreateAccountPage({ onBackToLogin }) {
 
                 <form onSubmit={(e) => {
                     e.preventDefault();
-                    viewModel.handleSubmit();
+                    viewModel.submitApplication();
                 }} className="create-account-form">
                     <div className="create-account-form-grid">
                         {/* Left Column Inputs */}
@@ -147,7 +147,7 @@ function CreateAccountPage({ onBackToLogin }) {
                                     Upload
                                 </button>
                                 <span className="create-account-file-name">
-                                    {viewModel.certificateFile ? viewModel.certificateFile.name : ''}
+                                    {viewModel.document ? viewModel.document.name : ''}
                                 </span>
                                 <button
                                     type="button"
