@@ -27,7 +27,7 @@ function App() {
             if (user) {
                 try {
                     const idTokenResult = await user.getIdTokenResult(true);
-                    const userDocRef = doc(db, 'user_accounts', user.uid); // ✅ Your correct collection
+                    const userDocRef = doc(db, 'user_accounts', user.uid); 
                     const userDocSnap = await getDoc(userDocRef);
 
                     if (!userDocSnap.exists()) {
@@ -61,7 +61,7 @@ function App() {
                 setVerifiedLogin(false);
             }
 
-            setIsFirebaseLoading(false); // ✅ Always update after auth check
+            setIsFirebaseLoading(false); 
         });
 
         return () => unsubscribe();
