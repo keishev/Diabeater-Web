@@ -5,10 +5,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 class StorageService {
     async uploadCertificate(userId, file) {
         try {
-            const storageRef = ref(storage, `certificates/${userId}/${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            return downloadURL;
+            const certificateRef = ref(storage, `certificates/${userId}/${file.name}`);
+            const url = await getDownloadURL(certificateRef);
+            return url;
         } catch (error) {
             console.error("Error uploading certificate:", error);
             throw error;

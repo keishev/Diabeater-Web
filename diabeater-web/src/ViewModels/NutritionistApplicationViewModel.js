@@ -1,6 +1,7 @@
 // src/ViewModels/NutritionistApplicationViewModel.js
 import { makeAutoObservable } from 'mobx';
-import NutritionistRepository from '../Repositories/NutritionistRepository';
+import NutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
+import { getAuth } from 'firebase/auth'; // Ensure getAuth is imported
 
 class NutritionistApplicationViewModel {
     application = {
@@ -117,7 +118,7 @@ class NutritionistApplicationViewModel {
 
         this.setLoading(true);
         try {
-            await NutritionistRepository.submitNutritionistApplication(this.application, this.document);
+            await NutritionistApplicationRepository.submitNutritionistApplication(this.application, this.document);
             this.setShowPendingApprovalModal(true);
             this.resetForm();
         } catch (error) {
@@ -141,6 +142,47 @@ class NutritionistApplicationViewModel {
         const fileInput = document.getElementById('certificate-upload');
         if (fileInput) fileInput.value = '';
     }
+
+    async viewCertificate(userId) {
+        this.setLoading(true);
+        this.setError('');
+
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            console.log('user', user);
+
+            if (!user) {
+                this.setError("Please log in to view the certificate.");
+                alert("Please log in to view the certificate.");
+                return;
+            }
+
+            const idTokenResult = await user.getIdTokenResult(true);
+            if (idTokenResult.claims.admin !== true) {
+                this.setError("Access Denied: You must be an administrator to view this certificate.");
+                alert("Access Denied: You must be an administrator to view this certificate.");
+                return;
+            }
+
+            const url = await NutritionistApplicationRepository.getNutritionistCertificateUrl(userId);
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                this.setError("Certificate URL not found.");
+                alert("Certificate URL not found for this user.");
+            }
+
+        } catch (error) {
+            console.error("viewCertificate error:", error);
+            this.setError(`Failed to fetch certificate: ${error.message}`);
+            alert(`Failed to fetch certificate: ${error.message}`);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
 }
 
-export default NutritionistApplicationViewModel;
+export default  NutritionistApplicationViewModel;

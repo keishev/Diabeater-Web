@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import useAuthViewModel from '../ViewModels/AuthViewModel';
 import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; 
+import NutritionistApplicationViewModel from '../ViewModels/NutritionistApplicationViewModel';
 import AdminViewModel from '../ViewModels/AdminViewModel';
 import UserDetailModal from './UserDetailModal';
 import AdminProfile from './AdminProfile';
@@ -13,6 +13,8 @@ import UserFeedbacksPage from './UserFeedbacksPage';
 
 import './AdminDashboard.css';
 import './AdminStatDashboard.css'; // Assuming this has general dashboard styles
+
+const nutritionistAppVM = new NutritionistApplicationViewModel();
 
 // Admin Sidebar Component
 const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
@@ -107,7 +109,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 <td>
                     <button
                         className="doc-action-button view-button"
-                        onClick={() => AdminDashboardViewModel.viewCertificate(user.id)}
+                        onClick={() => nutritionistAppVM.viewCertificate(user.id)}
                         disabled={AdminDashboardViewModel.isLoading}
                     >
                         VIEW

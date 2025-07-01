@@ -3,6 +3,7 @@ import React from 'react'; // No need for useState if state is entirely in ViewM
 import { observer } from 'mobx-react-lite';
 import adminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Import the ViewModel
 import './UserDetailModal.css'; // Make sure you have this CSS file
+import NutritionistApplicationViewModel from '../ViewModels/NutritionistApplicationViewModel';
 
 const UserDetailModal = observer(({ onClose }) => {
     // We get the selected user directly from the ViewModel
@@ -35,7 +36,7 @@ const UserDetailModal = observer(({ onClose }) => {
     };
 
     const handleViewDocument = async () => {
-        await adminDashboardViewModel.viewCertificate(user.id);
+        await NutritionistApplicationViewModel.viewCertificate(user.id);
     };
 
     return (

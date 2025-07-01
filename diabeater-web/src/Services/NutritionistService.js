@@ -4,16 +4,6 @@ import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firesto
 import Nutritionist from '../Models/Nutritionist'; // Import the Nutritionist model
 
 class NutritionistService {
-    async saveNutritionistData(userId, data) {
-        try {
-            await setDoc(doc(db, "nutritionist_application", userId), data);
-            console.log("Nutritionist data saved successfully for user:", userId);
-        } catch (error) {
-            console.error("Error saving nutritionist data:", error);
-            throw error;
-        }
-    }
-
     async getPendingNutritionists() {
         try {
             const q = query(collection(db, "nutritionist_application"), where("status", "==", "pending"));

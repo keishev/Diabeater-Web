@@ -1,7 +1,7 @@
 // src/ViewModels/AdminDashboardViewModel.js
 
 import { makeAutoObservable, runInAction } from 'mobx';
-import nutritionistRepository from '../Repositories/NutritionistRepository';
+import nutritionistRepository from '../Repositories/NutritionistApplicationRepository';
 import { getAuth } from 'firebase/auth'; // Ensure getAuth is imported
 
 class AdminDashboardViewModel {
@@ -245,59 +245,6 @@ class AdminDashboardViewModel {
             alert(`Failed to reject user: ${error.message}`);
         } finally {
             runInAction(() => { // Ensure MobX actions are within runInAction
-                this.setLoading(false);
-            });
-        }
-    }
-
-    async viewCertificate(userId) {
-        this.setLoading(true);
-        this.setError('');
-
-        try {
-            const auth = getAuth();
-            const user = auth.currentUser;
-
-            if (!user) {
-                console.error("VIEW_CERTIFICATE_CALL: No user logged in when attempting to view certificate.");
-                runInAction(() => {
-                    this.setError("Failed to fetch certificate: No user logged in. Please log in.");
-                    alert("Please log in to view the certificate.");
-                });
-                return;
-            }
-
-            // Force a refresh of the ID token to ensure custom claims are up-to-date.
-            const idTokenResult = await user.getIdTokenResult(true);
-
-            // Double-check admin status right before calling the function
-            if (idTokenResult.claims.admin !== true) {
-                console.warn("VIEW_CERTIFICATE_CALL: User does NOT have admin claims despite being logged in. Access denied.");
-                runInAction(() => {
-                    this.setError("Access Denied: You must be an administrator to view this certificate.");
-                    alert("Access Denied: You must be an administrator to view this certificate.");
-                });
-                return;
-            }
-
-            // If we reach here, user is logged in and has admin claims. Proceed with the call.
-            const url = await nutritionistRepository.getNutritionistCertificateUrl(userId);
-            if (url) {
-                window.open(url, '_blank'); // Open the URL directly in a new tab
-            } else {
-                runInAction(() => {
-                    this.setError("Certificate URL not found.");
-                    alert("Certificate URL not found for this user.");
-                });
-            }
-        } catch (error) {
-            console.error("Error fetching certificate URL:", error);
-            runInAction(() => {
-                this.setError(`Failed to fetch certificate: ${error.message}`);
-                alert(`Failed to fetch certificate: ${error.message}`);
-            });
-        } finally {
-            runInAction(() => {
                 this.setLoading(false);
             });
         }
