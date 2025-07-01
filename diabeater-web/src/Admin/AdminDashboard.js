@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { observer } from 'mobx-react-lite'; // Import observer
-import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Import the ViewModel (it's a singleton)
+import { observer } from 'mobx-react-lite';
+import useAuthViewModel from '../ViewModels/AuthViewModel';
+import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; 
+import AdminViewModel from '../ViewModels/AdminViewModel';
 import UserDetailModal from './UserDetailModal';
 import AdminProfile from './AdminProfile';
 import AdminStatDashboard from './AdminStatDashboard';
@@ -13,11 +15,10 @@ import './AdminDashboard.css';
 import './AdminStatDashboard.css'; // Assuming this has general dashboard styles
 
 // Admin Sidebar Component
-const AdminSidebar = observer(({ onNavigate, currentView }) => {
-    const handleLogout = () => {
-        // In a real app, you'd call a logout function from an Auth service
-        // For now, redirect.
-        window.location.href = '/login';
+const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
+    const handleLogout = async () => {
+        await onLogout(); 
+        window.location.href = '/'; 
     };
 
     return (
@@ -277,26 +278,29 @@ const UserAccountsContent = observer(() => {
 
 
 // AdminDashboard Main Component
-const AdminDashboard = observer(() => {
+const AdminDashboard = observer(({ onLogout }) => {
     const { currentView } = AdminDashboardViewModel;
 
     // Check admin status on mount
     useEffect(() => {
-        const check = async () => {
-            const isAdmin = await AdminDashboardViewModel.checkAdminStatus();
-            if (!isAdmin) {
-                alert("Access Denied: You must be an administrator to view this page.");
-                window.location.href = '/login';
-            }
-        };
-        check();
-    }, []);
+    const checkAccess = async () => {
+        await AdminViewModel.verifyAdminAccess();
+        console.log('isAdmin', AdminViewModel.isAdmin);
+        if (!AdminViewModel.isAdmin) {
+            alert("Access Denied: You must be an administrator to view this page.");
+            window.location.href = '/login';
+        }
+    };
+    checkAccess();
+}, []);
+
 
     return (
         <div className="admin-dashboard-page">
             <AdminSidebar
                 onNavigate={(view) => AdminDashboardViewModel.setCurrentView(view)}
                 currentView={currentView}
+                onLogout={onLogout} 
             />
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}

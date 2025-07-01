@@ -1,5 +1,5 @@
 // src/Repositories/NutritionistRepository.js
-import AuthService from '../Services/AuthService';
+import AuthService from '../Services/NutritionistService';
 import StorageService from '../Services/StorageService';
 import FirestoreService from '../Services/FirestoreService';
 import AdminService from '../Services/AdminService'; // Ensure this is imported

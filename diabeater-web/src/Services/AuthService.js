@@ -1,45 +1,46 @@
-// src/Services/FirestoreService.js
-import { db } from '../firebase';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import Nutritionist from '../Models/Nutritionist'; // Import the Nutritionist model
+// src/services/AuthService.js
+import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import app from '../firebase';
 
-class FirestoreService {
-    async saveNutritionistData(userId, data) {
-        try {
-            await setDoc(doc(db, "nutritionists", userId), data);
-            console.log("Nutritionist data saved successfully for user:", userId);
-        } catch (error) {
-            console.error("Error saving nutritionist data:", error);
-            throw error;
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const AuthService = {
+    async loginWithEmail(email, password, selectedRole) {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Fetch Firestore doc
+        const userDocRef = doc(db, 'user_accounts', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (!userDocSnap.exists()) {
+            throw new Error('User account not found in database.');
         }
-    }
 
-    async getPendingNutritionists() {
-        try {
-            const q = query(collection(db, "nutritionists"), where("status", "==", "pending"));
-            const querySnapshot = await getDocs(q);
-            const pendingNutritionists = querySnapshot.docs.map(doc => Nutritionist.fromFirestore(doc));
-            return pendingNutritionists;
-        } catch (error) {
-            console.error("Error fetching pending nutritionists:", error);
-            throw error;
+        const userData = userDocSnap.data();
+
+        // Check role + approval status
+        if (userData.role !== selectedRole) {
+            throw new Error(`This account is not registered as ${selectedRole}.`);
         }
-    }
 
-    async getAllNutritionists() {
-        try {
-            const q = query(collection(db, "nutritionists"));
-            const querySnapshot = await getDocs(q);
-            const allNutritionists = querySnapshot.docs.map(doc => Nutritionist.fromFirestore(doc));
-            return allNutritionists;
-        } catch (error) {
-            console.error("Error fetching all nutritionists:", error);
-            throw error;
+        if (selectedRole === 'nutritionist' && userData.status !== true) {
+            throw new Error('Nutritionist account is not approved.');
         }
+
+        // Success
+        return {
+            uid: user.uid,
+            role: userData.role,
+            status: userData.status ?? null
+        };
+    },
+
+    async logout() {
+        await signOut(auth);
     }
+};
 
-    // You might also need methods to fetch regular users if they are in a different collection
-    // For now, assuming your `initialUserAccounts` handles them.
-}
-
-export default new FirestoreService();
+export default AuthService;

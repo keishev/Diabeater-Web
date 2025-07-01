@@ -6,51 +6,62 @@ import AdminDashboard from './Admin/AdminDashboard';
 import ResetPasswordPage from './ResetPasswordPage';
 import CreateAccountPage from './CreateAccountPage';
 
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import app from './firebase';
 
-// Import getAuth and onAuthStateChanged
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import app from './firebase'; // Import your initialized firebase app instance
-
-// REMOVE: import { runInAction } from 'mobx'; // <--- REMOVE THIS LINE
-
+import AuthRepository from './Repositories/AuthRepository'; 
 
 function App() {
     const [userRole, setUserRole] = useState(null);
+    const [verifiedLogin, setVerifiedLogin] = useState(false);
+    const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
     const [showResetPassword, setShowResetPassword] = useState(false);
     const [showCreateAccount, setShowCreateAccount] = useState(false);
-    const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
 
-    // Global Auth State Listener
     useEffect(() => {
         const auth = getAuth(app);
+        const db = getFirestore(app);
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                console.log("APP.JS: Auth State Changed - User is logged in:", user.uid, user.email);
                 try {
                     const idTokenResult = await user.getIdTokenResult(true);
-                    console.log("APP.JS: Global Auth State - Claims:", idTokenResult.claims);
+                    const userDocRef = doc(db, 'user_accounts', user.uid); // ✅ Your correct collection
+                    const userDocSnap = await getDoc(userDocRef);
 
-                    // No need for runInAction here, setUserRole updates React state directly
-                    if (idTokenResult.claims.admin) {
-                        setUserRole('admin');
-                    } else if (idTokenResult.claims.nutritionist) {
-                        setUserRole('nutritionist');
+                    if (!userDocSnap.exists()) {
+                        console.warn("User Firestore doc not found, signing out...");
+                        await signOut(auth);
+                        setUserRole(null);
+                        setVerifiedLogin(false);
                     } else {
-                        setUserRole('user');
+                        const userData = userDocSnap.data();
+                        if (userData.role === 'admin') {
+                            setUserRole('admin');
+                            setVerifiedLogin(true);
+                        } else if (userData.role === 'nutritionist' && userData.status === 'approved') {
+                            setUserRole('nutritionist');
+                            setVerifiedLogin(true);
+                        } else {
+                            console.warn("User not authorized for this dashboard");
+                            await signOut(auth);
+                            setUserRole(null);
+                            setVerifiedLogin(false);
+                        }
                     }
-                } catch (error) {
-                    console.error("APP.JS: Error getting ID token result during auth state change:", error);
-                    // No need for runInAction here
+                } catch (err) {
+                    console.error("Error during auth check:", err);
+                    await signOut(auth);
                     setUserRole(null);
+                    setVerifiedLogin(false);
                 }
             } else {
-                console.log("APP.JS: Auth State Changed - User is logged out.");
-                // No need for runInAction here
                 setUserRole(null);
+                setVerifiedLogin(false);
             }
-            // No need for runInAction here
-            setIsFirebaseLoading(false);
+
+            setIsFirebaseLoading(false); // ✅ Always update after auth check
         });
 
         return () => unsubscribe();
@@ -58,60 +69,63 @@ function App() {
 
     const handleLoginSuccess = (role) => {
         setUserRole(role);
+        setVerifiedLogin(true);
         setShowResetPassword(false);
         setShowCreateAccount(false);
     };
 
     const handleResetPasswordRequest = () => {
-        setUserRole(null);
-        setShowCreateAccount(false);
         setShowResetPassword(true);
+        setShowCreateAccount(false);
+    };
+
+    const handleCreateAccountRequest = () => {
+        setShowCreateAccount(true);
+        setShowResetPassword(false);
     };
 
     const handleBackToLogin = () => {
         setShowResetPassword(false);
         setShowCreateAccount(false);
         setUserRole(null);
-        getAuth(app).signOut();
+        setVerifiedLogin(false);
+        const auth = getAuth(app);
+        signOut(auth);
     };
 
-    const handleCreateAccountRequest = () => {
+    const handleLogout = async () => {
+        await AuthRepository.logout(); 
         setUserRole(null);
-        setShowResetPassword(false);
-        setShowCreateAccount(true);
-    };
-
-    const handleAccountCreatedAndReturnToLogin = () => {
+        setVerifiedLogin(false);
         setShowCreateAccount(false);
-        setUserRole(null);
+        setShowResetPassword(false);
     };
 
-    if (isFirebaseLoading) {
-        return <div>Loading authentication...</div>;
-    }
+    if (isFirebaseLoading) return <div>Loading authentication...</div>;
 
     if (showCreateAccount) {
-        return (
-            <CreateAccountPage
-                onAccountCreated={handleAccountCreatedAndReturnToLogin}
-                onBackToLogin={handleAccountCreatedAndReturnToLogin}
-            />
-        );
-    } else if (showResetPassword) {
-        return <ResetPasswordPage onBackToLogin={handleBackToLogin} />;
-    } else if (userRole === 'nutritionist') {
-        return <NutritionistDashboard />;
-    } else if (userRole === 'admin') {
-        return <AdminDashboard onLogout={handleBackToLogin} />;
-    } else {
-        return (
-            <LoginPage
-                onLoginSuccess={handleLoginSuccess}
-                onResetPasswordRequest={handleResetPasswordRequest}
-                onCreateAccountRequest={handleCreateAccountRequest}
-            />
-        );
+        return <CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />;
     }
+
+    if (showResetPassword) {
+        return <ResetPasswordPage onBackToLogin={handleBackToLogin} />;
+    }
+
+    if (verifiedLogin && userRole === 'nutritionist') {
+        return <NutritionistDashboard />;
+    }
+
+    if (verifiedLogin && userRole === 'admin') {
+        return <AdminDashboard onLogout={handleLogout} />; 
+    }
+
+    return (
+        <LoginPage
+            onLoginSuccess={handleLoginSuccess}
+            onResetPasswordRequest={handleResetPasswordRequest}
+            onCreateAccountRequest={handleCreateAccountRequest}
+        />
+    );
 }
 
 export default App;
