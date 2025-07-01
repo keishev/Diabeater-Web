@@ -1,5 +1,8 @@
 // src/Repositories/NutritionistRepository.js
-import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, getDoc, updateDoc, getDocs } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+import { firebaseConfig } from '../firebase';
 import { db } from "../firebase";
 
 class NutritionistApplicationService {
@@ -26,6 +29,88 @@ class NutritionistApplicationService {
             }
         } catch (error) {
             console.error("NutritionistApplicationService: Error fetching certificate URL:", error);
+            throw error;
+        }
+    }
+
+    async approveNutritionist(userId) {
+        try {
+            // Get the application document
+            const applicationRef = doc(db, "nutritionist_application", userId);
+            const applicationSnap = await getDoc(applicationRef);
+
+            if (!applicationSnap.exists()) {
+                throw new Error("Nutritionist application not found.");
+            }
+
+            const applicationData = applicationSnap.data();
+
+            // Create Firebase Auth user
+
+            const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+            const secondaryAuth = getAuth(secondaryApp);
+
+            const userCredential = await createUserWithEmailAndPassword(
+                secondaryAuth,
+                applicationData.email,
+                applicationData.password
+            );
+
+            const newUser = userCredential.user;
+
+            // Save to `nutritionists` collection
+            const nutritionistRef = doc(db, "user_accounts", newUser.uid);
+            console.log(nutritionistRef);
+            await setDoc(nutritionistRef, {
+                userId: newUser.uid,
+                email: applicationData.email,
+                firstName: applicationData.firstName,
+                lastName: applicationData.lastName,
+                dob: applicationData.dob,
+                gender: "",
+                profilePictureUrl: "",
+                role: "nutritionist",
+                isPremium: false,
+                points: 0,
+                profileCompleted: false,
+                status: true,
+                username: "",
+                createdAt: new Date().toISOString()
+            });
+
+            console.log ('appref approving', applicationRef);
+            await updateDoc(applicationRef, {
+                status: "approved",
+                approvedAt: new Date().toISOString(), 
+            });
+
+            return { uid: newUser.uid, email: newUser.email };
+        } catch (error) {
+            console.error("Service: Error approving nutritionist:", error);
+            throw error;
+        }
+    }
+
+    async rejectNutritionist(userId, reason) {
+        try {
+            const applicationRef = doc(db, "nutritionist_application", userId);
+            const applicationSnap = await getDoc(applicationRef);
+
+            if (!applicationSnap.exists()) {
+                throw new Error("Nutritionist application not found.");
+            }
+
+            console.log ('appref rejecting', applicationRef);
+            await updateDoc(applicationRef, {
+                status: "rejected",
+                rejectionReason: reason || "", 
+                rejectedAt: new Date().toISOString(), 
+            });
+
+            console.log(`Application for ${userId} marked as rejected.`);
+            return true;
+        } catch (error) {
+            console.error("Service: Error rejecting nutritionist:", error);
             throw error;
         }
     }

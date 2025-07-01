@@ -2,6 +2,8 @@
 import { makeAutoObservable } from 'mobx';
 import NutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
 import { getAuth } from 'firebase/auth'; // Ensure getAuth is imported
+import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
+import AdminDashboardViewModel from './AdminDashboardViewModel';
 
 class NutritionistApplicationViewModel {
     application = {
@@ -183,6 +185,73 @@ class NutritionistApplicationViewModel {
         }
     }
 
+    async approveNutritionist(userId) {
+        this.setLoading(true);
+        this.setError('');
+
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert("Please log in as an administrator.");
+                this.setError("No user logged in.");
+                return;
+            }
+
+            const token = await user.getIdTokenResult(true);
+            if (!token.claims.admin) {
+                alert("Access Denied: You must be an administrator.");
+                this.setError("Unauthorized");
+                return;
+            }
+
+            await nutritionistApplicationRepository.approveNutritionist(userId);
+            await AdminDashboardViewModel.fetchAccounts(); 
+
+            alert("Nutritionist has been approved!");
+        } catch (error) {
+            console.error("Error approving nutritionist:", error);
+            this.setError(error.message || "Approval failed.");
+            alert(`Failed to approve: ${error.message}`);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    async rejectNutritionist(userId) {
+        this.setLoading(true);
+        this.setError('');
+
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert("Please log in as an administrator.");
+                this.setError("No user logged in.");
+                return;
+            }
+
+            const token = await user.getIdTokenResult(true);
+            if (!token.claims.admin) {
+                alert("Access Denied: You must be an administrator.");
+                this.setError("Unauthorized");
+                return;
+            }
+
+            await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason || "");
+            await AdminDashboardViewModel.fetchAccounts(); 
+
+            alert("Nutritionist has been rejected!");
+        } catch (error) {
+            console.error("Error rejecting nutritionist:", error);
+            this.setError(error.message || "Rejection failed.");
+            alert(`Failed to reject: ${error.message}`);
+        } finally {
+            this.setLoading(false);
+        }
+    }
 }
 
 export default  NutritionistApplicationViewModel;

@@ -54,7 +54,7 @@ class NutritionistApplicationRepository {
 
     async approveNutritionist(userId) {
         try {
-            return await this.adminService.approveNutritionist(userId);
+            return await this.nutritionistApplicationService.approveNutritionist(userId);
         } catch (error) {
             console.error("Repository: Error approving nutritionist:", error);
             throw error;
@@ -63,7 +63,7 @@ class NutritionistApplicationRepository {
 
     async rejectNutritionist(userId, reason) {
         try {
-            return await this.adminService.rejectNutritionist(userId, reason);
+            return await this.nutritionistApplicationService.rejectNutritionist(userId, reason);
         } catch (error) {
             console.error("Repository: Error rejecting nutritionist:", error);
             throw error;

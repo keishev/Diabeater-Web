@@ -5,6 +5,8 @@ import adminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // 
 import './UserDetailModal.css'; // Make sure you have this CSS file
 import NutritionistApplicationViewModel from '../ViewModels/NutritionistApplicationViewModel';
 
+const NutritionistApplicationVM = new NutritionistApplicationViewModel();
+
 const UserDetailModal = observer(({ onClose }) => {
     // We get the selected user directly from the ViewModel
     const user = adminDashboardViewModel.selectedUser;
@@ -30,13 +32,13 @@ const UserDetailModal = observer(({ onClose }) => {
 
     const handleConfirmReject = async () => {
         if (window.confirm(`Are you sure you want to REJECT ${user.firstName || user.name}'s account? This action cannot be undone.`)) {
-            await adminDashboardViewModel.rejectNutritionist(user.id);
+            await NutritionistApplicationVM.rejectNutritionist(user.id);
             onClose(); // Close modal after action
         }
     };
 
     const handleViewDocument = async () => {
-        await NutritionistApplicationViewModel.viewCertificate(user.id);
+        await NutritionistApplicationVM.viewCertificate(user.id);
     };
 
     return (

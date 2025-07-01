@@ -87,7 +87,6 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
 
 // User Account Table Row Component - Renders based on ViewModel data
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
-    // Determine status class based on the 'status' property
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
     return (
@@ -99,12 +98,14 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 </span>
             </td>
             <td>{user.email}</td>
-            {type === 'all' && <td>{user.accountType || 'N/A'}</td>} {/* Display Account Type only for 'all' accounts */}
+            {type === 'all' && <td>{user.accountType || 'N/A'}</td>}
             <td className={statusClass}>
                 <span className="status-dot"></span>{user.status === 'approved' ? 'Active' : user.status}
             </td>
             {type === 'all' && <td>{user.userSince || 'N/A'}</td>}
-            {type === 'pending' && <td>{user.appliedDate || 'N/A'}</td>} {/* Display Applied Date for pending */}
+            {type === 'pending' && <td>{user.appliedDate || 'N/A'}</td>}
+
+            {/* VIEW BUTTON */}
             {type === 'pending' && (
                 <td>
                     <button
@@ -116,6 +117,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                     </button>
                 </td>
             )}
+
             {type === 'all' && (
                 <td>
                     <button
@@ -130,6 +132,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
         </tr>
     );
 });
+
 
 // User Accounts Content Component
 const UserAccountsContent = observer(() => {
@@ -220,18 +223,23 @@ const UserAccountsContent = observer(() => {
 
             <div className="table-container">
                 <table>
-                    <thead>
+                   <thead>
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
                             {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
                             <th>Status</th>
                             {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
-                            {activeTab === 'PENDING_APPROVAL' && <th>Applied Date</th>}
-                            {activeTab === 'PENDING_APPROVAL' && <th>Documents</th>}
+                            {activeTab === 'PENDING_APPROVAL' && (
+                                <>
+                                    <th>Signed up at</th>
+                                    <th>Documents</th>
+                                </>
+                            )}
                             {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
                         </tr>
                     </thead>
+
                     <tbody>
                         {activeTab === 'ALL_ACCOUNTS' && filteredAllAccounts.length > 0 ? (
                             filteredAllAccounts.map(user => (
@@ -248,7 +256,7 @@ const UserAccountsContent = observer(() => {
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
-                                    onAction={() => {}} // No suspend/unsuspend for pending
+                                    onAction={() => {}} 
                                     onNameClick={handleOpenModal}
                                     type="pending"
                                 />
