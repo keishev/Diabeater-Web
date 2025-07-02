@@ -1,5 +1,20 @@
 {
+  "name": "my-full-stack-diabeater-app",
+  "version": "1.0.0",
+  "description": "Root package.json for managing Diabeater frontend and backend",
+  "main": "index.js",
+  "scripts": {
+    "start:frontend": "npm start --prefix diabeater-web",
+    "start:backend": "npm run dev --prefix backend",
+    "start:all": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+  },
   "dependencies": {
     "firebase": "^11.9.0"
-  }
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2" 
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

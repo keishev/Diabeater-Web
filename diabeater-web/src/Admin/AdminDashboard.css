@@ -228,6 +228,7 @@ table tbody tr:last-child td {
     font-weight: bold;
     display: flex;
     align-items: center;
+    margin-top: 25px;
 }
 
 .status-inactive {
@@ -235,6 +236,7 @@ table tbody tr:last-child td {
     font-weight: bold;
     display: flex;
     align-items: center;
+    margin-top: 20px;
 }
 
 .status-dot {

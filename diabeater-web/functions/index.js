@@ -46,7 +46,7 @@ exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, cont
 
         const userId = data.userId;
         if (!userId) {
-            throw new new functions.https.HttpsError('invalid-argument', 'User ID is required.');
+            throw new functions.https.HttpsError('invalid-argument', 'User ID is required.');
         }
 
         // 2. Fetch the nutritionist document from Firestore
@@ -226,8 +226,112 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
     }
 });
 
+
+/**
+ * NEW: Callable Cloud Function to suspend a user.
+ * Disables the user in Firebase Authentication and updates Firestore status.
+ */
+exports.suspendUser = functions.https.onCall(async (data, context) => {
+    try {
+        // 1. Security Check: Ensure the caller is an authenticated administrator
+        await isAdmin(context);
+
+        const userId = data.userId;
+        if (!userId) {
+            throw new functions.https.HttpsError('invalid-argument', 'User ID is required to suspend a user.');
+        }
+
+        // 2. Disable the user in Firebase Authentication
+        await admin.auth().updateUser(userId, { disabled: true });
+        console.log(`Firebase Auth user ${userId} disabled.`);
+
+        // 3. Update the user's status in Firestore
+        // Assuming your general user accounts are in a collection named 'user_accounts'
+        const userAccountRef = db.collection('user_accounts').doc(userId);
+        const userAccountDoc = await userAccountRef.get();
+
+        if (userAccountDoc.exists) {
+            await userAccountRef.update({ status: 'Inactive' }); // Or 'suspended'
+            console.log(`Firestore status for user ${userId} updated to 'Inactive'.`);
+        } else {
+            console.warn(`User account document not found in Firestore for ID: ${userId}. Auth user still disabled.`);
+        }
+
+        // 4. Revoke refresh tokens to force the user's ID token to refresh
+        await admin.auth().revokeRefreshTokens(userId);
+        console.log(`Refresh tokens revoked for user ${userId}.`);
+
+        return { success: true, message: `User ${userId} has been suspended.` };
+
+    } catch (error) {
+        console.error(`Error suspending user ${data?.userId || 'unknown'}:`, error);
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            `An unexpected error occurred during user suspension: ${error.message}`,
+            { originalError: error.message, stack: error.stack }
+        );
+    }
+});
+
+/**
+ * NEW: Callable Cloud Function to unsuspend a user.
+ * Enables the user in Firebase Authentication and updates Firestore status.
+ */
+exports.unsuspendUser = functions.https.onCall(async (data, context) => {
+    try {
+        // 1. Security Check: Ensure the caller is an authenticated administrator
+        await isAdmin(context);
+
+        const userId = data.userId;
+        if (!userId) {
+            throw new functions.https.HttpsError('invalid-argument', 'User ID is required to unsuspend a user.');
+        }
+
+        // 2. Enable the user in Firebase Authentication
+        await admin.auth().updateUser(userId, { disabled: false });
+        console.log(`Firebase Auth user ${userId} enabled.`);
+
+        // 3. Update the user's status in Firestore
+        const userAccountRef = db.collection('user_accounts').doc(userId);
+        const userAccountDoc = await userAccountRef.get();
+
+        if (userAccountDoc.exists) {
+            await userAccountRef.update({ status: 'Active' }); // Or 'active'
+            console.log(`Firestore status for user ${userId} updated to 'Active'.`);
+        } else {
+            console.warn(`User account document not found in Firestore for ID: ${userId}. Auth user still enabled.`);
+        }
+
+        // 4. Revoke refresh tokens to force the user's ID token to refresh
+        await admin.auth().revokeRefreshTokens(userId);
+        console.log(`Refresh tokens revoked for user ${userId}.`);
+
+        return { success: true, message: `User ${userId} has been unsuspended.` };
+
+    } catch (error) {
+        console.error(`Error unsuspending user ${data?.userId || 'unknown'}:`, error);
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            `An unexpected error occurred during user unsuspension: ${error.message}`,
+            { originalError: error.message, stack: error.stack }
+        );
+    }
+});
+
+
 // Your existing addAdminRole function
 exports.addAdminRole = functions.https.onCall(async (data, context) => {
+    // Note: It's good practice to use the isAdmin helper here for consistency.
+    // However, your current implementation also checks context.auth.token.admin which is fine if it's consistently set.
+    // For robust security, `await isAdmin(context)` is recommended.
     if (!context.auth || context.auth.token.admin !== true) {
         throw new functions.https.HttpsError(
             'permission-denied',

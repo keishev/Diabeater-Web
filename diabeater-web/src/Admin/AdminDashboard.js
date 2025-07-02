@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; 
-import NutritionistApplicationViewModel from '../ViewModels/NutritionistApplicationViewModel';
+import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel';
+// Keep this import if NutritionistApplicationViewModel is still directly used or needed by other components
+import NutritionistApplicationViewModel from '../ViewModels/NutritionistApplicationViewModel'; // Reinstated import
 import AdminViewModel from '../ViewModels/AdminViewModel';
 import UserDetailModal from './UserDetailModal';
+import RejectionReasonModal from './RejectionReasonModal'; // <--- CRITICAL FIX: Import the RejectionReasonModal
 import AdminProfile from './AdminProfile';
 import AdminStatDashboard from './AdminStatDashboard';
 import AdminMealPlans from './AdminMealPlans';
@@ -12,15 +14,13 @@ import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
 
 import './AdminDashboard.css';
-import './AdminStatDashboard.css'; // Assuming this has general dashboard styles
-
-const nutritionistAppVM = new NutritionistApplicationViewModel();
+import './AdminStatDashboard.css';
 
 // Admin Sidebar Component
 const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
     const handleLogout = async () => {
-        await onLogout(); 
-        window.location.href = '/'; 
+        await onLogout();
+        window.location.href = '/';
     };
 
     return (
@@ -50,6 +50,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                 >
                     <i className="fas fa-users"></i>
                     <span>User Accounts</span>
+                {/* pieza line was likely a placeholder/typo and has been removed */}
                 </div>
                 <div
                     className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`}
@@ -87,6 +88,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
 
 // User Account Table Row Component - Renders based on ViewModel data
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
+    // Determine the status class based on the user's status.
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
     return (
@@ -94,6 +96,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
             <td>
                 <span className="user-name-clickable" onClick={() => onNameClick(user)}>
                     <i className="fas fa-user-circle user-icon"></i>
+                    {/* Display name based on available fields */}
                     {user.firstName ? `${user.firstName} ${user.lastName}` : user.name}
                 </span>
             </td>
@@ -105,12 +108,12 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
             {type === 'all' && <td>{user.userSince || 'N/A'}</td>}
             {type === 'pending' && <td>{user.appliedDate || 'N/A'}</td>}
 
-            {/* VIEW BUTTON */}
+            {/* VIEW BUTTON for pending nutritionists */}
             {type === 'pending' && (
                 <td>
                     <button
                         className="doc-action-button view-button"
-                        onClick={() => nutritionistAppVM.viewCertificate(user.id)}
+                        onClick={() => AdminDashboardViewModel.viewCertificate(user.id)} // Correctly calls the method on AdminDashboardViewModel
                         disabled={AdminDashboardViewModel.isLoading}
                     >
                         VIEW
@@ -118,14 +121,40 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 </td>
             )}
 
+            {/* Action button for ALL ACCOUNTS tab */}
             {type === 'all' && (
                 <td>
+                    {user.accountType !== 'admin' && ( // Prevent suspending admins
+                        <button
+                            className={`action-button ${user.status === 'Active' ? 'suspend-button' : 'unsuspend-button'}`}
+                            onClick={() => onAction(user.id, user.status)} // Calls handleSuspendUnsuspend in UserAccountsContent
+                            disabled={AdminDashboardViewModel.userAccountsVM.isLoading} /* Use userAccountsVM's loading state */
+                        >
+                            {user.status === 'Active' ? 'Suspend' : 'Unsuspend'}
+                        </button>
+                    )}
+                </td>
+            )}
+             {/* Action buttons for PENDING_APPROVAL tab */}
+             {type === 'pending' && (
+                <td>
                     <button
-                        className={`action-button ${user.status === 'Active' ? 'suspend-button' : 'unsuspend-button'}`}
-                        onClick={() => onAction(user.id, user.status)}
+                        className="action-button approve-button"
+                        onClick={() => AdminDashboardViewModel.approveNutritionist(user.id)}
                         disabled={AdminDashboardViewModel.isLoading}
                     >
-                        {user.status === 'Active' ? 'Suspend' : 'Unsuspend'}
+                        Approve
+                    </button>
+                    <button
+                        className="action-button reject-button"
+                        onClick={() => {
+                            // Call directly on the singleton ViewModel instance
+                            AdminDashboardViewModel.setSelectedUser(user);
+                            AdminDashboardViewModel.setShowRejectionReasonModal(true);
+                        }}
+                        disabled={AdminDashboardViewModel.isLoading}
+                    >
+                        Reject
                     </button>
                 </td>
             )}
@@ -134,54 +163,64 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
 });
 
 
-// User Accounts Content Component
+// User Accounts Content Component (now correctly using userAccountsVM)
 const UserAccountsContent = observer(() => {
+    // Access properties from AdminDashboardViewModel and its nested userAccountsVM
     const {
         activeTab,
-        searchTerm,
-        filteredAllAccounts,
-        filteredPendingAccounts,
+        filteredPendingAccounts, // Still in AdminDashboardViewModel for pending nutritionists
         showUserDetailModal,
         selectedUser,
-        isLoading,
-        error
+        isLoading, // General loading state for AdminDashboardViewModel
+        error,     // General error state for AdminDashboardViewModel
+        showRejectionReasonModal, // <--- CRITICAL FIX: Ensure this is destructured
+        rejectionReason,
+        // Removed `setSelectedUser`, `setShowUserDetailModal`, `setShowRejectionReasonModal`, `setRejectionReason`
+        // from destructuring, as these are called directly on the AdminDashboardViewModel instance below.
+        approveNutritionist,
+        rejectNutritionist,
+        viewCertificate,
+        userAccountsVM // Direct access to the UserAccountsViewModel instance
     } = AdminDashboardViewModel;
 
-    // Fetch accounts on component mount
+    // Destructure specific states and methods from userAccountsVM
+    const {
+        searchTerm: userAccountsSearchTerm, // Renamed to avoid conflict
+        filteredAllAccounts: allUsersFiltered, // Renamed for clarity
+        isLoading: userAccountsLoading, // Specific loading for user accounts tab
+        error: userAccountsError,       // Specific error for user accounts tab
+        setSearchTerm: setUserAccountsSearchTerm, // Setter for user accounts search term
+    } = userAccountsVM;
+
+
+    // Fetch accounts on component mount or when the tab changes to ensure fresh data
     useEffect(() => {
-        AdminDashboardViewModel.fetchAccounts();
-    }, []); 
+        AdminDashboardViewModel.fetchAccounts(); // This will trigger both pending and all user fetches
+    }, [activeTab]);
+
 
     const handleOpenModal = (user) => {
-        AdminDashboardViewModel.setSelectedUser(user);
+        AdminDashboardViewModel.setSelectedUser(user); // Ensure direct call to the imported singleton ViewModel
         AdminDashboardViewModel.setShowUserDetailModal(true);
     };
 
     const handleCloseModal = () => {
         AdminDashboardViewModel.setShowUserDetailModal(false);
         AdminDashboardViewModel.setSelectedUser(null);
-        AdminDashboardViewModel.fetchAccounts(); // Refresh accounts after modal closes
+        // Refresh both sets of accounts after modal closes to reflect any changes
+        AdminDashboardViewModel.fetchAccounts();
     };
 
     const handleSuspendUnsuspend = async (userId, currentStatus) => {
         console.log(`Attempting to change status for User ${userId} from ${currentStatus}`);
-        AdminDashboardViewModel.setLoading(true);
         try {
             if (currentStatus === 'Active') {
-                // Assuming 'suspend' logic might set status to 'suspended' or 'inactive'
-                await AdminDashboardViewModel.suspendUser(userId);
+                await AdminDashboardViewModel.userAccountsVM.suspendUser(userId); // Explicitly call on userAccountsVM
             } else {
-                // Assuming 'unsuspend' logic might set status back to 'active'
-                await AdminDashboardViewModel.unsuspendUser(userId);
+                await AdminDashboardViewModel.userAccountsVM.unsuspendUser(userId); // Explicitly call on userAccountsVM
             }
-            // Re-fetch accounts to update the UI
-            await AdminDashboardViewModel.fetchAccounts();
-            console.log(`Status change successful for user ${userId}`);
-        } catch (error) {
-            console.error("Error changing user status:", error);
-            AdminDashboardViewModel.setError(`Failed to change status: ${error.message}`);
-        } finally {
-            AdminDashboardViewModel.setLoading(false);
+        } catch (operationError) {
+            console.error("Error changing user status in component:", operationError);
         }
     };
 
@@ -195,8 +234,8 @@ const UserAccountsContent = observer(() => {
                         <input
                             type="text"
                             placeholder="Search by username, email, or name"
-                            value={searchTerm}
-                            onChange={(e) => AdminDashboardViewModel.setSearchTerm(e.target.value)}
+                            value={userAccountsSearchTerm} // Use searchTerm from userAccountsVM
+                            onChange={(e) => setUserAccountsSearchTerm(e.target.value)} // Use setSearchTerm from userAccountsVM
                         />
                         <i className="fas fa-search"></i>
                     </div>
@@ -218,12 +257,13 @@ const UserAccountsContent = observer(() => {
                 </button>
             </div>
 
-            {isLoading && <p className="loading-message">Loading accounts...</p>}
-            {error && <p className="error-message">{error}</p>}
+            {/* Display loading and error messages from both view models */}
+            {(isLoading || userAccountsLoading) && <p className="loading-message">Loading accounts...</p>}
+            {(error || userAccountsError) && <p className="error-message">{error || userAccountsError}</p>}
 
             <div className="table-container">
                 <table>
-                   <thead>
+                    <thead>
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
@@ -236,17 +276,17 @@ const UserAccountsContent = observer(() => {
                                     <th>Documents</th>
                                 </>
                             )}
-                            {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
+                            <th>Action</th> {/* Single Action column for both tabs */}
                         </tr>
                     </thead>
 
                     <tbody>
-                        {activeTab === 'ALL_ACCOUNTS' && filteredAllAccounts.length > 0 ? (
-                            filteredAllAccounts.map(user => (
+                        {activeTab === 'ALL_ACCOUNTS' && allUsersFiltered.length > 0 ? ( // Use allUsersFiltered from userAccountsVM
+                            allUsersFiltered.map(user => (
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
-                                    onAction={handleSuspendUnsuspend}
+                                    onAction={handleSuspendUnsuspend} // This calls the specific action function
                                     onNameClick={handleOpenModal}
                                     type="all"
                                 />
@@ -256,7 +296,7 @@ const UserAccountsContent = observer(() => {
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
-                                    onAction={() => {}} 
+                                    onAction={() => {}} // Action is handled within UserAccountRow for pending
                                     onNameClick={handleOpenModal}
                                     type="pending"
                                 />
@@ -264,7 +304,7 @@ const UserAccountsContent = observer(() => {
                         ) : (
                             <tr>
                                 <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message">
-                                    {isLoading ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
+                                    {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
                                 </td>
                             </tr>
                         )}
@@ -279,7 +319,22 @@ const UserAccountsContent = observer(() => {
 
             {showUserDetailModal && selectedUser && (
                 <UserDetailModal
+                    user={selectedUser} // Pass the selected user to the modal
                     onClose={handleCloseModal}
+                    onApprove={approveNutritionist} // From AdminDashboardViewModel
+                    onReject={() => AdminDashboardViewModel.setShowRejectionReasonModal(true)} // Directly call on ViewModel
+                    onViewCertificate={viewCertificate} // From AdminDashboardViewModel
+                    isPendingNutritionist={activeTab === 'PENDING_APPROVAL'} // Inform modal about context
+                />
+            )}
+
+            {/* Rejection Reason Modal - controlled by AdminDashboardViewModel */}
+            {showRejectionReasonModal && (
+                <RejectionReasonModal
+                    reason={rejectionReason}
+                    setReason={(value) => AdminDashboardViewModel.setRejectionReason(value)} // Directly call on ViewModel
+                    onConfirm={() => rejectNutritionist(selectedUser.id)}
+                    onClose={() => AdminDashboardViewModel.setShowRejectionReasonModal(false)} // Directly call on ViewModel
                 />
             )}
         </>
@@ -289,20 +344,21 @@ const UserAccountsContent = observer(() => {
 
 // AdminDashboard Main Component
 const AdminDashboard = observer(({ onLogout }) => {
+    // Access currentView directly from AdminDashboardViewModel
     const { currentView } = AdminDashboardViewModel;
 
     // Check admin status on mount
     useEffect(() => {
-    const checkAccess = async () => {
-        await AdminViewModel.verifyAdminAccess();
-        console.log('isAdmin', AdminViewModel.isAdmin);
-        if (!AdminViewModel.isAdmin) {
-            alert("Access Denied: You must be an administrator to view this page.");
-            window.location.href = '/login';
-        }
-    };
-    checkAccess();
-}, []);
+        const checkAccess = async () => {
+            await AdminViewModel.verifyAdminAccess();
+            console.log('isAdmin', AdminViewModel.isAdmin);
+            if (!AdminViewModel.isAdmin) {
+                alert("Access Denied: You must be an administrator to view this page.");
+                window.location.href = '/login';
+            }
+        };
+        checkAccess();
+    }, []);
 
 
     return (
@@ -310,7 +366,7 @@ const AdminDashboard = observer(({ onLogout }) => {
             <AdminSidebar
                 onNavigate={(view) => AdminDashboardViewModel.setCurrentView(view)}
                 currentView={currentView}
-                onLogout={onLogout} 
+                onLogout={onLogout}
             />
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}
@@ -324,5 +380,8 @@ const AdminDashboard = observer(({ onLogout }) => {
         </div>
     );
 });
+
+// IMPORTANT: The RejectionReasonModal component definition has been moved to its own file.
+// It should NOT be present here.
 
 export default AdminDashboard;

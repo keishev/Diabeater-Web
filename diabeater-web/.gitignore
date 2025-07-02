@@ -48,3 +48,5 @@ coverage/
 
 # Optional cache folders
 .cache/
+
+../backend/node_modules
