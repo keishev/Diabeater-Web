@@ -150,7 +150,7 @@ const UserAccountsContent = observer(() => {
     // Fetch accounts on component mount
     useEffect(() => {
         AdminDashboardViewModel.fetchAccounts();
-    }, []); // Empty dependency array means this runs once on mount
+    }, []); 
 
     const handleOpenModal = (user) => {
         AdminDashboardViewModel.setSelectedUser(user);

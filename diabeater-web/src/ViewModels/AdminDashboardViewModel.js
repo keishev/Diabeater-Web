@@ -1,7 +1,7 @@
 // src/ViewModels/AdminDashboardViewModel.js
 
 import { makeAutoObservable, runInAction } from 'mobx';
-import nutritionistRepository from '../Repositories/NutritionistApplicationRepository';
+import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
 import { getAuth } from 'firebase/auth'; // Ensure getAuth is imported
 
 class AdminDashboardViewModel {
@@ -105,7 +105,7 @@ class AdminDashboardViewModel {
         this.setLoading(true);
         this.setError('');
         try {
-            const allNutritionistsFromFirestore = await nutritionistRepository.getAllNutritionists() || [];
+            const allNutritionistsFromFirestore = await nutritionistApplicationRepository.getAllNutritionists() || [];
 
             runInAction(() => {
                 const pending = allNutritionistsFromFirestore.filter(n => n.status === 'pending').map(n => ({
@@ -138,6 +138,187 @@ class AdminDashboardViewModel {
         } catch (error) {
             console.error("Error fetching accounts:", error);
             this.setError(`Failed to fetch accounts: ${error.message}`);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    async approveNutritionist(userId) {
+        this.setLoading(true);
+        this.setError('');
+        try {
+            // --- ADDED AUTHENTICATION CHECKS ---
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.error("APPROVE_NUTRITIONIST_CALL: No user logged in when attempting to approve nutritionist.");
+                runInAction(() => {
+                    this.setError("Failed to approve: No user logged in. Please log in.");
+                    alert("Please log in as an administrator to approve.");
+                });
+                return;
+            }
+
+            const idTokenResult = await user.getIdTokenResult(true); // Force refresh token
+            if (idTokenResult.claims.admin !== true) {
+                console.warn("APPROVE_NUTRITIONIST_CALL: User does NOT have admin claims. Access denied.");
+                runInAction(() => {
+                    this.setError("Access Denied: You must be an administrator to approve accounts.");
+                    alert("Access Denied: You must be an administrator to approve accounts.");
+                });
+                return;
+            }
+            // --- END ADDED AUTHENTICATION CHECKS ---
+
+            const result = await nutritionistApplicationRepository.approveNutritionist(userId);
+            runInAction(() => {
+                this.setPendingAccounts(this.pendingAccounts.filter(user => user.id !== userId));
+
+                const approvedNutIndex = this.allAccounts.findIndex(u => u.id === userId);
+                if (approvedNutIndex !== -1) {
+                    const updatedAllAccounts = [...this.allAccounts];
+                    updatedAllAccounts[approvedNutIndex] = { ...updatedAllAccounts[approvedNutIndex], status: 'Active' };
+                    this.setAllAccounts(updatedAllAccounts);
+                } else {
+                    const newlyApproved = this.pendingAccounts.find(u => u.id === userId);
+                    if (newlyApproved) {
+                        const updatedAllAccounts = [...this.allAccounts, { ...newlyApproved, status: 'Active', accountType: 'Nutritionist' }];
+                        this.setAllAccounts(updatedAllAccounts);
+                    }
+                }
+                this.setShowUserDetailModal(false);
+                alert("User account has been approved!");
+            });
+            console.log("Approved nutritionist:", userId, result);
+        } catch (error) {
+            console.error("Error approving nutritionist:", error);
+            this.setError(`Failed to approve: ${error.message}`);
+            alert(`Failed to approve user: ${error.message}`);
+        } finally {
+            runInAction(() => { // Ensure MobX actions are within runInAction
+                this.setLoading(false);
+            });
+        }
+    }
+
+    async rejectNutritionist(userId) {
+        this.setLoading(true);
+        this.setError('');
+        try {
+            // --- ADDED AUTHENTICATION CHECKS ---
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.error("REJECT_NUTRITIONIST_CALL: No user logged in when attempting to reject nutritionist.");
+                runInAction(() => {
+                    this.setError("Failed to reject: No user logged in. Please log in.");
+                    alert("Please log in as an administrator to reject.");
+                });
+                return;
+            }
+
+            const idTokenResult = await user.getIdTokenResult(true); // Force refresh token
+            if (idTokenResult.claims.admin !== true) {
+                console.warn("REJECT_NUTRITIONIST_CALL: User does NOT have admin claims. Access denied.");
+                runInAction(() => {
+                    this.setError("Access Denied: You must be an administrator to reject accounts.");
+                    alert("Access Denied: You must be an administrator to reject accounts.");
+                });
+                return;
+            }
+            // --- END ADDED AUTHENTICATION CHECKS ---
+
+            const result = await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason);
+            runInAction(() => {
+                this.setPendingAccounts(this.pendingAccounts.filter(user => user.id !== userId));
+                this.setShowRejectionReasonModal(false);
+                this.setShowUserDetailModal(false);
+                this.setRejectionReason('');
+                alert("User account has been rejected!");
+            });
+            console.log("Rejected nutritionist:", userId, result);
+        } catch (error) {
+            console.error("Error rejecting nutritionist:", error);
+            this.setError(`Failed to reject: ${error.message}`);
+            alert(`Failed to reject user: ${error.message}`);
+        } finally {
+            runInAction(() => { // Ensure MobX actions are within runInAction
+                this.setLoading(false);
+            });
+        }
+    }
+
+    async viewCertificate(userId) {
+        this.setLoading(true);
+        this.setError('');
+
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.error("VIEW_CERTIFICATE_CALL: No user logged in when attempting to view certificate.");
+                runInAction(() => {
+                    this.setError("Failed to fetch certificate: No user logged in. Please log in.");
+                    alert("Please log in to view the certificate.");
+                });
+                return;
+            }
+
+            // Force a refresh of the ID token to ensure custom claims are up-to-date.
+            const idTokenResult = await user.getIdTokenResult(true);
+
+            // Double-check admin status right before calling the function
+            if (idTokenResult.claims.admin !== true) {
+                console.warn("VIEW_CERTIFICATE_CALL: User does NOT have admin claims despite being logged in. Access denied.");
+                runInAction(() => {
+                    this.setError("Access Denied: You must be an administrator to view this certificate.");
+                    alert("Access Denied: You must be an administrator to view this certificate.");
+                });
+                return;
+            }
+
+            // If we reach here, user is logged in and has admin claims. Proceed with the call.
+            const url = await nutritionistApplicationRepository.getNutritionistCertificateUrl(userId);
+            if (url) {
+                window.open(url, '_blank'); // Open the URL directly in a new tab
+            } else {
+                runInAction(() => {
+                    this.setError("Certificate URL not found.");
+                    alert("Certificate URL not found for this user.");
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching certificate URL:", error);
+            runInAction(() => {
+                this.setError(`Failed to fetch certificate: ${error.message}`);
+                alert(`Failed to fetch certificate: ${error.message}`);
+            });
+        } finally {
+            runInAction(() => {
+                this.setLoading(false);
+            });
+        }
+    }
+
+    async suspendUser(userId) {
+        this.setLoading(true);
+        this.setError('');
+        try {
+            console.log(`Simulating suspend for user: ${userId}`);
+            runInAction(() => {
+                const userToUpdate = this.allAccounts.find(user => user.id === userId);
+                if (userToUpdate) {
+                    userToUpdate.status = 'Inactive';
+                    alert(`User ${userToUpdate.name} has been suspended.`);
+                }
+            });
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+            console.error("Error suspending user:", error);
+            this.setError(`Failed to suspend user: ${error.message}`);
         } finally {
             this.setLoading(false);
         }
@@ -188,8 +369,6 @@ class AdminDashboardViewModel {
             return false;
         }
     }
-
-    
 }
 
 export default new AdminDashboardViewModel();

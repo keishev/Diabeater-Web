@@ -3,9 +3,12 @@ import { storage } from '../firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 class StorageService {
-    async uploadCertificate(userId, file) {
+    async uploadCertificate(userEmail, file) {
         try {
-            const certificateRef = ref(storage, `certificates/${userId}/${file.name}`);
+            const encodedEmail = encodeURIComponent(userEmail);
+            const certificateRef = ref(storage, `certificates/${encodedEmail}/${file.name}`);
+            await uploadBytes(certificateRef, file);
+
             const url = await getDownloadURL(certificateRef);
             return url;
         } catch (error) {

@@ -78,7 +78,6 @@ class NutritionistApplicationService {
                 createdAt: new Date().toISOString()
             });
 
-            console.log ('appref approving', applicationRef);
             await updateDoc(applicationRef, {
                 status: "approved",
                 approvedAt: new Date().toISOString(), 
@@ -100,7 +99,6 @@ class NutritionistApplicationService {
                 throw new Error("Nutritionist application not found.");
             }
 
-            console.log ('appref rejecting', applicationRef);
             await updateDoc(applicationRef, {
                 status: "rejected",
                 rejectionReason: reason || "", 

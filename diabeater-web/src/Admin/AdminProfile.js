@@ -28,8 +28,6 @@ const AdminProfile = () => {
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
-            // In a real app, you'd upload this file to a server (e.g., Firebase Storage)
-            // and get back a URL. For now, we'll just use a temporary URL.
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfileImage(reader.result); // Store the base64 URL for display
