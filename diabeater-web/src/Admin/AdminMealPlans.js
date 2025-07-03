@@ -1,303 +1,16 @@
-import React, { useState } from 'react';
+// src/Admin/AdminMealPlans.js
+import React, { useState, useEffect, useCallback } from 'react';
 import './AdminMealPlans.css';
 
-// Mock Data for Meal Plans - (Keep your existing DUMMY_MEAL_PLANS array here)
-const DUMMY_MEAL_PLANS = [
-    {
-        id: 'mp1',
-        name: 'Oatmeal and Strawberries',
-        author: 'John Doe',
-        imageFileName: 'oatmeal-and-strawberries.jpg',
-        status: 'pending',
-        description: 'A warm and comforting bowl of oatmeal topped with fresh, juicy strawberries. Perfect for a healthy start to your day.',
-        ingredients: [
-            '½ cup rolled oats',
-            '1 cup water or milk',
-            '½ cup fresh strawberries, sliced',
-            '1 tbsp honey or maple syrup (optional)',
-            'Pinch of salt'
-        ],
-        nutrientInfo: {
-            kcal: 320,
-            carbs: 50,
-            protein: 14,
-            fat: 7
-        },
-        category: ['Improved Energy', 'Healthy Breakfast']
-    },
-    {
-        id: 'mp2',
-        name: 'Overnight Oats with Blueberries',
-        author: 'John Doe',
-        imageFileName: 'overnight-oats-with-blueberries.jpg',
-        status: 'pending',
-        description: 'Start your day with a refreshing and nutritious jar of Blueberry Overnight Oats. This make-ahead breakfast is rich in fiber, antioxidants, and protein – perfect for busy mornings. Creamy oats soaked in almond milk are layered with juicy blueberries, Greek yogurt, and a touch of honey for natural sweetness. It’s a wholesome, satisfying meal that fuels your morning without any fuss.',
-        ingredients: [
-            '½ cup rolled oats',
-            '¾ cup unsweetened almond milk (or milk of choice)',
-            '¼ cup Greek yogurt',
-            '1 tbsp chia seeds',
-            '½ tsp vanilla extract',
-            'Pinch of cinnamon (optional)',
-            '½ cup fresh blueberries',
-            '1 tbsp honey or maple syrup (optional)'
-        ],
-        nutrientInfo: {
-            kcal: 320,
-            carbs: 50,
-            protein: 14,
-            fat: 7
-        },
-        category: ['Improved Energy', 'Weight Loss']
-    },
-    {
-        id: 'mp3',
-        name: 'Grilled Salmon with Asparagus',
-        author: 'Jane Smith',
-        imageFileName: 'grilled-salmon-asparagus.jpg',
-        status: 'approved',
-        description: 'A lean and flavorful meal featuring perfectly grilled salmon and tender asparagus. Rich in omega-3 fatty acids and vitamins.',
-        ingredients: [
-            '6 oz salmon fillet',
-            '1 bunch asparagus, trimmed',
-            '1 tbsp olive oil',
-            'Salt and black pepper to taste',
-            'Lemon wedges for serving'
-        ],
-        nutrientInfo: {
-            kcal: 450,
-            carbs: 8,
-            protein: 40,
-            fat: 28
-        },
-        category: ['Heart Health', 'High Protein']
-    },
-    {
-        id: 'mp4',
-        name: 'Chicken and Vegetable Stir-fry',
-        author: 'Michael Brown',
-        imageFileName: 'chicken-vegetable-stir-fry.jpg',
-        status: 'pending',
-        description: 'A quick and colorful stir-fry packed with lean chicken breast and a variety of fresh vegetables. A great source of fiber and essential nutrients.',
-        ingredients: [
-            '8 oz chicken breast, sliced',
-            '1 cup broccoli florets',
-            '½ cup sliced carrots',
-            '½ cup bell peppers (assorted colors), sliced',
-            '2 tbsp soy sauce (low sodium)',
-            '1 tbsp sesame oil',
-            '1 tsp ginger, minced',
-            '1 clove garlic, minced',
-            '¼ cup chicken broth',
-            'Brown rice for serving (optional)'
-        ],
-        nutrientInfo: {
-            kcal: 380,
-            carbs: 35,
-            protein: 30,
-            fat: 12
-        },
-        category: ['Balanced Meal', 'Quick & Easy']
-    },
-    {
-        id: 'mp5',
-        name: 'Lentil Soup with Whole Grain Bread',
-        author: 'Emily White',
-        imageFileName: 'lentil-soup.jpg',
-        status: 'approved',
-        description: 'A hearty and nutritious lentil soup, rich in plant-based protein and fiber, served with a slice of whole-grain bread. Ideal for a comforting and healthy lunch or dinner.',
-        ingredients: [
-            '1 cup brown or green lentils, rinsed',
-            '4 cups vegetable broth',
-            '1 onion, chopped',
-            '2 carrots, diced',
-            '2 celery stalks, diced',
-            '1 can (14.5 oz) diced tomatoes',
-            '1 tsp cumin',
-            '½ tsp thyme',
-            'Salt and pepper to taste',
-            'Whole grain bread for serving'
-        ],
-        nutrientInfo: {
-            kcal: 300,
-            carbs: 55,
-            protein: 18,
-            fat: 4
-        },
-        category: ['Vegetarian', 'High Fiber']
-    },
-    {
-        id: 'mp6',
-        name: 'Quinoa Salad with Chickpeas',
-        author: 'Chris Green',
-        imageFileName: 'quinoa-chickpea-salad.jpg',
-        status: 'pending',
-        description: 'A refreshing and protein-packed quinoa salad featuring chickpeas, cucumbers, tomatoes, and a zesty lemon dressing. Perfect for a light lunch or side dish.',
-        ingredients: [
-            '1 cup cooked quinoa',
-            '1 can (15 oz) chickpeas, rinsed and drained',
-            '½ cucumber, diced',
-            '½ cup cherry tomatoes, halved',
-            '¼ cup red onion, finely chopped',
-            '2 tbsp fresh parsley, chopped',
-            '2 tbsp olive oil',
-            'Juice of ½ lemon',
-            'Salt and pepper to taste'
-        ],
-        nutrientInfo: {
-            kcal: 350,
-            carbs: 45,
-            protein: 12,
-            fat: 15
-        },
-        category: ['Vegan', 'Gluten-Free']
-    },
-    {
-        id: 'mp7',
-        name: 'Turkey Meatballs with Zucchini Noodles',
-        author: 'David Lee',
-        imageFileName: 'turkey-meatballs-zoodles.jpg',
-        status: 'approved',
-        description: 'Flavorful turkey meatballs served over a bed of fresh zucchini noodles, tossed in a light tomato sauce. A low-carb, high-protein alternative to traditional pasta dishes.',
-        ingredients: [
-            '1 lb ground turkey',
-            '½ cup breadcrumbs (gluten-free if preferred)',
-            '¼ cup milk',
-            '1 egg',
-            '¼ cup grated Parmesan cheese (optional)',
-            '1 clove garlic, minced',
-            '1 tbsp fresh parsley, chopped',
-            'Salt and pepper to taste',
-            '2 medium zucchini, spiralized',
-            '1 cup marinara sauce'
-        ],
-        nutrientInfo: {
-            kcal: 400,
-            carbs: 15,
-            protein: 35,
-            fat: 20
-        },
-        category: ['Low Carb', 'High Protein']
-    },
-    {
-        id: 'mp8',
-        name: 'Spinach and Feta Omelette',
-        author: 'Sarah Johnson',
-        imageFileName: 'spinach-feta-omelette.jpg',
-        status: 'pending',
-        description: 'A quick and protein-rich omelette filled with fresh spinach and tangy feta cheese. Ideal for a healthy breakfast or light meal.',
-        ingredients: [
-            '3 large eggs',
-            '½ cup fresh spinach',
-            '¼ cup crumbled feta cheese',
-            '1 tsp olive oil or butter',
-            'Salt and pepper to taste'
-        ],
-        nutrientInfo: {
-            kcal: 280,
-            carbs: 5,
-            protein: 20,
-            fat: 20
-        },
-        category: ['Healthy Breakfast', 'Quick & Easy']
-    },
-    {
-        id: 'mp9',
-        name: 'Baked Cod with Roasted Vegetables',
-        author: 'Tom Davis',
-        imageFileName: 'baked-cod-vegetables.jpg',
-        status: 'approved',
-        description: 'A simple and healthy baked cod fillet served with a medley of roasted seasonal vegetables. Light, nutritious, and easy to prepare.',
-        ingredients: [
-            '6 oz cod fillet',
-            '1 cup mixed vegetables (e.g., bell peppers, zucchini, onion), chopped',
-            '1 tbsp olive oil',
-            '½ tsp paprika',
-            'Salt and black pepper to taste',
-            'Lemon slice for garnish'
-        ],
-        nutrientInfo: {
-            kcal: 350,
-            carbs: 15,
-            protein: 30,
-            fat: 18
-        },
-        category: ['Heart Health', 'Low Calorie']
-    },
-    {
-        id: 'mp10',
-        name: 'Sweet Potato and Black Bean Burger',
-        author: 'Anna Kim',
-        imageFileName: 'sweet-potato-black-bean-burger.jpg',
-        status: 'pending',
-        description: 'A delicious and satisfying vegetarian burger made with sweet potato and black beans, served on a whole-wheat bun with fresh toppings.',
-        ingredients: [
-            '1 medium sweet potato, cooked and mashed',
-            '1 can (15 oz) black beans, rinsed and mashed',
-            '¼ cup breadcrumbs',
-            '¼ cup finely chopped onion',
-            '1 clove garlic, minced',
-            '1 tsp chili powder',
-            '½ tsp cumin',
-            'Salt and pepper to taste',
-            'Whole-wheat bun',
-            'Lettuce, tomato, avocado for topping'
-        ],
-        nutrientInfo: {
-            kcal: 420,
-            carbs: 60,
-            protein: 15,
-            fat: 12
-        },
-        category: ['Vegetarian', 'Plant-Based']
-    },
-    {
-        id: 'mp11',
-        name: 'Greek Yogurt with Berries and Nuts',
-        author: 'Peter Wilson',
-        imageFileName: 'greek-yogurt-berries.jpg',
-        status: 'approved',
-        description: 'A quick, protein-rich snack or breakfast featuring creamy Greek yogurt topped with a mix of fresh berries and crunchy nuts. Packed with probiotics and antioxidants.',
-        ingredients: [
-            '1 cup plain Greek yogurt',
-            '½ cup mixed berries (strawberries, blueberries, raspberries)',
-            '2 tbsp mixed nuts (almonds, walnuts), chopped',
-            '1 tsp honey or maple syrup (optional)'
-        ],
-        nutrientInfo: {
-            kcal: 250,
-            carbs: 25,
-            protein: 25,
-            fat: 8
-        },
-        category: ['Healthy Snack', 'High Protein']
-    },
-    {
-        id: 'mp12',
-        name: 'Whole Wheat Pasta with Pesto and Cherry Tomatoes',
-        author: 'Laura Adams',
-        imageFileName: 'pasta-pesto-cherry-tomatoes.jpg',
-        status: 'pending',
-        description: 'A simple and fresh pasta dish using whole wheat pasta, vibrant pesto, and sweet cherry tomatoes. A quick vegetarian meal.',
-        ingredients: [
-            '1 cup whole wheat pasta (uncooked)',
-            '¼ cup pesto',
-            '1 cup cherry tomatoes, halved',
-            '2 tbsp grated Parmesan cheese (optional)',
-            'Fresh basil for garnish'
-        ],
-        nutrientInfo: {
-            kcal: 400,
-            carbs: 55,
-            protein: 15,
-            fat: 15
-        },
-        category: ['Vegetarian', 'Quick & Easy']
-    }
-];
+// Firebase Imports
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore'; // Added addDoc and serverTimestamp
+import { db } from '../firebase'; // Import db from your firebase.js
+
+// apiService is no longer needed for notifications if you have no Node.js backend
+// import apiService from '../Services/apiService';
 
 const AdminMealPlans = ({ onViewDetails }) => {
-    const [mealPlans, setMealPlans] = useState(DUMMY_MEAL_PLANS);
+    const [mealPlans, setMealPlans] = useState([]);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedPlanToReject, setSelectedPlanToReject] = useState(null);
     const [selectedRejectReason, setSelectedRejectReason] = useState('');
@@ -306,10 +19,10 @@ const AdminMealPlans = ({ onViewDetails }) => {
     const [showApproveConfirmModal, setShowApproveConfirmModal] = useState(false);
     const [selectedPlanToApprove, setSelectedPlanToApprove] = useState(null);
 
-    // New state for search and category filter
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+    const [allCategories, setAllCategories] = useState([]);
 
     const rejectionReasons = [
         'Incomplete information provided',
@@ -320,11 +33,35 @@ const AdminMealPlans = ({ onViewDetails }) => {
         'Other (please specify)'
     ];
 
-    // Collect all unique categories from DUMMY_MEAL_PLANS
-    const allCategories = Array.from(new Set(
-        DUMMY_MEAL_PLANS.flatMap(plan => plan.category || [])
-    )).sort();
+    const fetchMealPlansForAdmin = useCallback(async () => {
+        try {
+            console.log("AdminMealPlans: Fetching meal plans from Firestore for admin review...");
+            const q = query(
+                collection(db, 'meal_plans'),
+                where('status', '==', 'PENDING_APPROVAL')
+            );
+            const querySnapshot = await getDocs(q);
+            const fetchedMealPlans = querySnapshot.docs.map(doc => ({
+                _id: doc.id,
+                ...doc.data()
+            }));
 
+            setMealPlans(fetchedMealPlans);
+
+            const categories = [...new Set(fetchedMealPlans.flatMap(plan => plan.categories || []))];
+            setAllCategories(categories.sort());
+
+            console.log("AdminMealPlans: Fetched pending meal plans:", fetchedMealPlans);
+        } catch (error) {
+            console.error('AdminMealPlans: Error fetching meal plans from Firestore:', error);
+            setMealPlans([]);
+            setAllCategories([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchMealPlansForAdmin();
+    }, [fetchMealPlansForAdmin]);
 
     // --- APPROVE MODAL LOGIC ---
     const handleApproveClick = (id) => {
@@ -332,16 +69,39 @@ const AdminMealPlans = ({ onViewDetails }) => {
         setShowApproveConfirmModal(true);
     };
 
-    const handleApproveConfirm = () => {
-        setMealPlans(prevPlans =>
-            prevPlans.map(plan =>
-                plan.id === selectedPlanToApprove ? { ...plan, status: 'approved' } : plan
-            )
-        );
-        console.log(`Meal Plan ${selectedPlanToApprove} Approved!`);
-        // In a real app, send API call to approve
-        setShowApproveConfirmModal(false);
-        setSelectedPlanToApprove(null);
+    const handleApproveConfirm = async () => {
+        try {
+            console.log(`AdminMealPlans: Approving meal plan ${selectedPlanToApprove} in Firestore...`);
+            const mealPlanRef = doc(db, 'meal_plans', selectedPlanToApprove);
+            await updateDoc(mealPlanRef, { status: 'UPLOADED' });
+
+            console.log(`Meal Plan ${selectedPlanToApprove} Approved in Firestore!`);
+            setShowApproveConfirmModal(false);
+            setSelectedPlanToApprove(null);
+
+            const approvedPlanDoc = await getDoc(mealPlanRef);
+            if (approvedPlanDoc.exists()) {
+                const approvedPlanData = approvedPlanDoc.data();
+                // ⭐ Create Approval Notification in Firestore
+                await addDoc(collection(db, 'notifications'), {
+                    recipientId: approvedPlanData.authorId,
+                    type: 'mealPlanApproval',
+                    message: `Your meal plan "${approvedPlanData.name}" has been APPROVED.`,
+                    mealPlanId: approvedPlanDoc.id,
+                    isRead: false,
+                    timestamp: serverTimestamp() // Use Firestore server timestamp
+                });
+                console.log(`Approval notification created in Firestore for meal plan ${approvedPlanDoc.id}`);
+            }
+
+            fetchMealPlansForAdmin();
+
+        } catch (error) {
+            console.error('AdminMealPlans: Error approving meal plan or creating notification:', error);
+            alert('Failed to approve meal plan. Please try again.');
+            setShowApproveConfirmModal(false);
+            setSelectedPlanToApprove(null);
+        }
     };
 
     const handleApproveCancel = () => {
@@ -366,7 +126,7 @@ const AdminMealPlans = ({ onViewDetails }) => {
         }
     };
 
-    const handleRejectSubmit = () => {
+    const handleRejectSubmit = async () => {
         let finalReason = selectedRejectReason;
 
         if (!finalReason) {
@@ -382,16 +142,43 @@ const AdminMealPlans = ({ onViewDetails }) => {
             finalReason = otherReasonText.trim();
         }
 
-        setMealPlans(prevPlans =>
-            prevPlans.map(plan =>
-                plan.id === selectedPlanToReject ? { ...plan, status: 'rejected', rejectionReason: finalReason } : plan
-            )
-        );
-        console.log(`Meal Plan ${selectedPlanToReject} Rejected! Reason: ${finalReason}`);
-        setShowRejectModal(false);
-        setSelectedPlanToReject(null);
-        setSelectedRejectReason('');
-        setOtherReasonText('');
+        try {
+            console.log(`AdminMealPlans: Rejecting meal plan ${selectedPlanToReject} in Firestore. Reason: ${finalReason}`);
+            const mealPlanRef = doc(db, 'meal_plans', selectedPlanToReject);
+            await updateDoc(mealPlanRef, { status: 'REJECTED', rejectionReason: finalReason });
+
+            console.log(`Meal Plan ${selectedPlanToReject} Rejected in Firestore! Reason: ${finalReason}`);
+            setShowRejectModal(false);
+            setSelectedPlanToReject(null);
+            setSelectedRejectReason('');
+            setOtherReasonText('');
+
+            const rejectedPlanDoc = await getDoc(mealPlanRef);
+            if (rejectedPlanDoc.exists()) {
+                const rejectedPlanData = rejectedPlanDoc.data();
+                // ⭐ Create Rejection Notification in Firestore
+                await addDoc(collection(db, 'notifications'), {
+                    recipientId: rejectedPlanData.authorId,
+                    type: 'mealPlanRejection',
+                    message: `Your meal plan "${rejectedPlanData.name}" has been REJECTED. Reason: ${finalReason}`,
+                    mealPlanId: rejectedPlanDoc.id,
+                    rejectionReason: finalReason,
+                    isRead: false,
+                    timestamp: serverTimestamp() // Use Firestore server timestamp
+                });
+                console.log(`Rejection notification created in Firestore for meal plan ${rejectedPlanDoc.id}`);
+            }
+
+            fetchMealPlansForAdmin();
+
+        } catch (error) {
+            console.error('AdminMealPlans: Error rejecting meal plan or creating notification:', error);
+            alert('Failed to reject meal plan. Please try again.');
+            setShowRejectModal(false);
+            setSelectedPlanToReject(null);
+            setSelectedRejectReason('');
+            setOtherReasonText('');
+        }
     };
 
     const handleRejectCancel = () => {
@@ -400,29 +187,25 @@ const AdminMealPlans = ({ onViewDetails }) => {
         setSelectedRejectReason('');
         setOtherReasonText('');
     };
-    // --- END REJECT MODAL LOGIC ---
-
 
     const handleImageClick = (id) => {
         console.log('Image clicked for ID:', id);
-        if (onViewDetails) {
-            onViewDetails(id);
+        const plan = mealPlans.find(p => p._id === id);
+        if (onViewDetails && plan) {
+            onViewDetails(plan);
         }
     };
 
-    // Filtered meal plans based on status, search term, and category
     const filteredMealPlans = mealPlans.filter(plan => {
-        const matchesStatus = plan.status === 'pending';
         const matchesSearchTerm = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                  plan.author.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory === '' || (plan.category && plan.category.includes(selectedCategory));
-
-        return matchesStatus && matchesSearchTerm && matchesCategory;
+                                  (plan.author && plan.author.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesCategory = selectedCategory === '' || (plan.categories && plan.categories.includes(selectedCategory));
+        return matchesSearchTerm && matchesCategory;
     });
 
     return (
         <div className="admin-meal-plans-container">
-            <div className="admin-meal-plans-header"> {/* New div for header content */}
+            <div className="admin-meal-plans-header">
                 <h1 className="admin-meal-plans-title">VERIFY MEAL PLANS</h1>
                 <div className="search-controls">
                     <input
@@ -471,27 +254,27 @@ const AdminMealPlans = ({ onViewDetails }) => {
             <div className="meal-plans-grid">
                 {filteredMealPlans.length > 0 ? (
                     filteredMealPlans.map(plan => (
-                        <div key={plan.id} className="meal-plan-card">
+                        <div key={plan._id} className="meal-plan-card">
                             <img
-                                src={`/assetscopy/${plan.imageFileName}`}
+                                src={plan.imageUrl || `/assetscopy/${plan.imageFileName}`}
                                 alt={plan.name}
                                 className="meal-plan-card-image"
-                                onClick={() => handleImageClick(plan.id)}
+                                onClick={() => handleImageClick(plan._id)}
                             />
                             <div className="meal-plan-card-info">
                                 <h3 className="meal-plan-card-name">{plan.name}</h3>
-                                <p className="meal-plan-card-author">by {plan.author}</p>
+                                <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
                             </div>
                             <div className="meal-plan-card-actions">
                                 <button
                                     className="approve-button"
-                                    onClick={() => handleApproveClick(plan.id)}
+                                    onClick={() => handleApproveClick(plan._id)}
                                 >
                                     VERIFY
                                 </button>
                                 <button
                                     className="reject-button"
-                                    onClick={() => handleRejectClick(plan.id)}
+                                    onClick={() => handleRejectClick(plan._id)}
                                 >
                                     REJECT
                                 </button>
@@ -503,7 +286,7 @@ const AdminMealPlans = ({ onViewDetails }) => {
                 )}
             </div>
 
-            {/* Rejection Reasons Modal (Existing) */}
+            {/* Rejection Reasons Modal */}
             {showRejectModal && (
                 <div className="reject-modal-overlay">
                     <div className="reject-modal-content">
@@ -542,11 +325,12 @@ const AdminMealPlans = ({ onViewDetails }) => {
                 </div>
             )}
 
-            {/* Approve Confirmation Modal (Existing) */}
+            {/* Approve Confirmation Modal */}
             {showApproveConfirmModal && (
                 <div className="approve-modal-overlay">
                     <div className="approve-modal-content">
                         <h2 className="modal-title">Accept Meal Plan</h2>
+                        <p>Are you sure you want to approve this meal plan?</p>
                         <div className="modal-actions">
                             <button className="no-button" onClick={handleApproveCancel}>
                                 No
@@ -562,5 +346,4 @@ const AdminMealPlans = ({ onViewDetails }) => {
     );
 };
 
-export { DUMMY_MEAL_PLANS };
 export default AdminMealPlans;

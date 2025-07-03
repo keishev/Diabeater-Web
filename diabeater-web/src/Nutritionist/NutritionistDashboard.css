@@ -78,6 +78,42 @@
     font-size: 20px;
 }
 
+.nav-item .notification-badge {
+    background-color: #ff4d4f; /* Red background for visibility */
+    color: white;
+    border-radius: 50%; /* Makes it circular */
+    padding: 2px 7px; /* Adjust padding to make it a small, neat circle/oval */
+    font-size: 0.7em; /* Smaller font size for the number */
+    min-width: 18px; /* Ensures a minimum width/height for single digits */
+    text-align: center;
+    line-height: 1; /* Helps vertically center the number within the badge */
+    box-sizing: border-box; /* Include padding in width/height calculation */
+    margin-top: 375px; /* Adjust this value to position the badge vertically */
+
+    /* Positioning within the flex container */
+    margin-right: 40px; /* This pushes the badge to the far right within the flex item */
+    
+    /* If you want it closer to the "Notifications" text, you'd use absolute positioning */
+    /*
+    position: absolute;
+    right: 10px; 
+    top: 50%;
+    transform: translateY(-50%);
+    */
+    /* Or, for a very tight fit next to the text: */
+    /*
+    position: relative; 
+    left: 5px; 
+    */
+}
+
+/* Ensure the span for "Notifications" doesn't take up excessive space */
+.nav-item span {
+    flex-shrink: 0; /* Prevents it from shrinking too much */
+    flex-grow: 0; /* Prevents it from growing too much if other elements are small */
+}
+
+
 .logout-button {
     background-color: #ff9800; /* Orange color */
     color: white;

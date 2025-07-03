@@ -1,19 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react'; // Import useRef
-import './CreateMealPlan.css'; // Make sure this CSS file is created
+import React, { useState, useEffect, useRef } from 'react';
+import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'; // Import doc, getDoc
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import app from '../firebase'; // Ensure this path is correct
+import AuthService from '../Services/AuthService'; // Import AuthService to get current user name
 
-const CreateMealPlan = () => {
+import './CreateMealPlan.css';
+
+const db = getFirestore(app);
+const storage = getStorage(app);
+const auth = getAuth(app);
+
+const CreateMealPlan = ({ onMealPlanSubmitted }) => {
     const [mealName, setMealName] = useState('');
-    const [selectedCategories, setSelectedCategories] = useState([]); // Array for multiple categories
-    const [uploadPhoto, setUploadPhoto] = useState(null); // To hold the File object
-    const [imagePreviewUrl, setImagePreviewUrl] = useState(null); // To hold the URL for image src
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [uploadPhoto, setUploadPhoto] = useState(null);
+    const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
     const [description, setDescription] = useState('');
     const [calories, setCalories] = useState('');
     const [protein, setProtein] = useState('');
     const [carbohydrates, setCarbohydrates] = useState('');
     const [fats, setFats] = useState('');
 
-    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false); // New state for dropdown
-    const categoryDropdownRef = useRef(null); // Ref for click outside detection
+    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const categoryDropdownRef = useRef(null);
+
+    const [loading, setLoading] = useState(false); // New state for loading
+    const [error, setError] = useState('');     // New state for errors
+    const [success, setSuccess] = useState(''); // New state for success message
 
     const categoryOptions = [
         'Improved Energy',
@@ -26,7 +40,6 @@ const CreateMealPlan = () => {
         'Snack',
     ];
 
-    // Effect for handling click outside to close dropdown
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
@@ -44,15 +57,13 @@ const CreateMealPlan = () => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setUploadPhoto(file);
-            setImagePreviewUrl(URL.createObjectURL(file)); // Create a URL for the image preview
+            setImagePreviewUrl(URL.createObjectURL(file));
         } else {
-            // If no file is selected (e.g., user cancels file dialog), clear both
             setUploadPhoto(null);
             setImagePreviewUrl(null);
         }
     };
 
-    // Cleanup function for object URL to prevent memory leaks
     useEffect(() => {
         return () => {
             if (imagePreviewUrl) {
@@ -65,43 +76,98 @@ const CreateMealPlan = () => {
         const { value, checked } = e.target;
         setSelectedCategories(prev => {
             if (checked) {
-                return [...prev, value]; // Add category if checked
+                return [...prev, value];
             } else {
-                return prev.filter(category => category !== value); // Remove category if unchecked
+                return prev.filter(category => category !== value);
             }
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // In a real application, you would send this data to your backend API
-        const mealPlanData = {
-            mealName,
-            categories: selectedCategories, // Now an array
-            description,
-            calories: parseFloat(calories),
-            protein: parseFloat(protein),
-            carbohydrates: parseFloat(carbohydrates),
-            fats: parseFloat(fats),
-            // For photo, you'd typically upload the file separately or send as FormData
-            uploadPhoto: uploadPhoto ? uploadPhoto.name : null,
-        };
-        console.log('New Meal Plan Data:', mealPlanData);
-        alert('Meal Plan Created! (Check console for data)');
+        setLoading(true);
+        setError('');
+        setSuccess('');
 
-        // Optional: Reset form after submission
-        setMealName('');
-        setSelectedCategories([]);
-        setUploadPhoto(null);
-        setImagePreviewUrl(null); // Clear image preview on reset
-        setDescription('');
-        setCalories('');
-        setProtein('');
-        setCarbohydrates('');
-        setFats('');
+        const user = auth.currentUser; // Get current Firebase Auth user
+        const nutritionistInfo = AuthService.getCurrentUser(); // Get user info from localStorage (AuthService)
+
+        if (!user || !nutritionistInfo || nutritionistInfo.role !== 'nutritionist') {
+            setError('You must be logged in as an approved nutritionist to create a meal plan.');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            let imageUrl = '';
+            let imageFileName = '';
+
+            if (uploadPhoto) {
+                // 1. Upload image to Firebase Storage
+                imageFileName = `${Date.now()}_${uploadPhoto.name}`;
+                const storageRef = ref(storage, `meal_plan_images/${imageFileName}`);
+                const snapshot = await uploadBytes(storageRef, uploadPhoto);
+                imageUrl = await getDownloadURL(snapshot.ref);
+            } else {
+                setError('Please upload a meal plan image.');
+                setLoading(false);
+                return;
+            }
+
+            // Get the nutritionist's actual name from Firestore user_accounts (more reliable than localStorage for initial fetch)
+            // This ensures the `author` field is accurate.
+            const userDocRef = doc(db, 'user_accounts', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+            const actualNutritionistName = userData.name || userData.username || user.email; // Fallback to email
+
+            // 2. Save meal plan data to Firestore
+            const mealPlanData = {
+                name: mealName,
+                categories: selectedCategories,
+                description,
+                calories: parseFloat(calories),
+                protein: parseFloat(protein),
+                carbohydrates: parseFloat(carbohydrates),
+                fats: parseFloat(fats),
+                imageUrl: imageUrl,       // Stored direct image URL
+                imageFileName: imageFileName, // Stored original file name
+                author: actualNutritionistName, // Nutritionist's display name
+                authorId: user.uid,         // Nutritionist's UID (for filtering)
+                status: 'PENDING_APPROVAL', // Initial status set here
+                likes: 0,
+                createdAt: serverTimestamp(), // Firestore timestamp
+            };
+
+            await addDoc(collection(db, 'meal_plans'), mealPlanData);
+
+            setSuccess('Meal Plan Created Successfully!');
+            console.log('New Meal Plan Data Saved to Firestore:', mealPlanData);
+
+            // Notify parent component (NutritionistDashboard) to re-fetch meal plans
+            if (onMealPlanSubmitted) {
+                onMealPlanSubmitted();
+            }
+
+            // Reset form fields
+            setMealName('');
+            setSelectedCategories([]);
+            setUploadPhoto(null);
+            setImagePreviewUrl(null);
+            setDescription('');
+            setCalories('');
+            setProtein('');
+            setCarbohydrates('');
+            setFats('');
+
+        } catch (err) {
+            console.error('Error creating meal plan:', err);
+            setError('Failed to create meal plan: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Helper function to display selected categories on the button
     const getCategoryButtonText = () => {
         if (selectedCategories.length === 0) {
             return "Select Categories";
@@ -117,7 +183,6 @@ const CreateMealPlan = () => {
             <h2 className="page-title">CREATE MEAL PLAN</h2>
             <form onSubmit={handleSubmit} className="meal-plan-form">
                 <div className="form-row-top">
-                    {/* Meal Name Input */}
                     <div className="form-group meal-name">
                         <label htmlFor="meal-name">Meal Name</label>
                         <input
@@ -130,20 +195,17 @@ const CreateMealPlan = () => {
                         />
                     </div>
 
-                    {/* Upload Photo Section - Initially the button, then the preview and change button */}
                     <div className="form-group upload-photo">
-
                         <input
                             type="file"
                             id="upload-photo"
                             accept="image/*"
                             onChange={handleFileChange}
-                            style={{ display: 'none' }} // Hidden file input
+                            style={{ display: 'none' }}
                         />
                         {imagePreviewUrl ? (
                             <div className="uploaded-image-preview">
                                 <img src={imagePreviewUrl} alt="Meal Preview" className="meal-thumbnail" />
-                                {/* Label targets the hidden file input to allow changing */}
                                 <label htmlFor="upload-photo" className="change-photo-button">
                                     Change Picture
                                 </label>
@@ -156,10 +218,10 @@ const CreateMealPlan = () => {
                     </div>
 
                     <div className="form-group category">
-                        <label>Category</label> {/* No htmlFor needed for the main label */}
+                        <label>Category</label>
                         <div className="dropdown-checklist-container" ref={categoryDropdownRef}>
                             <button
-                                type="button" // Important: set type to button to prevent form submission
+                                type="button"
                                 className={`dropdown-toggle-button ${isCategoryDropdownOpen ? 'open' : ''}`}
                                 onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
                             >
@@ -201,7 +263,6 @@ const CreateMealPlan = () => {
 
                 <h3 className="create-meal-section-title">Nutrients Information</h3>
                 <div className="nutrients-grid">
-                    {/* Calories Input */}
                     <div className="nutrient-item">
                         <label htmlFor="calories" className="nutrient-label">Calories</label>
                         <input
@@ -216,7 +277,6 @@ const CreateMealPlan = () => {
                         <span className="unit">kcal</span>
                     </div>
 
-                    {/* Protein Input */}
                     <div className="nutrient-item">
                         <label htmlFor="protein" className="nutrient-label">Protein</label>
                         <input
@@ -231,7 +291,6 @@ const CreateMealPlan = () => {
                         <span className="unit">grams</span>
                     </div>
 
-                    {/* Carbohydrates Input */}
                     <div className="nutrient-item">
                         <label htmlFor="carbohydrates" className="nutrient-label">Carbohydrates</label>
                         <input
@@ -246,7 +305,6 @@ const CreateMealPlan = () => {
                         <span className="unit">grams</span>
                     </div>
 
-                    {/* Fats Input */}
                     <div className="nutrient-item">
                         <label htmlFor="fats" className="nutrient-label"> Fats</label>
                         <input
@@ -262,8 +320,11 @@ const CreateMealPlan = () => {
                     </div>
                 </div>
 
-                <button type="submit" className="create-button">
-                    + CREATE
+                {error && <p className="error-message">{error}</p>}
+                {success && <p className="success-message">{success}</p>}
+
+                <button type="submit" className="create-button" disabled={loading}>
+                    {loading ? 'Creating...' : '+ CREATE'}
                 </button>
             </form>
         </div>

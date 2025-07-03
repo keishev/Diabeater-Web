@@ -28,6 +28,7 @@ function App() {
                 try {
                     const idTokenResult = await user.getIdTokenResult(true);
                     const userDocRef = doc(db, 'user_accounts', user.uid); 
+                    console.log (user.uid);
                     const userDocSnap = await getDoc(userDocRef);
 
                     if (!userDocSnap.exists()) {
@@ -40,7 +41,7 @@ function App() {
                         if (userData.role === 'admin') {
                             setUserRole('admin');
                             setVerifiedLogin(true);
-                        } else if (userData.role === 'nutritionist' && userData.status === 'approved') {
+                        } else if (userData.role === 'nutritionist' && userData.status === 'Active') {
                             setUserRole('nutritionist');
                             setVerifiedLogin(true);
                         } else {
@@ -112,7 +113,8 @@ function App() {
     }
 
     if (verifiedLogin && userRole === 'nutritionist') {
-        return <NutritionistDashboard />;
+        // ⭐⭐⭐ THIS IS THE LINE TO CHANGE ⭐⭐⭐
+        return <NutritionistDashboard onLogout={handleLogout} />; 
     }
 
     if (verifiedLogin && userRole === 'admin') {

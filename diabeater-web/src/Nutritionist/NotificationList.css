@@ -1,0 +1,124 @@
+/* NotificationList.css */
+
+.notification-list-content {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.notification-list-content .page-title {
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 2em;
+}
+
+.notifications-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.notification-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+.notification-item.unread {
+    border-left: 5px solid #007bff; /* Highlight unread notifications */
+    background-color: #f0f8ff; /* Light blue background for unread */
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.notification-type {
+    font-weight: bold;
+    color: #007bff;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+/* Specific type styling */
+.notification-type.type-meal-plan-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.notification-type.type-meal-plan-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.notification-date {
+    font-size: 0.8em;
+    color: #777;
+}
+
+.notification-message {
+    margin-bottom: 10px;
+    color: #333;
+    line-height: 1.5;
+}
+
+.notification-reason {
+    font-style: italic;
+    color: #555;
+    margin-top: 5px;
+    font-size: 0.9em;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+}
+
+.mark-as-read-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85em;
+    margin-top: 10px;
+    float: right; /* Position to the right */
+    transition: background-color 0.2s ease;
+}
+
+.mark-as-read-button:hover {
+    background-color: #0056b3;
+}
+
+.no-notifications-message {
+    text-align: center;
+    color: #666;
+    margin-top: 50px;
+    font-size: 1.1em;
+}
+
+/* For the sidebar notification badge */
+.sidebar .notification-badge {
+    background-color: #dc3545; /* Red color for alerts */
+    color: white;
+    border-radius: 50%;
+    padding: 2px 7px;
+    font-size: 0.7em;
+    position: absolute;
+    top: 5px; /* Adjust as needed */
+    right: 5px; /* Adjust as needed */
+    transform: translate(50%, -50%); /* Center badge relative to its parent corner */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 20px;
+    height: 20px;
+}

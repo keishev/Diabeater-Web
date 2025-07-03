@@ -73,7 +73,7 @@ class NutritionistApplicationService {
                 isPremium: false,
                 points: 0,
                 profileCompleted: false,
-                status: true,
+                status: 'Active',
                 username: "",
                 createdAt: new Date().toISOString()
             });
