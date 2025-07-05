@@ -1,11 +1,12 @@
+/* src/CreateMealPlan.js */
 import React, { useState, useEffect, useRef } from 'react';
-import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'; // Import doc, getDoc
+import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
-import app from '../firebase'; // Ensure this path is correct
-import AuthService from '../Services/AuthService'; // Import AuthService to get current user name
+import app from '../firebase';
+import AuthService from '../Services/AuthService';
 
-import './CreateMealPlan.css';
+import './CreateMealPlan.css'; // Assuming this CSS exists and is suitable
 
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -25,9 +26,9 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const categoryDropdownRef = useRef(null);
 
-    const [loading, setLoading] = useState(false); // New state for loading
-    const [error, setError] = useState('');     // New state for errors
-    const [success, setSuccess] = useState(''); // New state for success message
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     const categoryOptions = [
         'Improved Energy',
@@ -89,8 +90,8 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         setError('');
         setSuccess('');
 
-        const user = auth.currentUser; // Get current Firebase Auth user
-        const nutritionistInfo = AuthService.getCurrentUser(); // Get user info from localStorage (AuthService)
+        const user = auth.currentUser;
+        const nutritionistInfo = AuthService.getCurrentUser();
 
         if (!user || !nutritionistInfo || nutritionistInfo.role !== 'nutritionist') {
             setError('You must be logged in as an approved nutritionist to create a meal plan.');
@@ -103,7 +104,6 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
             let imageFileName = '';
 
             if (uploadPhoto) {
-                // 1. Upload image to Firebase Storage
                 imageFileName = `${Date.now()}_${uploadPhoto.name}`;
                 const storageRef = ref(storage, `meal_plan_images/${imageFileName}`);
                 const snapshot = await uploadBytes(storageRef, uploadPhoto);
@@ -114,14 +114,12 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                 return;
             }
 
-            // Get the nutritionist's actual name from Firestore user_accounts (more reliable than localStorage for initial fetch)
-            // This ensures the `author` field is accurate.
+            // Get the nutritionist's actual name from Firestore user_accounts (more reliable)
             const userDocRef = doc(db, 'user_accounts', user.uid);
             const userDocSnap = await getDoc(userDocRef);
             const userData = userDocSnap.exists() ? userDocSnap.data() : {};
-            const actualNutritionistName = userData.name || userData.username || user.email; // Fallback to email
+            const actualNutritionistName = userData.name || userData.username || user.email;
 
-            // 2. Save meal plan data to Firestore
             const mealPlanData = {
                 name: mealName,
                 categories: selectedCategories,
@@ -130,21 +128,20 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                 protein: parseFloat(protein),
                 carbohydrates: parseFloat(carbohydrates),
                 fats: parseFloat(fats),
-                imageUrl: imageUrl,       // Stored direct image URL
-                imageFileName: imageFileName, // Stored original file name
-                author: actualNutritionistName, // Nutritionist's display name
-                authorId: user.uid,         // Nutritionist's UID (for filtering)
-                status: 'PENDING_APPROVAL', // Initial status set here
+                imageUrl: imageUrl,
+                imageFileName: imageFileName,
+                author: actualNutritionistName,
+                authorId: user.uid,
+                status: 'PENDING_APPROVAL', // New plans start as PENDING_APPROVAL
                 likes: 0,
-                createdAt: serverTimestamp(), // Firestore timestamp
+                createdAt: serverTimestamp(),
             };
 
             await addDoc(collection(db, 'meal_plans'), mealPlanData);
 
-            setSuccess('Meal Plan Created Successfully!');
+            setSuccess('Meal Plan created successfully and sent for approval!');
             console.log('New Meal Plan Data Saved to Firestore:', mealPlanData);
 
-            // Notify parent component (NutritionistDashboard) to re-fetch meal plans
             if (onMealPlanSubmitted) {
                 onMealPlanSubmitted();
             }
