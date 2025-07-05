@@ -52,7 +52,7 @@
     min-height: 100vh;
     box-sizing: border-box;
     margin-left:200px;
-    background-color: var(--theme-bg-light);
+    background-color: #fffaf3
 }
 
 /* Logo in Sidebar (reused from nutritionist) */
@@ -502,7 +502,7 @@ table tbody tr:last-child td {
     padding-right: 40px;
     flex-grow: 1;
     width: 100%; /* Important: Ensure it explicitly takes 100% of its parent's width */
-    background-color: var(--theme-bg-light); /* Match admin-main-content background */
+    background-color: #fffaf3; /* Match admin-main-content background */
     display: flex;
     flex-direction: column;
     align-items: flex-start; /* Align contents to the start (left) */
