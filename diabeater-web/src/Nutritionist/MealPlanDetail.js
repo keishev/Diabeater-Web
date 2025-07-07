@@ -1,111 +1,125 @@
 // src/Nutritionist/MealPlanDetail.js
-import React from 'react';
+import React, { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
+import mealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Directly import the singleton
 import './MealPlanDetail.css';
 
-const MealPlanDetail = ({ mealPlan, onBack }) => {
-    if (!mealPlan) {
-        return <p>Meal plan not found.</p>;
-    }
+const MealPlanDetail = observer(({ onBack, userRole, currentUserId }) => {
+    // Destructure directly from the ViewModel
+    const { loading, error, selectedMealPlanForDetail, loadMealPlanDetails, deleteMealPlan } = mealPlanViewModel;
 
-    // Ensure nutrientInfo exists and has default values to prevent errors if data is missing
-    const nutrientInfo = mealPlan.nutrientInfo || {
-        calories: 'N/A',
-        carbs: 'N/A',
-        protein: 'N/A',
-        fat: 'N/A',
+    useEffect(() => {
+        // No direct fetching here, assuming selectedMealPlanForDetail is set by parent via ViewModel action.
+        // If this component were to be directly navigated to via a route with an ID,
+        // you would pass that ID as a prop and use it to call loadMealPlanDetails.
+        // E.g., const { mealPlanId } = useParams();
+        // useEffect(() => { if (mealPlanId) mealPlanViewModel.loadMealPlanDetails(mealPlanId); }, [mealPlanId]);
+    }, []);
+
+    const handleDeleteClick = async () => {
+        if (!selectedMealPlanForDetail) return;
+        const success = await deleteMealPlan(selectedMealPlanForDetail._id, selectedMealPlanForDetail.imageFileName);
+        if (success) {
+            onBack();
+        }
     };
 
+    if (loading) {
+        return <div className="loading-message">Loading meal plan details...</div>;
+    }
+
+    if (error) {
+        return <div className="error-message">Error: {error}</div>;
+    }
+
+    if (!selectedMealPlanForDetail) {
+        return <div className="no-detail-selected">No meal plan selected for detail.</div>;
+    }
+
+    const isNutritionistAuthor = userRole === 'nutritionist' && currentUserId === selectedMealPlanForDetail.authorId;
+    const isAdmin = userRole === 'admin';
+
     return (
-        <div className="meal-detail-page">
-            <header className="meal-detail-header">
-                <button className="back-button" onClick={onBack}>
-                    <i className="fas fa-arrow-left"></i> Back to Meal Plans
-                </button>
-                <h1 className="meal-detail-title">{mealPlan.name}</h1>
-                <span className="meal-detail-author">{mealPlan.author}</span>
-            </header>
-
-            <div className="meal-detail-image-container">
-                <img src={mealPlan.image} alt={mealPlan.name} className="meal-detail-main-image" />
-                <span className="meal-detail-likes-count">{mealPlan.likes}</span>
-            </div>
-
-            <div className="meal-detail-section">
-                <h2>Description</h2>
-                <p>{mealPlan.description}</p>
-                <h3>Recipe:</h3>
-                <ul>
-                    {/* Check if mealPlan.recipe exists and is an array before mapping */}
-                    {mealPlan.recipe && Array.isArray(mealPlan.recipe) && mealPlan.recipe.map((item, index) => (
-                        <li key={index}>{item}</li>
-                    ))}
-                </ul>
-            </div>
-
-            <div className="meal-detail-section">
-                <h2>Preparation:</h2>
-                <p>{mealPlan.preparation}</p>
-            </div>
-
-            {/* Container for Allergens and Nutrient Information to be side-by-side */}
-            <div className="allergens-nutrients-section-wrapper">
-
-                {/* Allergens, Portion Size, and Storage Section (Left Column) */}
-                <div className="meal-detail-section allergens-info-section">
-                    <h3>Allergens:</h3>
-                    <p>{mealPlan.allergens}</p>
-                    <h3>Portion Size:</h3>
-                    <p>{mealPlan.portionSize}</p>
-                    <h3>Storage:</h3>
-                    <p>{mealPlan.storage}</p>
+        <div className="meal-plan-detail-overlay">
+            <div className="meal-plan-detail-content">
+                <button className="back-button" onClick={onBack}>← Back to Meal Plans</button>
+                <div className="detail-header">
+                    <h2>{selectedMealPlanForDetail.name}</h2>
+                    {selectedMealPlanForDetail.author && (
+                        <p className="detail-author">By: {selectedMealPlanForDetail.author}</p>
+                    )}
+                    <p className="detail-status">Status: <span>{selectedMealPlanForDetail.status}</span></p>
+                    {selectedMealPlanForDetail.rejectionReason && (
+                         <p className="detail-rejection-reason">Rejection Reason: <span>{selectedMealPlanForDetail.rejectionReason}</span></p>
+                    )}
                 </div>
 
-                {/* NEW NUTRIENT INFORMATION DISPLAY (Right Column) */}
-                <div className="meal-detail-section nutrient-info-section">
-                    <h2>Nutrient Information</h2>
-                    <div className="nutrients-display-container"> {/* Renamed for display, not input */}
-                        {/* Calories Circle Display */}
-                        <div className="nutrient-circle-display-wrapper">
-                            <div className="nutrient-display-circle">
-                                <span className="nutrient-value-kcal">{nutrientInfo.calories}</span>
-                                <span className="nutrient-unit-kcal">kcal</span>
-                            </div>
-                        </div>
+                <div className="detail-body">
+                    {selectedMealPlanForDetail.imageUrl && (
+                        <img src={selectedMealPlanForDetail.imageUrl} alt={selectedMealPlanForDetail.name} className="detail-image" />
+                    )}
 
-                        {/* Rectangular Nutrient Displays */}
-                        <div className="nutrient-rectangular-display-wrapper">
-                            <div className="nutrient-display-card">
-                                <span className="nutrient-label-text">carbs</span>
-                                <span className="nutrient-value-g">{nutrientInfo.carbs}g</span>
-                            </div>
-                            <div className="nutrient-display-card">
-                                <span className="nutrient-label-text">fats</span>
-                                <span className="nutrient-value-g">{nutrientInfo.fat}g</span>
-                            </div>
-                            <div className="nutrient-display-card">
-                                <span className="nutrient-label-text">protein</span>
-                                <span className="nutrient-value-g">{nutrientInfo.protein}g</span>
-                            </div>
-                        </div>
+                    <div className="detail-sections">
+                        <section className="detail-section">
+                            <h3>Description</h3>
+                            <p>{selectedMealPlanForDetail.description}</p>
+                        </section>
+
+                        <section className="detail-section">
+                            <h3>Categories</h3>
+                            <p>{selectedMealPlanForDetail.categories && selectedMealPlanForDetail.categories.join(', ')}</p>
+                        </section>
+
+                        <section className="detail-section">
+                            <h3>Target Calories</h3>
+                            <p>{selectedMealPlanForDetail.targetCalories} kcal</p>
+                        </section>
+
+                        <section className="detail-section">
+                            <h3>Meal Types</h3>
+                            <ul>
+                                {selectedMealPlanForDetail.mealType && selectedMealPlanForDetail.mealType.map((type, index) => (
+                                    <li key={index}>{type}</li>
+                                ))}
+                            </ul>
+                        </section>
+
+                        <section className="detail-section">
+                            <h3>Ingredients</h3>
+                            <ul>
+                                {selectedMealPlanForDetail.ingredients && selectedMealPlanForDetail.ingredients.map((ingredient, index) => (
+                                    <li key={index}>{ingredient}</li>
+                                ))}
+                            </ul>
+                        </section>
+
+                        <section className="detail-section">
+                            <h3>Instructions</h3>
+                            <ol>
+                                {selectedMealPlanForDetail.instructions && selectedMealPlanForDetail.instructions.map((instruction, index) => (
+                                    <li key={index}>{instruction}</li>
+                                ))}
+                            </ol>
+                        </section>
                     </div>
                 </div>
 
-            </div> {/* End of allergens-nutrients-section-wrapper */}
-
-            <div className="meal-detail-section">
-                <h2>Category</h2>
-                <div className="category-tags">
-                    {mealPlan.categories.map((category, index) => (
-                        <span key={index} className="category-tag">{category}</span>
-                    ))}
-                </div>
-            </div>
-
-            <div className="meal-detail-actions">
-                <button className="delete-plan-button">DELETE PLAN</button>
+                {(isNutritionistAuthor || isAdmin) && (selectedMealPlanForDetail.status !== 'APPROVED') && (
+                    <div className="detail-actions">
+                        {(isNutritionistAuthor && selectedMealPlanForDetail.status !== 'APPROVED') && (
+                            <button
+                                className="delete-button"
+                                onClick={handleDeleteClick}
+                                disabled={loading}
+                            >
+                                {loading ? 'Deleting...' : 'Delete Meal Plan'}
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
-};
+});
 
 export default MealPlanDetail;

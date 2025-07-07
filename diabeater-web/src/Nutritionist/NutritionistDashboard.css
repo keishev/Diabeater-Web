@@ -108,15 +108,17 @@
 
 /* Logout Button */
 .logout-button {
-    background-color: #ff9800;
+     background-color: #ff9800;
     color: white;
     border: none;
     padding: 12px 20px;
     border-radius: 20px;
     font-size: 16px;
     cursor: pointer;
-    width: calc(100% - 40px); /* Adjust width to fit padding */
-    margin-top: auto; /* Pushes the button to the bottom */
+    width: calc(100% - 40px);
+    position: absolute;
+    bottom: 60px;
+    left: 20px;
     margin-bottom: 20px;
     transition: background-color 0.2s ease;
 }
@@ -272,25 +274,26 @@
     background-color: #ff9800; /* Orange underline for active tab */
 }
 
-/* Meal Plan Grid */
 .meal-plans-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
     gap: 25px;
-    align-items: stretch;
+    align-items: stretch; /* Ensures cards stretch to fill row height */
 }
 
+/* Base styles for all meal plan cards */
 .meal-plan-card {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack children (image, info) vertically */
     background-color: #ffffff;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    cursor: pointer; /* Indicate clickable card */
-    min-height: 350px; /* Ensure a minimum height for consistent cards */
-    width: 500px;
+    cursor: pointer;
+    min-height: 350px; /* CRITICAL: Maintain a consistent min-height for all cards */
+    width: 100%; /* Make it responsive within the grid, not fixed 400px */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .meal-plan-card:hover {
@@ -306,36 +309,90 @@
 }
 
 .meal-plan-info {
-    flex-grow: 1;
+    flex-grow: 1; /* Allows this section to take up remaining vertical space */
     padding: 15px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* CRITICAL: Centers ALL children horizontally within meal-plan-info */
+    /* REMOVE justify-content from here. We'll use individual item margins. */
+    text-align: center; /* Ensures text inside centered elements is also centered */
+}
+
+/* Container for Name and Status to group and center them */
+.meal-plan-header-content {
+    width: 100%; /* Ensure it takes full width for text-align to be effective */
+    text-align: center; /* Center text and inline-block elements within */
+    margin-bottom: 10px; /* Space between header content and likes */
+    /* IMPORTANT: No flex properties or auto margins here. Let it sit at the top naturally. */
 }
 
 .meal-plan-name {
     font-size: 18px;
     color: #333;
     margin-top: 0;
-    margin-bottom: 10px; /* Reduced margin */
+    margin-bottom: 5px; /* Space between name and status */
     font-weight: bold;
+    text-align: center;
+    width: 100%; /* Ensure it takes full width */
+    box-sizing: border-box;
+    margin-left: 100px;
 }
 
+.meal-plan-status {
+    font-size: 13px;
+    color: #666;
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block; /* Allows it to be centered by text-align on parent */
+}
+
+/* Likes count */
+.likes-count {
+    font-size: 15px;
+    color: #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto; /* Push likes count and subsequent content to the bottom */
+    width: 100%;
+    padding-bottom: 10px; /* Space between likes and the buttons below it */
+}
+
+.likes-count i {
+    margin-right: 5px;
+    color: #ff5252;
+}
+
+/* Base styles for the actions container - most critical for consistent height */
 .meal-plan-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Center buttons horizontally */
     align-items: center;
-    margin-top: 10px; /* Space above actions */
+    width: 100%; /* Ensure actions div takes full width for centering */
+    /* Do NOT use margin-top: auto here. likes-count handles the push. */
+    padding-top: 15px;
+    padding-bottom: 5px;
+    min-height: 50px; /* Ensures consistent minimum height for the actions container */
+    box-sizing: border-box;
+    margin-left: 100px;
+
 }
 
-/* Common button styles */
+
+/* Common button styles (keep as is) */
 .button-base {
     border: none;
     padding: 8px 15px;
-    border-radius: 6px;
+    border-radius: 60px;
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.2s ease, transform 0.1s ease;
+    margin: 0 5px;
+    font-weight: bold;
 }
 
 .button-base:active {
@@ -352,66 +409,54 @@
 }
 
 .delete-button {
-    background-color: #f44336; /* Red */
+    background-color: #f44336;
     color: white;
-    margin-left: 10px; /* Space from update button */
 }
 
 .delete-button:hover {
     background-color: #d32f2f;
 }
 
-.approve-button { /* New style for approve button */
-    background-color: #4CAF50; /* Green */
+.approve-button {
+    background-color: #4CAF50;
     color: white;
-    margin-left: 10px; /* Space from other buttons */
 }
 
 .approve-button:hover {
     background-color: #388E3C;
 }
 
+.admin-reject-button {
+    background-color: #ffc107;
+    color: #343a40;
+}
 
-.meal-plan-status {
-    font-size: 13px;
-    color: #666;
-    background-color: #f0f0f0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    font-weight: 600;
-    margin-right: auto; /* Pushes likes count to the right */
-    white-space: nowrap;
+.admin-reject-button:hover {
+    background-color: #e0a800;
+}
+
+/* Existing Status Styles (keep as is) */
+.meal-plan-status.UPLOADED {
+    background-color: #e0f2f7;
+    color: #0288d1;
 }
 
 .meal-plan-status.PENDING_APPROVAL {
-    background-color: #ffeb3b; /* Yellow for pending */
-    color: #795548; /* Dark brown text for contrast */
+    background-color: #ffeb3b;
+    color: #795548;
 }
 
-.meal-plan-status.UPLOADED, .meal-plan-status.APPROVED {
-    background-color: #c8e6c9; /* Light green for published/approved */
-    color: #2e7d32; /* Dark green text */
+.meal-plan-status.APPROVED {
+    background-color: #c8e6c9;
+    color: #388e3c;
 }
 
 .meal-plan-status.REJECTED {
-    background-color: #ffcdd2; /* Light red for rejected */
-    color: #d32f2f; /* Dark red text */
+    background-color: #ffcdd2;
+    color: #d32f2f;
 }
 
 
-.likes-count {
-    font-size: 15px;
-    color: #777;
-    display: flex;
-    align-items: center;
-    margin-left: 10px; /* Space from status */
-}
-
-.likes-count i {
-    margin-right: 5px;
-    color: #ff5252; /* Red for heart icon */
-}
 
 .no-meal-plans-message {
     grid-column: 1 / -1;

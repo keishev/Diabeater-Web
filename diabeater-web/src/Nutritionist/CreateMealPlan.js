@@ -1,18 +1,11 @@
-/* src/CreateMealPlan.js */
+// src/CreateMealPlan.js
 import React, { useState, useEffect, useRef } from 'react';
-import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
-import app from '../firebase';
-import AuthService from '../Services/AuthService';
+import MealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the ViewModel
 
 import './CreateMealPlan.css'; // Assuming this CSS exists and is suitable
 
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
-
 const CreateMealPlan = ({ onMealPlanSubmitted }) => {
+    // State variables remain the same as they are part of the View's local state
     const [mealName, setMealName] = useState('');
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [uploadPhoto, setUploadPhoto] = useState(null);
@@ -26,6 +19,8 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const categoryDropdownRef = useRef(null);
 
+    // Use ViewModel's loading, error, success states (or manage locally if preferred for UI specific feedback)
+    // For simplicity, we will keep them local in the component and update them based on ViewModel's operation results.
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -90,76 +85,38 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         setError('');
         setSuccess('');
 
-        const user = auth.currentUser;
-        const nutritionistInfo = AuthService.getCurrentUser();
-
-        if (!user || !nutritionistInfo || nutritionistInfo.role !== 'nutritionist') {
-            setError('You must be logged in as an approved nutritionist to create a meal plan.');
-            setLoading(false);
-            return;
-        }
+        const mealPlanData = {
+            name: mealName,
+            categories: selectedCategories,
+            description,
+            calories: parseFloat(calories),
+            protein: parseFloat(protein),
+            carbohydrates: parseFloat(carbohydrates),
+            fats: parseFloat(fats),
+        };
 
         try {
-            let imageUrl = '';
-            let imageFileName = '';
-
-            if (uploadPhoto) {
-                imageFileName = `${Date.now()}_${uploadPhoto.name}`;
-                const storageRef = ref(storage, `meal_plan_images/${imageFileName}`);
-                const snapshot = await uploadBytes(storageRef, uploadPhoto);
-                imageUrl = await getDownloadURL(snapshot.ref);
+            const result = await MealPlanViewModel.createMealPlan(mealPlanData, uploadPhoto);
+            if (result) {
+                setSuccess('Meal Plan created successfully and sent for approval!');
+                if (onMealPlanSubmitted) {
+                    onMealPlanSubmitted();
+                }
+                // Reset form fields
+                setMealName('');
+                setSelectedCategories([]);
+                setUploadPhoto(null);
+                setImagePreviewUrl(null);
+                setDescription('');
+                setCalories('');
+                setProtein('');
+                setCarbohydrates('');
+                setFats('');
             } else {
-                setError('Please upload a meal plan image.');
-                setLoading(false);
-                return;
+                setError(MealPlanViewModel.error); // Get error message from ViewModel
             }
-
-            // Get the nutritionist's actual name from Firestore user_accounts (more reliable)
-            const userDocRef = doc(db, 'user_accounts', user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-            const userData = userDocSnap.exists() ? userDocSnap.data() : {};
-            const actualNutritionistName = userData.name || userData.username || user.email;
-
-            const mealPlanData = {
-                name: mealName,
-                categories: selectedCategories,
-                description,
-                calories: parseFloat(calories),
-                protein: parseFloat(protein),
-                carbohydrates: parseFloat(carbohydrates),
-                fats: parseFloat(fats),
-                imageUrl: imageUrl,
-                imageFileName: imageFileName,
-                author: actualNutritionistName,
-                authorId: user.uid,
-                status: 'PENDING_APPROVAL', // New plans start as PENDING_APPROVAL
-                likes: 0,
-                createdAt: serverTimestamp(),
-            };
-
-            await addDoc(collection(db, 'meal_plans'), mealPlanData);
-
-            setSuccess('Meal Plan created successfully and sent for approval!');
-            console.log('New Meal Plan Data Saved to Firestore:', mealPlanData);
-
-            if (onMealPlanSubmitted) {
-                onMealPlanSubmitted();
-            }
-
-            // Reset form fields
-            setMealName('');
-            setSelectedCategories([]);
-            setUploadPhoto(null);
-            setImagePreviewUrl(null);
-            setDescription('');
-            setCalories('');
-            setProtein('');
-            setCarbohydrates('');
-            setFats('');
-
         } catch (err) {
-            console.error('Error creating meal plan:', err);
-            setError('Failed to create meal plan: ' + err.message);
+            setError(err.message); // Catch any unexpected errors during the call
         } finally {
             setLoading(false);
         }

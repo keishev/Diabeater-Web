@@ -8,17 +8,17 @@ import UpdateMealPlan from './UpdateMealPlan';
 import NotificationList from './NotificationList';
 
 // Firebase Imports
-import { 
-    getFirestore, 
-    collection, 
-    query, 
-    where, 
-    getDocs, 
-    doc, 
-    deleteDoc, 
-    updateDoc, 
-    onSnapshot, 
-    orderBy, 
+import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    doc,
+    deleteDoc,
+    updateDoc,
+    onSnapshot,
+    orderBy,
     serverTimestamp,
     addDoc // <--- Add this import
 } from 'firebase/firestore';
@@ -35,11 +35,24 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
     const displayStatus = mealPlan.status === 'UPLOADED' ? 'PUBLISHED' : mealPlan.status.replace(/_/g, ' ');
     const imageUrl = mealPlan.imageUrl || `/assetscopy/${mealPlan.imageFileName}`;
 
+    // 🎯 NEW: Dynamic class based on mealPlan.status
+    const cardClassName = `meal-plan-card meal-plan-card--${mealPlan.status.toLowerCase()}`;
+
     return (
-        <div className="meal-plan-card" onClick={() => onClick(mealPlan)}>
+        <div className={cardClassName} onClick={() => onClick(mealPlan)}> {/* Use the dynamic class here */}
             <img src={imageUrl} alt={mealPlan.name} className="meal-plan-image" />
             <div className="meal-plan-info">
-                <h3 className="meal-plan-name">{mealPlan.name}</h3>
+                {/* 🎯 NEW: Wrapper for title and status */}
+                <div className="meal-plan-header-content">
+                    <h3 className="meal-plan-name">{mealPlan.name}</h3>
+                    <span className={`meal-plan-status ${mealPlan.status}`}>Status: {displayStatus}</span>
+                </div>
+
+                {/* 🎯 NEW: Likes count directly inside meal-plan-info, perhaps above actions */}
+                <span className="likes-count">
+                    <i className="fa-solid fa-heart"></i> {mealPlan.likes || 0}
+                </span>
+
                 <div className="meal-plan-actions">
                     {/* Conditional rendering for nutritionist actions (update/delete) */}
                     {(mealPlan.status === 'UPLOADED' || mealPlan.status === 'REJECTED') && !isAdmin && (
@@ -53,22 +66,16 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
                         <button className="button-base approve-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'APPROVED', mealPlan.authorId); }}>APPROVE</button>
                     )}
                     {isAdmin && mealPlan.status !== 'PENDING_APPROVAL' && ( // Admins can delete any plan (even uploaded/approved ones if needed)
-                         <button className="button-base delete-button" onClick={(e) => { e.stopPropagation(); onDeleteClick(mealPlan._id, mealPlan.imageFileName); }}>DELETE</button>
+                            <button className="button-base delete-button" onClick={(e) => { e.stopPropagation(); onDeleteClick(mealPlan._id, mealPlan.imageFileName); }}>DELETE</button>
                     )}
-                     {isAdmin && mealPlan.status === 'APPROVED' && (
-                         <button className="button-base update-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'REJECTED', mealPlan.authorId); }}>REJECT</button>
+                    {isAdmin && mealPlan.status === 'APPROVED' && (
+                            <button className="button-base admin-reject-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'REJECTED', mealPlan.authorId); }}>REJECT</button>
                     )}
-
-                    <span className={`meal-plan-status ${mealPlan.status}`}>Status: {displayStatus}</span>
-                    <span className="likes-count">
-                        <i className="fa-solid fa-heart"></i> {mealPlan.likes || 0}
-                    </span>
                 </div>
             </div>
         </div>
     );
 };
-
 // --- MyMealPlansContent component ---
 const MyMealPlansContent = ({
     mealPlans,
@@ -116,7 +123,7 @@ const MyMealPlansContent = ({
 
     const filteredAndSearchedMealPlans = filteredByTab.filter(plan => {
         const matchesSearchTerm = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                  (plan.author && plan.author.toLowerCase().includes(searchTerm.toLowerCase()));
+                                    (plan.author && plan.author.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesCategory = selectedCategory === '' || (plan.categories && plan.categories.includes(selectedCategory));
 
         return matchesSearchTerm && matchesCategory;

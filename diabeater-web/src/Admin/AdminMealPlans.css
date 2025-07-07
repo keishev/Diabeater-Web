@@ -136,7 +136,7 @@
 .meal-plans-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); /* or 360px */
-    gap: 40px 10px; /* more vertical gap */
+    gap: 40px 30px; /* more vertical gap */
     justify-content: center;
     align-items: stretch; /* ensure items fill the same height */
     max-width: 1400px;
@@ -184,6 +184,7 @@
     margin-bottom: 5px;
     font-weight: bold;
     margin-top: 5px;
+    text-align: center;
 }
 
 .meal-plan-card-author {
