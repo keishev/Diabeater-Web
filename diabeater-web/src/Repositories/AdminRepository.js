@@ -10,6 +10,8 @@ const AdminRepository = {
             return { success: false, error: err.message };
         }
     }
+
+    
 };
 
 export default AdminRepository;
