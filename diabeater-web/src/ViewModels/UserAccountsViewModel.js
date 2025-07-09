@@ -21,6 +21,7 @@ class UserAccountsViewModel {
         this.allAccounts = accounts;
     }
 
+    // This method is called from your UI component
     setSearchTerm(term) {
         this.searchTerm = term;
     }
@@ -229,4 +230,5 @@ class UserAccountsViewModel {
     }
 }
 
-export default new UserAccountsViewModel();
+// Export the class itself
+export default UserAccountsViewModel;

@@ -1,41 +1,33 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { getAuth } from 'firebase/auth';
 import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
-import UserRepository from '../Repositories/UserAccountRepository'; // Still needed if used directly within this VM, though not explicitly called here
+import UserRepository from '../Repositories/UserAccountRepository'; 
 import UserAccountsViewModel from './UserAccountsViewModel'; 
 
-/**
- * AdminDashboardViewModel
- * Manages the overall state and logic for the admin dashboard.
- * It now delegates general user account management (fetching, searching, suspending)
- * to the UserAccountsViewModel. It retains responsibility for nutritionist-specific
- * approvals and rejections, and overall dashboard navigation.
- */
 class AdminDashboardViewModel {
     // State for pending nutritionist applications
     pendingAccounts = [];
 
     // Overall dashboard UI state
-    activeTab = 'ALL_ACCOUNTS'; // Controls which tab is active: 'ALL_ACCOUNTS' or 'PENDING_APPROVAL'
-    currentView = 'dashboard'; // Can be used for larger navigation within the admin panel
+    activeTab = 'ALL_ACCOUNTS'; 
+    currentView = 'dashboard'; 
 
     // Modals and selected user state
     selectedUser = null;
     showUserDetailModal = false;
     showRejectionReasonModal = false;
-    rejectionReason = ''; // For nutritionist rejection
+    rejectionReason = ''; 
 
     // Loading and error states
-    isLoading = false; // General loading state for dashboard operations
+    isLoading = false; 
     error = '';
 
     // Delegate for all user accounts management
-    userAccountsVM = UserAccountsViewModel;
+    // Instantiate UserAccountsViewModel here
+    userAccountsVM = new UserAccountsViewModel(); // Key fix: instantiate the view model
 
     constructor() {
         makeAutoObservable(this);
-        // Initialize UserAccountsViewModel to fetch all users on startup, or when needed
-        // this.userAccountsVM.fetchAccounts(); // Can be called here or in a React useEffect
     }
 
     // --- State Setters ---
@@ -49,7 +41,6 @@ class AdminDashboardViewModel {
 
     setCurrentView(view) {
         this.currentView = view;
-        // When navigating to userAccounts view, ensure latest data is fetched
         if (view === 'userAccounts') {
             this.userAccountsVM.fetchAccounts();
         }
@@ -57,22 +48,22 @@ class AdminDashboardViewModel {
 
     setSelectedUser(user) {
         this.selectedUser = user;
-        this.error = ''; // Clear previous errors
-        this.rejectionReason = ''; // Clear previous rejection reason
+        this.error = ''; 
+        this.rejectionReason = ''; 
     }
 
     setShowUserDetailModal(value) {
         this.showUserDetailModal = value;
         if (!value) {
-            this.selectedUser = null; // Clear selected user when modal closes
-            this.setError(''); // Clear any modal-related errors
+            this.selectedUser = null; 
+            this.setError(''); 
         }
     }
 
     setShowRejectionReasonModal(value) {
         this.showRejectionReasonModal = value;
         if (!value) {
-            this.rejectionReason = ''; // Clear rejection reason when modal closes
+            this.rejectionReason = ''; 
         }
     }
 
@@ -90,7 +81,7 @@ class AdminDashboardViewModel {
 
     // --- Computed Properties ---
     get filteredPendingAccounts() {
-        const lowerCaseSearchTerm = this.userAccountsVM.searchTerm.toLowerCase(); // Use the search term from UserAccountsViewModel
+        const lowerCaseSearchTerm = this.userAccountsVM.searchTerm.toLowerCase(); 
         return this.pendingAccounts.filter(user =>
             (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm) ||
              user.lastName?.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -102,19 +93,17 @@ class AdminDashboardViewModel {
      * Fetches both pending nutritionist accounts and all general user accounts.
      * The latter is delegated to UserAccountsViewModel.
      */
-    fetchAccounts = async () => { // Converted to arrow function
+    fetchAccounts = async () => {
         this.setLoading(true);
         this.setError('');
         try {
-            // Fetch pending nutritionist accounts
             const allNutritionistsFromFirestore = await nutritionistApplicationRepository.getAllNutritionists() || [];
 
             runInAction(() => {
                 const pending = allNutritionistsFromFirestore.filter(n => n.status === 'pending').map(n => ({
                     ...n,
-                    id: n.id, // Assuming 'id' is part of the nutritionist data
+                    id: n.id, 
                     name: `${n.firstName} ${n.lastName}`,
-                    // Ensure 'createdAt' is a Date object or convert it if it's a string
                     appliedDate: n.createdAt ? 
                                  (new Date(n.createdAt)).toLocaleDateString('en-SG', { year: 'numeric', month: 'short', day: 'numeric' }) : 
                                  'N/A',
@@ -122,7 +111,6 @@ class AdminDashboardViewModel {
                 this.setPendingAccounts(pending);
             });
 
-            // Trigger fetch for all general user accounts via UserAccountsViewModel
             await this.userAccountsVM.fetchAccounts();
 
         } catch (error) {
@@ -139,7 +127,7 @@ class AdminDashboardViewModel {
      * Approves a pending nutritionist.
      * Updates Firestore, sets custom claims, and revokes tokens.
      */
-    approveNutritionist = async (userId) => { // Converted to arrow function
+    approveNutritionist = async (userId) => { 
         this.setLoading(true);
         this.setError('');
         try {
@@ -153,7 +141,7 @@ class AdminDashboardViewModel {
                 return;
             }
 
-            const idTokenResult = await user.getIdTokenResult(true); // Force refresh token
+            const idTokenResult = await user.getIdTokenResult(true); 
             if (idTokenResult.claims.admin !== true) {
                 console.warn("APPROVE_NUTRITIONIST_CALL: User is not an admin. Access denied.");
                 this.setError("Access Denied: You must be an administrator to approve accounts.");
@@ -164,7 +152,6 @@ class AdminDashboardViewModel {
             const result = await nutritionistApplicationRepository.approveNutritionist(userId);
             runInAction(() => {
                 this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
-                // Re-fetch all accounts in UserAccountsViewModel to reflect the status change
                 this.userAccountsVM.fetchAccounts();
                 this.setShowUserDetailModal(false);
                 alert("Nutritionist account has been approved!");
@@ -185,7 +172,7 @@ class AdminDashboardViewModel {
      * Rejects a pending nutritionist.
      * Updates Firestore, removes/modifies custom claims, and revokes tokens.
      */
-    rejectNutritionist = async (userId) => { // Converted to arrow function
+    rejectNutritionist = async (userId) => { 
         this.setLoading(true);
         this.setError('');
         try {
@@ -199,7 +186,7 @@ class AdminDashboardViewModel {
                 return;
             }
 
-            const idTokenResult = await user.getIdTokenResult(true); // Force refresh token
+            const idTokenResult = await user.getIdTokenResult(true); 
             if (idTokenResult.claims.admin !== true) {
                 console.warn("REJECT_NUTRITIONIST_CALL: User is not an admin. Access denied.");
                 this.setError("Access Denied: You must be an administrator to reject accounts.");
@@ -210,7 +197,6 @@ class AdminDashboardViewModel {
             const result = await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason);
             runInAction(() => {
                 this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
-                // Re-fetch all accounts in UserAccountsViewModel to reflect the status change
                 this.userAccountsVM.fetchAccounts();
                 this.setShowRejectionReasonModal(false);
                 this.setShowUserDetailModal(false);
@@ -232,7 +218,7 @@ class AdminDashboardViewModel {
     /**
      * Fetches a signed URL for a nutritionist's certificate from Firebase Storage.
      */
-    viewCertificate = async (userId) => { // Converted to arrow function
+    viewCertificate = async (userId) => { 
         this.setLoading(true);
         this.setError('');
         try {
@@ -276,7 +262,7 @@ class AdminDashboardViewModel {
      * Checks if the currently logged-in user has admin claims.
      * Useful for conditional rendering of admin-only UI elements.
      */
-    checkAdminStatus = async () => { // Converted to arrow function
+    checkAdminStatus = async () => { 
         try {
             const auth = getAuth();
             const user = auth.currentUser;

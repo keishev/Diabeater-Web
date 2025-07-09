@@ -165,33 +165,31 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
 
 // User Accounts Content Component (now correctly using userAccountsVM)
 const UserAccountsContent = observer(() => {
-    // Access properties from AdminDashboardViewModel and its nested userAccountsVM
+    // Access properties directly from the AdminDashboardViewModel singleton instance
     const {
         activeTab,
-        filteredPendingAccounts, // Still in AdminDashboardViewModel for pending nutritionists
+        filteredPendingAccounts, 
         showUserDetailModal,
         selectedUser,
-        isLoading, // General loading state for AdminDashboardViewModel
-        error,     // General error state for AdminDashboardViewModel
-        showRejectionReasonModal, // <--- CRITICAL FIX: Ensure this is destructured
+        isLoading, 
+        error, 
+        showRejectionReasonModal, 
         rejectionReason,
-        // Removed `setSelectedUser`, `setShowUserDetailModal`, `setShowRejectionReasonModal`, `setRejectionReason`
-        // from destructuring, as these are called directly on the AdminDashboardViewModel instance below.
+        // Methods called directly on the singleton
         approveNutritionist,
         rejectNutritionist,
         viewCertificate,
         userAccountsVM // Direct access to the UserAccountsViewModel instance
-    } = AdminDashboardViewModel;
+    } = AdminDashboardViewModel; // Destructure directly from the AdminDashboardViewModel singleton
 
     // Destructure specific states and methods from userAccountsVM
+    // No need to rename as we are using them directly from userAccountsVM
     const {
-        searchTerm: userAccountsSearchTerm, // Renamed to avoid conflict
-        filteredAllAccounts: allUsersFiltered, // Renamed for clarity
+        searchTerm, // Use searchTerm directly
+        filteredAllAccounts, // Use filteredAllAccounts directly
         isLoading: userAccountsLoading, // Specific loading for user accounts tab
-        error: userAccountsError,       // Specific error for user accounts tab
-        setSearchTerm: setUserAccountsSearchTerm, // Setter for user accounts search term
-    } = userAccountsVM;
-
+        error: userAccountsError,       // Specific error for user accounts tab
+    } = userAccountsVM; // Destructure from the userAccountsVM instance
 
     // Fetch accounts on component mount or when the tab changes to ensure fresh data
     useEffect(() => {
@@ -215,9 +213,9 @@ const UserAccountsContent = observer(() => {
         console.log(`Attempting to change status for User ${userId} from ${currentStatus}`);
         try {
             if (currentStatus === 'Active') {
-                await AdminDashboardViewModel.userAccountsVM.suspendUser(userId); // Explicitly call on userAccountsVM
+                await userAccountsVM.suspendUser(userId); // Explicitly call on userAccountsVM
             } else {
-                await AdminDashboardViewModel.userAccountsVM.unsuspendUser(userId); // Explicitly call on userAccountsVM
+                await userAccountsVM.unsuspendUser(userId); // Explicitly call on userAccountsVM
             }
         } catch (operationError) {
             console.error("Error changing user status in component:", operationError);
@@ -234,8 +232,8 @@ const UserAccountsContent = observer(() => {
                         <input
                             type="text"
                             placeholder="Search by username, email, or name"
-                            value={userAccountsSearchTerm} // Use searchTerm from userAccountsVM
-                            onChange={(e) => setUserAccountsSearchTerm(e.target.value)} // Use setSearchTerm from userAccountsVM
+                            value={searchTerm} // Use searchTerm directly from userAccountsVM
+                            onChange={(e) => userAccountsVM.setSearchTerm(e.target.value)} // Call setSearchTerm directly on userAccountsVM
                         />
                         <i className="fas fa-search"></i>
                     </div>
@@ -281,8 +279,8 @@ const UserAccountsContent = observer(() => {
                     </thead>
 
                     <tbody>
-                        {activeTab === 'ALL_ACCOUNTS' && allUsersFiltered.length > 0 ? ( // Use allUsersFiltered from userAccountsVM
-                            allUsersFiltered.map(user => (
+                        {activeTab === 'ALL_ACCOUNTS' && filteredAllAccounts.length > 0 ? ( // Use filteredAllAccounts directly from userAccountsVM
+                            filteredAllAccounts.map(user => (
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
@@ -380,8 +378,5 @@ const AdminDashboard = observer(({ onLogout }) => {
         </div>
     );
 });
-
-// IMPORTANT: The RejectionReasonModal component definition has been moved to its own file.
-// It should NOT be present here.
 
 export default AdminDashboard;
