@@ -5,22 +5,35 @@ import MealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the V
 import './CreateMealPlan.css'; // Assuming this CSS exists and is suitable
 
 const CreateMealPlan = ({ onMealPlanSubmitted }) => {
-    // State variables remain the same as they are part of the View's local state
+    // State variables for basic meal plan details
     const [mealName, setMealName] = useState('');
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [uploadPhoto, setUploadPhoto] = useState(null);
     const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
-    const [description, setDescription] = useState('');
+
+    // ⭐ NEW STATE FOR SPLIT DESCRIPTION ⭐
+    const [ingredients, setIngredients] = useState('');
+    const [steps, setSteps] = useState('');
+    const [generalDescription, setGeneralDescription] = useState(''); // Renamed from 'description'
+
+    // State for basic nutritionals
     const [calories, setCalories] = useState('');
     const [protein, setProtein] = useState('');
     const [carbohydrates, setCarbohydrates] = useState('');
     const [fats, setFats] = useState('');
 
+    // ⭐ NEW STATE FOR PREMIUM NUTRITIONALS ⭐
+    const [sugar, setSugar] = useState('');
+    const [saturatedFat, setSaturatedFat] = useState('');
+    const [unsaturatedFat, setUnsaturatedFat] = useState('');
+    const [cholesterol, setCholesterol] = useState('');
+    const [sodium, setSodium] = useState('');
+    const [potassium, setPotassium] = useState('');
+
+    // UI related states
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const categoryDropdownRef = useRef(null);
 
-    // Use ViewModel's loading, error, success states (or manage locally if preferred for UI specific feedback)
-    // For simplicity, we will keep them local in the component and update them based on ViewModel's operation results.
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -85,14 +98,26 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         setError('');
         setSuccess('');
 
+        // ⭐ UPDATED mealPlanData structure ⭐
         const mealPlanData = {
             name: mealName,
             categories: selectedCategories,
-            description,
+            // Split description fields
+            ingredients,
+            steps,
+            description: generalDescription, // Use the new general description field
+            // Basic nutritionals
             calories: parseFloat(calories),
             protein: parseFloat(protein),
             carbohydrates: parseFloat(carbohydrates),
             fats: parseFloat(fats),
+            // Premium nutritionals (always send, backend/display logic handles premium unlock)
+            sugar: sugar ? parseFloat(sugar) : null, // Send null if empty
+            saturatedFat: saturatedFat ? parseFloat(saturatedFat) : null,
+            unsaturatedFat: unsaturatedFat ? parseFloat(unsaturatedFat) : null,
+            cholesterol: cholesterol ? parseFloat(cholesterol) : null,
+            sodium: sodium ? parseFloat(sodium) : null,
+            potassium: potassium ? parseFloat(potassium) : null,
         };
 
         try {
@@ -107,11 +132,19 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                 setSelectedCategories([]);
                 setUploadPhoto(null);
                 setImagePreviewUrl(null);
-                setDescription('');
+                setIngredients(''); // Reset new fields
+                setSteps('');
+                setGeneralDescription('');
                 setCalories('');
                 setProtein('');
                 setCarbohydrates('');
                 setFats('');
+                setSugar(''); // Reset premium fields
+                setSaturatedFat('');
+                setUnsaturatedFat('');
+                setCholesterol('');
+                setSodium('');
+                setPotassium('');
             } else {
                 setError(MealPlanViewModel.error); // Get error message from ViewModel
             }
@@ -203,15 +236,40 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                     </div>
                 </div>
 
-                <div className="form-group description">
-                    <label htmlFor="description">Description</label>
+                {/* ⭐ NEW: Split Description Fields ⭐ */}
+                <h3 className="create-meal-section-title">Meal Details</h3>
+                <div className="form-group">
+                    <label htmlFor="ingredients">Ingredients</label>
                     <textarea
-                        id="description"
+                        id="ingredients"
                         rows="5"
-                        placeholder="Include the recipe, preparation method, allergen warnings (e.g., contains nuts or dairy), portion size, and storage notes."
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="List all ingredients, e.g., 2 large eggs, 1 cup spinach, 1 tbsp olive oil."
+                        value={ingredients}
+                        onChange={(e) => setIngredients(e.target.value)}
                         required
+                    ></textarea>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="steps">Preparation Steps</label>
+                    <textarea
+                        id="steps"
+                        rows="5"
+                        placeholder="Provide step-by-step instructions, e.g., 1. Heat oil in pan. 2. Sauté spinach. 3. Add eggs."
+                        value={steps}
+                        onChange={(e) => setSteps(e.target.value)}
+                        required
+                    ></textarea>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="general-description">General Description & Notes</label>
+                    <textarea
+                        id="general-description"
+                        rows="3"
+                        placeholder="Add allergen warnings (e.g., contains dairy), portion size, storage notes, or a general overview of the meal."
+                        value={generalDescription}
+                        onChange={(e) => setGeneralDescription(e.target.value)}
                     ></textarea>
                 </div>
 
@@ -260,7 +318,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                     </div>
 
                     <div className="nutrient-item">
-                        <label htmlFor="fats" className="nutrient-label"> Fats</label>
+                        <label htmlFor="fats" className="nutrient-label">Fats</label>
                         <input
                             type="number"
                             id="fats"
@@ -273,6 +331,84 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                         <span className="unit">grams</span>
                     </div>
                 </div>
+
+                {/* ⭐ NEW: Premium Nutritional Information (always shown for input, display logic for premium unlock) ⭐ */}
+                <h3 className="create-meal-section-title">Advanced Nutrients (Optional)</h3>
+                <div className="nutrients-grid premium-nutrients">
+                    <div className="nutrient-item">
+                        <label htmlFor="sugar" className="nutrient-label">Sugar</label>
+                        <input
+                            type="number"
+                            id="sugar"
+                            value={sugar}
+                            onChange={(e) => setSugar(e.target.value)}
+                            placeholder="0"
+                            min="0"
+                        />
+                        <span className="unit">grams</span>
+                    </div>
+                    <div className="nutrient-item">
+                        <label htmlFor="saturatedFat" className="nutrient-label">Saturated Fat</label>
+                        <input
+                            type="number"
+                            id="saturatedFat"
+                            value={saturatedFat}
+                            onChange={(e) => setSaturatedFat(e.target.value)}
+                            placeholder="0"
+                            min="0"
+                        />
+                        <span className="unit">grams</span>
+                    </div>
+                    <div className="nutrient-item">
+                        <label htmlFor="unsaturatedFat" className="nutrient-label">Unsaturated Fat</label>
+                        <input
+                            type="number"
+                            id="unsaturatedFat"
+                            value={unsaturatedFat}
+                            onChange={(e) => setUnsaturatedFat(e.target.value)}
+                            placeholder="0"
+                            min="0"
+                        />
+                        <span className="unit">grams</span>
+                    </div>
+                    <div className="nutrient-item">
+                        <label htmlFor="cholesterol" className="nutrient-label">Cholesterol</label>
+                        <input
+                            type="number"
+                            id="cholesterol"
+                            value={cholesterol}
+                            onChange={(e) => setCholesterol(e.target.value)}
+                            placeholder="0"
+                            min="0"
+                        />
+                        <span className="unit">mg</span>
+                    </div>
+                    <div className="nutrient-item">
+                        <label htmlFor="sodium" className="nutrient-label">Sodium</label>
+                        <input
+                            type="number"
+                            id="sodium"
+                            value={sodium}
+                            onChange={(e) => setSodium(e.target.value)}
+                            placeholder="0"
+                            min="0"
+                        />
+                        <span className="unit">mg</span>
+                    </div>
+                    <div className="nutrient-item">
+                        <label htmlFor="potassium" className="nutrient-label">Potassium</label>
+                        <input
+                            type="number"
+                            id="potassium"
+                            value={potassium}
+                            onChange={(e) => setPotassium(e.target.value)}
+                            placeholder="0"
+                            min="0"
+                        />
+                        <span className="unit">mg</span>
+                    </div>
+                </div>
+
 
                 {error && <p className="error-message">{error}</p>}
                 {success && <p className="success-message">{success}</p>}
