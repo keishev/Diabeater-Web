@@ -10,7 +10,8 @@ import {
     query,
     where,
     getDocs,
-    deleteDoc // Import deleteDoc
+    deleteDoc, // Import deleteDoc
+    orderBy // Import orderBy for notifications
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'; // Import deleteObject
 import { getAuth } from 'firebase/auth';
@@ -61,7 +62,7 @@ class MealPlanService {
             imageFileName: imageFileName,
             author: actualNutritionistName,
             authorId: user.uid,
-            status: 'PENDING_APPROVAL',
+            status: 'PENDING_APPROVAL', // Initial status
             likes: 0,
             createdAt: serverTimestamp(),
         };
@@ -82,11 +83,14 @@ class MealPlanService {
         }));
     }
 
-    // ⭐ NEW METHOD: Get Uploaded (Approved) Meal Plans ⭐
-    async getUploadedMealPlans() {
+    /**
+     * Fetches meal plans with 'APPROVED' status.
+     * Renamed from getUploadedMealPlans for consistency with ViewModel's expectation.
+     */
+    async getApprovedMealPlans() { // Changed method name
         const q = query(
             collection(this.db, 'meal_plans'),
-            where('status', '==', 'UPLOADED') // Assuming 'UPLOADED' means 'APPROVED' for public display
+            where('status', '==', 'APPROVED') // Explicitly query for 'APPROVED'
         );
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => ({
@@ -95,7 +99,6 @@ class MealPlanService {
         }));
     }
 
-    // ⭐ NEW METHOD: Get Rejected Meal Plans ⭐
     async getRejectedMealPlans() {
         const q = query(
             collection(this.db, 'meal_plans'),
@@ -108,7 +111,6 @@ class MealPlanService {
         }));
     }
 
-    // ⭐ NEW METHOD: Get Meal Plans by Author ID ⭐
     async getMealPlansByAuthor(authorId) {
         const q = query(
             collection(this.db, 'meal_plans'),
@@ -147,7 +149,7 @@ class MealPlanService {
             type,
             message,
             mealPlanId,
-            isRead: false, // Changed from 'read' to 'isRead' to match common naming convention, adjust if your DB uses 'read'
+            isRead: false, // Use 'isRead' in Firestore
             timestamp: serverTimestamp()
         };
         if (rejectionReason) {
@@ -157,7 +159,6 @@ class MealPlanService {
         return true;
     }
 
-    // ⭐ NEW METHOD: Real-time listener for notifications ⭐
     onNotificationsSnapshot(userId, callback) {
         if (!userId) {
             console.warn("Attempted to set up notification listener without a user ID.");
@@ -166,28 +167,24 @@ class MealPlanService {
 
         const q = query(
             collection(this.db, 'notifications'),
-            where('recipientId', '==', userId)
-            // You might want to order by timestamp if notifications are not already ordered by Firebase
-            // orderBy('timestamp', 'desc')
+            where('recipientId', '==', userId),
+            orderBy('timestamp', 'desc') // Added orderBy for consistent order
         );
 
-        // onSnapshot returns an unsubscribe function
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const notifications = snapshot.docs.map(doc => ({
                 _id: doc.id,
                 ...doc.data(),
-                read: doc.data().isRead // Map 'isRead' from Firestore to 'read' for consistency with ViewModel
+                read: doc.data().isRead // Map 'isRead' from Firestore to 'read' for ViewModel consistency
             }));
             callback(notifications);
         }, (error) => {
             console.error("Error listening to notifications:", error);
-            // Consider more robust error handling, e.g., passing error to callback
         });
 
         return unsubscribe;
     }
 
-    // ⭐ NEW METHOD: Get Notifications (one-time fetch) ⭐
     async getNotifications(userId) {
         if (!userId) {
             console.warn("Attempted to fetch notifications without a user ID.");
@@ -195,7 +192,8 @@ class MealPlanService {
         }
         const q = query(
             collection(this.db, 'notifications'),
-            where('recipientId', '==', userId)
+            where('recipientId', '==', userId),
+            orderBy('timestamp', 'desc') // Added orderBy for consistent order
         );
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => ({
@@ -205,14 +203,12 @@ class MealPlanService {
         }));
     }
 
-    // ⭐ NEW METHOD: Mark Notification as Read ⭐
     async markNotificationAsRead(notificationId) {
         const notificationRef = doc(this.db, 'notifications', notificationId);
         await updateDoc(notificationRef, { isRead: true }); // Update 'isRead' in Firestore
         return true;
     }
 
-    // ⭐ NEW METHOD: Delete Meal Plan (including image from Storage) ⭐
     async deleteMealPlan(mealPlanId, imageFileName) {
         // 1. Delete the Firestore document
         const mealPlanDocRef = doc(this.db, 'meal_plans', mealPlanId);
@@ -225,9 +221,13 @@ class MealPlanService {
                 await deleteObject(imageRef);
                 console.log(`Image ${imageFileName} deleted from storage.`);
             } catch (error) {
-                // If the file doesn't exist, deleteObject will throw an error.
-                // We can log it but allow the meal plan deletion to proceed.
-                console.warn(`Could not delete image ${imageFileName} from storage:`, error.message);
+                // If the file doesn't exist (e.g., already deleted or wrong path),
+                // deleteObject will throw an error. We log it but proceed.
+                if (error.code === 'storage/object-not-found') {
+                    console.warn(`Image ${imageFileName} not found in storage. Skipping deletion.`);
+                } else {
+                    console.error(`Error deleting image ${imageFileName} from storage:`, error);
+                }
             }
         }
         return true;

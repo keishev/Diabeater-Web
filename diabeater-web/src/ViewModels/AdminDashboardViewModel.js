@@ -1,7 +1,7 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { getAuth } from 'firebase/auth';
 import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
-import UserRepository from '../Repositories/UserRepository'; // Still needed if used directly within this VM, though not explicitly called here
+import UserRepository from '../Repositories/UserAccountRepository'; // Still needed if used directly within this VM, though not explicitly called here
 import UserAccountsViewModel from './UserAccountsViewModel'; 
 
 /**

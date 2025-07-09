@@ -1,5 +1,5 @@
 // src/Admin/AdminMealPlans.js
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // Import useRef
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel';
 import './AdminMealPlans.css';
@@ -14,13 +14,15 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
     const [showApproveConfirmModal, setShowApproveConfirmModal] = useState(false);
     const [selectedPlanToApprove, setSelectedPlanToApprove] = useState(null);
 
-    // Add local loading state for this component's UI feedback
-    const [localLoading, setLocalLoading] = useState(false); // Renamed to avoid confusion with VM loading
+    // Local loading state for this component's UI feedback
+    const [localLoading, setLocalLoading] = useState(false);
+
+    // Local state for Category Dropdown visibility
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+    const categoryDropdownRef = useRef(null); // Ref for click-outside functionality
 
     // ViewModel's state properties are accessed directly or via getters
-    // Note: If you want to show VM's loading/error/success globally, you'd use them here.
-    // For specific UI actions like modal confirmations, local loading is often better.
-    const { mealPlans, searchTerm, selectedCategory, allCategories, error } = MealPlanViewModel;
+    const { searchTerm, selectedCategory, allCategories, error } = MealPlanViewModel;
 
     const rejectionReasons = [
         'Incomplete information provided',
@@ -31,52 +33,74 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
         'Other (please specify)'
     ];
 
+    // Effect to fetch initial meal plans and handle click outside for category dropdown
     useEffect(() => {
-        MealPlanViewModel.fetchPendingMealPlans();
+        // ⭐ FIX: Call fetchAdminMealPlans with 'PENDING_APPROVAL' ⭐
+        MealPlanViewModel.fetchAdminMealPlans('PENDING_APPROVAL');
+
+        const handleClickOutside = (event) => {
+            if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+                setShowCategoryDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
     // --- APPROVE MODAL LOGIC ---
-    const handleApproveClick = (id) => {
+    const handleApproveClick = useCallback((id) => {
         setSelectedPlanToApprove(id);
         setShowApproveConfirmModal(true);
-    };
+    }, []);
 
-    const handleApproveConfirm = async () => {
-        setLocalLoading(true); // Use local loading state
+    const handleApproveConfirm = useCallback(async () => {
+        setLocalLoading(true);
         try {
-            await MealPlanViewModel.approveMealPlan(selectedPlanToApprove);
+            // Retrieve the full meal plan object to get authorId, adminName, adminId for the notification
+            const planToApprove = MealPlanViewModel.mealPlans.find(p => p._id === selectedPlanToApprove);
+            if (!planToApprove) {
+                throw new Error("Meal plan not found for approval.");
+            }
+
+            const authorId = planToApprove.authorId;
+            const adminName = MealPlanViewModel.currentUserRole === 'admin' ? MealPlanViewModel.currentUserName : 'Admin'; // Assuming currentUserName exists or can be fetched
+            const adminId = MealPlanViewModel.currentUserId;
+
+            await MealPlanViewModel.approveOrRejectMealPlan(selectedPlanToApprove, 'APPROVED', authorId, adminName, adminId);
             setShowApproveConfirmModal(false);
             setSelectedPlanToApprove(null);
         } catch (err) {
             alert(MealPlanViewModel.error || 'Failed to approve meal plan. Please try again.');
         } finally {
-            setLocalLoading(false); // Reset local loading state
+            setLocalLoading(false);
         }
-    };
+    }, [selectedPlanToApprove]);
 
-    const handleApproveCancel = () => {
+    const handleApproveCancel = useCallback(() => {
         setShowApproveConfirmModal(false);
         setSelectedPlanToApprove(null);
-    };
+    }, []);
     // --- END APPROVE MODAL LOGIC ---
 
-
     // --- REJECT MODAL LOGIC ---
-    const handleRejectClick = (id) => {
+    const handleRejectClick = useCallback((id) => {
         setSelectedPlanToReject(id);
         setSelectedRejectReason('');
         setOtherReasonText('');
         setShowRejectModal(true);
-    };
+    }, []);
 
-    const handleReasonButtonClick = (reason) => {
+    const handleReasonButtonClick = useCallback((reason) => {
         setSelectedRejectReason(reason);
         if (reason !== 'Other (please specify)') {
             setOtherReasonText('');
         }
-    };
+    }, []);
 
-    const handleRejectSubmit = async () => {
+    const handleRejectSubmit = useCallback(async () => {
         let finalReason = selectedRejectReason;
 
         if (!finalReason) {
@@ -92,9 +116,19 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
             finalReason = otherReasonText.trim();
         }
 
-        setLocalLoading(true); // Use local loading state
+        setLocalLoading(true);
         try {
-            await MealPlanViewModel.rejectMealPlan(selectedPlanToReject, finalReason);
+            // Retrieve the full meal plan object to get authorId, adminName, adminId for the notification
+            const planToReject = MealPlanViewModel.mealPlans.find(p => p._id === selectedPlanToReject);
+            if (!planToReject) {
+                throw new Error("Meal plan not found for rejection.");
+            }
+
+            const authorId = planToReject.authorId;
+            const adminName = MealPlanViewModel.currentUserRole === 'admin' ? MealPlanViewModel.currentUserName : 'Admin'; // Assuming currentUserName exists or can be fetched
+            const adminId = MealPlanViewModel.currentUserId;
+
+            await MealPlanViewModel.approveOrRejectMealPlan(selectedPlanToReject, 'REJECTED', authorId, adminName, adminId, finalReason);
             setShowRejectModal(false);
             setSelectedPlanToReject(null);
             setSelectedRejectReason('');
@@ -102,33 +136,49 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
         } catch (err) {
             alert(MealPlanViewModel.error || 'Failed to reject meal plan. Please try again.');
         } finally {
-            setLocalLoading(false); // Reset local loading state
+            setLocalLoading(false);
         }
-    };
+    }, [selectedPlanToReject, selectedRejectReason, otherReasonText]);
 
-    const handleRejectCancel = () => {
+    const handleRejectCancel = useCallback(() => {
         setShowRejectModal(false);
         setSelectedPlanToReject(null);
         setSelectedRejectReason('');
         setOtherReasonText('');
-    };
+    }, []);
 
-    const handleImageClick = (id) => {
-        const plan = mealPlans.find(p => p._id === id);
+    const handleImageClick = useCallback((id) => {
+        const plan = MealPlanViewModel.mealPlans.find(p => p._id === id);
         if (onViewDetails && plan) {
             onViewDetails(plan);
         }
-    };
-
-    // This `showCategoryDropdown` should be a local state for UI control.
-    // I'm adding it back as a local state.
-    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-
+    }, [onViewDetails]);
 
     return (
         <div className="admin-meal-plans-container">
             <div className="admin-meal-plans-header">
                 <h1 className="admin-meal-plans-title">VERIFY MEAL PLANS</h1>
+                {/* Admin Tab Navigation */}
+                <div className="admin-status-tabs">
+                    <button
+                        className={`tab-button ${MealPlanViewModel.adminActiveTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
+                        onClick={() => MealPlanViewModel.setAdminActiveTab('PENDING_APPROVAL')}
+                    >
+                        Pending ({MealPlanViewModel.mealPlans.filter(p => p.status === 'PENDING_APPROVAL').length})
+                    </button>
+                    <button
+                        className={`tab-button ${MealPlanViewModel.adminActiveTab === 'APPROVED' ? 'active' : ''}`}
+                        onClick={() => MealPlanViewModel.setAdminActiveTab('APPROVED')}
+                    >
+                        Approved ({MealPlanViewModel.mealPlans.filter(p => p.status === 'APPROVED').length})
+                    </button>
+                    <button
+                        className={`tab-button ${MealPlanViewModel.adminActiveTab === 'REJECTED' ? 'active' : ''}`}
+                        onClick={() => MealPlanViewModel.setAdminActiveTab('REJECTED')}
+                    >
+                        Rejected ({MealPlanViewModel.mealPlans.filter(p => p.status === 'REJECTED').length})
+                    </button>
+                </div>
                 <div className="search-controls">
                     <input
                         type="text"
@@ -137,64 +187,86 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
                         value={searchTerm}
                         onChange={(e) => MealPlanViewModel.setSearchTerm(e.target.value)}
                     />
-                    <div className="category-dropdown-container">
+                    <div className="category-dropdown-container" ref={categoryDropdownRef}> {/* Attach ref here */}
                         <button
                             className="category-button"
-                            onClick={() => setShowCategoryDropdown(!showCategoryDropdown)} // Use local state
+                            onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                         >
                             {selectedCategory || "Search by Category"}
                         </button>
-                        {showCategoryDropdown && ( // Conditionally render based on local state
-                            <CategoryDropdown
-                                allCategories={allCategories}
-                                selectedCategory={selectedCategory}
-                                onSelectCategory={(category) => {
-                                    MealPlanViewModel.setSelectedCategory(category);
-                                    setShowCategoryDropdown(false); // Close after selection
-                                }}
-                            />
+                        {showCategoryDropdown && (
+                            <div className="category-dropdown-menu">
+                                <button className="dropdown-item" onClick={() => { MealPlanViewModel.setSelectedCategory(''); setShowCategoryDropdown(false); }}>
+                                    All Categories
+                                </button>
+                                {allCategories.map((category, index) => (
+                                    <button
+                                        key={index}
+                                        className={`dropdown-item ${selectedCategory === category ? 'selected' : ''}`}
+                                        onClick={() => {
+                                            MealPlanViewModel.setSelectedCategory(category);
+                                            setShowCategoryDropdown(false);
+                                        }}
+                                    >
+                                        {category}
+                                    </button>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {localLoading && <p>Loading meal plans...</p>} {/* Use local loading */}
-            {error && <p className="error-message">{error}</p>}
-
-            <div className="meal-plans-grid">
-                {MealPlanViewModel.filteredMealPlans.length > 0 ? (
-                    MealPlanViewModel.filteredMealPlans.map(plan => (
-                        <div key={plan._id} className="meal-plan-card">
-                            <img
-                                src={plan.imageUrl || `/assetscopy/${plan.imageFileName}`}
-                                alt={plan.name}
-                                className="meal-plan-card-image"
-                                onClick={() => handleImageClick(plan._id)}
-                            />
-                            <div className="meal-plan-card-info">
-                                <h3 className="meal-plan-card-name">{plan.name}</h3>
-                                <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
+            {localLoading || MealPlanViewModel.loading ? ( // Use VM's loading for initial fetch, local for actions
+                <p>Loading meal plans...</p>
+            ) : error ? (
+                <p className="error-message">{error}</p>
+            ) : (
+                <div className="meal-plans-grid">
+                    {MealPlanViewModel.filteredMealPlans.length > 0 ? (
+                        MealPlanViewModel.filteredMealPlans.map(plan => (
+                            <div key={plan._id} className="meal-plan-card">
+                                <img
+                                    src={plan.imageUrl || `/assetscopy/${plan.imageFileName}`}
+                                    alt={plan.name}
+                                    className="meal-plan-card-image"
+                                    onClick={() => handleImageClick(plan._id)}
+                                />
+                                <div className="meal-plan-card-info">
+                                    <h3 className="meal-plan-card-name">{plan.name}</h3>
+                                    <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
+                                    <p className="meal-plan-card-status">Status: {plan.status}</p> {/* Display status */}
+                                </div>
+                                <div className="meal-plan-card-actions">
+                                    {plan.status === 'PENDING_APPROVAL' && ( // Only show buttons for pending
+                                        <>
+                                            <button
+                                                className="approve-button"
+                                                onClick={() => handleApproveClick(plan._id)}
+                                                disabled={localLoading}
+                                            >
+                                                APPROVE
+                                            </button>
+                                            <button
+                                                className="reject-button"
+                                                onClick={() => handleRejectClick(plan._id)}
+                                                disabled={localLoading}
+                                            >
+                                                REJECT
+                                            </button>
+                                        </>
+                                    )}
+                                    {plan.status === 'REJECTED' && plan.rejectionReason && (
+                                        <p className="rejection-info">Reason: {plan.rejectionReason}</p>
+                                    )}
+                                </div>
                             </div>
-                            <div className="meal-plan-card-actions">
-                                <button
-                                    className="approve-button"
-                                    onClick={() => handleApproveClick(plan._id)}
-                                >
-                                    VERIFY
-                                </button>
-                                <button
-                                    className="reject-button"
-                                    onClick={() => handleRejectClick(plan._id)}
-                                >
-                                    REJECT
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    !localLoading && <p className="no-pending-plans-message">No meal plans pending approval or matching your criteria.</p>
-                )}
-            </div>
+                        ))
+                    ) : (
+                        <p className="no-pending-plans-message">No meal plans matching your criteria for the selected status.</p>
+                    )}
+                </div>
+            )}
 
             {/* Rejection Reasons Modal */}
             {showRejectModal && (
@@ -257,51 +329,3 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
 });
 
 export default AdminMealPlans;
-
-// Helper component for Category Dropdown to maintain original UI structure
-const CategoryDropdown = ({ allCategories, selectedCategory, onSelectCategory }) => {
-    // This component's internal state for dropdown visibility
-    // The parent (AdminMealPlans) now controls when to render this component based on its `showCategoryDropdown`
-    // This component will manage its own `useRef` for click-outside.
-    const dropdownRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                // If the click is outside, we need to signal the parent to close the dropdown.
-                // However, since the parent (AdminMealPlans) manages its rendering,
-                // this component might not need to manage a `showDropdown` state itself.
-                // The `onSelectCategory` call will inherently close it if the parent logic sets `setShowCategoryDropdown(false)`.
-                // For a click outside, we need a way to tell the parent to close it.
-                // For now, I'll remove `setShowDropdown` from this helper and assume the parent will handle the close via `onSelectCategory`
-                // or if the parent manages the overall `showCategoryDropdown` state.
-                // Re-evaluating: The original code had a local `showCategoryDropdown` in AdminMealPlans.
-                // The `onClick` on the category button directly toggled that local state.
-                // The `CategoryDropdown` helper is not needed if `AdminMealPlans` directly renders the dropdown content.
-                // I will revert the CategoryDropdown helper and put the logic back into AdminMealPlans
-                // to match the original structure and avoid this communication complexity.
-                // The original code was simpler here.
-
-                // Let's re-add the `showDropdown` state locally to this helper for simplicity
-                // and to avoid prop-drilling a `setShowCategoryDropdown` callback from the parent.
-                // This means the `AdminMealPlans` component *should not* have `showCategoryDropdown` state.
-                // Instead, the `CategoryDropdown` component will be rendered always, but its internal logic
-                // will control its visibility.
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    // Reverting to the original structure for the category dropdown,
-    // where its visibility state is managed directly within AdminMealPlans,
-    // as the helper component introduced unnecessary complexity for this specific part.
-    // The `CategoryDropdown` helper component is thus removed, and its logic is inline in `AdminMealPlans`.
-
-    // The original `AdminMealPlans` component already had `showCategoryDropdown` and a `useRef` for click outside.
-    // I will put that logic back into `AdminMealPlans` as it was.
-    // The previous refactor's `CategoryDropdown` helper introduced more complexity than benefit here.
-    return null; // This helper component will be removed, its logic is back in AdminMealPlans.
-};
