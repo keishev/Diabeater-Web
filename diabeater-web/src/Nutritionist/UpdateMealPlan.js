@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react'; // Import useRef
+import React, { useState, useEffect, useRef } from 'react';
+import { observer } from 'mobx-react-lite'; // Import observer
+import mealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the ViewModel
 import './UpdateMealPlan.css'; // Make sure this CSS file is correctly linked
 
-const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
+const UpdateMealPlan = observer(({ mealPlan, onBack }) => { // Removed onSave prop
     // Initialize form state with data from the mealPlan prop
     const [formData, setFormData] = useState({
         name: mealPlan?.name || '',
-        // Initialize selectedCategories as an array from mealPlan.categories
-        // or an empty array if mealPlan.categories is not present/empty
         selectedCategories: mealPlan?.categories || [],
-        image: mealPlan?.image || '', // This will hold the URL or base64 if directly managed
+        // Use mealPlan.imageUrl for display if available, otherwise fallback to mealPlan.imageFileName
+        // For actual file upload, imageFile will be set
+        image: mealPlan?.imageUrl || (mealPlan?.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : ''),
         imageFile: null, // To hold the actual file object if a new one is selected
         description: mealPlan?.description || '',
         recipe: mealPlan?.recipe ? mealPlan.recipe.join('\n') : '', // Join array for textarea
@@ -18,11 +20,11 @@ const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
         fats: mealPlan?.nutrientInfo?.fat || '',
     });
 
-    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false); // New state for dropdown
-    const categoryDropdownRef = useRef(null); // Ref for click outside detection
+    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const categoryDropdownRef = useRef(null);
 
-    // Dummy categories as per the screenshot
-    const categoryOptions = [ // Renamed to categoryOptions for clarity
+    // Dummy categories (these should ideally come from ViewModel if dynamic)
+    const categoryOptions = [
         "Improved Energy",
         "Weight Loss",
         "Weight Management",
@@ -33,8 +35,8 @@ const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
         "Snack"
     ];
 
+    // Effect for handling click outside to close dropdown
     useEffect(() => {
-        // Effect for handling click outside to close dropdown
         const handleClickOutside = (event) => {
             if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
                 setIsCategoryDropdownOpen(false);
@@ -70,13 +72,14 @@ const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
         } else {
             setFormData(prev => ({
                 ...prev,
-                image: mealPlan?.image || '', // Revert to original if no file selected
+                // Revert to original image URL if no new file is selected,
+                // otherwise clear if it was a new upload that's now deselected.
+                image: mealPlan?.imageUrl || (mealPlan?.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : ''),
                 imageFile: null,
             }));
         }
     };
 
-    // New handler for category checkbox changes
     const handleCategoryChange = (e) => {
         const { value, checked } = e.target;
         setFormData(prev => {
@@ -90,29 +93,43 @@ const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
         });
     };
 
-    const handleSave = () => {
-        const updatedMealPlan = {
-            ...mealPlan, // Keep existing meal plan properties
+    // Refactored handleSave to use mealPlanViewModel
+    const handleSave = async () => {
+        // Construct the payload for the update operation
+        const updatedMealPlanData = {
+            _id: mealPlan._id, // Essential: Pass the ID of the meal plan to update
             name: formData.name,
-            categories: formData.selectedCategories, // Use the array of selected categories
-            image: formData.image, // Use the updated image (either URL or base64 preview)
+            categories: formData.selectedCategories,
             description: formData.description,
-            recipe: formData.recipe.split('\n').filter(line => line.trim() !== ''), // Split back to array
+            recipe: formData.recipe.split('\n').filter(line => line.trim() !== ''),
             nutrientInfo: {
                 calories: parseInt(formData.calories) || 0,
                 protein: parseInt(formData.protein) || 0,
                 carbs: parseInt(formData.carbohydrates) || 0,
                 fat: parseInt(formData.fats) || 0,
             },
+            // Only include imageFile if a new one was selected
+            imageFile: formData.imageFile,
+            // Pass original imageFileName for deletion if new image uploaded
+            originalImageFileName: mealPlan?.imageFileName || null,
+            // Pass current imageUrl if no new file is selected, to preserve it
+            imageUrl: formData.imageFile ? null : formData.image // If imageFile is null, use current image state
         };
-        console.log('Saving updated meal plan:', updatedMealPlan);
-        if (onSave) {
-            onSave(updatedMealPlan);
+
+        console.log('Attempting to update meal plan with:', updatedMealPlanData);
+
+        // Call the updateMealPlan action from the ViewModel
+        await mealPlanViewModel.updateMealPlan(updatedMealPlanData);
+
+        // Check ViewModel's success/error state after the operation
+        if (mealPlanViewModel.success) {
+            alert('Meal plan updated successfully!'); // Or use a nicer UI notification
+            onBack(); // Go back to the dashboard
+        } else if (mealPlanViewModel.error) {
+            alert(`Error updating meal plan: ${mealPlanViewModel.error}`); // Display error
         }
-        onBack(); // Go back to dashboard after saving (or show success message)
     };
 
-    // Helper function to display selected categories on the button
     const getCategoryButtonText = () => {
         if (formData.selectedCategories.length === 0) {
             return "Select Categories";
@@ -145,10 +162,10 @@ const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
 
                     <div className="form-row category-upload-row">
                         <div className="form-section category-section">
-                            <label>Category</label> {/* Label for the dropdown button */}
+                            <label>Category</label>
                             <div className="dropdown-checklist-container" ref={categoryDropdownRef}>
                                 <button
-                                    type="button" // Important: set type to button to prevent form submission
+                                    type="button"
                                     className={`dropdown-toggle-button ${isCategoryDropdownOpen ? 'open' : ''}`}
                                     onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
                                 >
@@ -174,84 +191,112 @@ const UpdateMealPlan = ({ mealPlan, onBack, onSave }) => {
                                 )}
                             </div>
                         </div>
-                        <div className="form-section upload-photo-section">
-                            <label htmlFor="uploadPhoto" className="upload-photo-button">UPLOAD PHOTO</label>
+                        <div className="form-section image-upload-section">
+                            <label htmlFor="mealImage">Meal Image</label>
                             <input
                                 type="file"
-                                id="uploadPhoto"
+                                id="mealImage"
+                                name="imageFile"
+                                accept="image/*"
                                 onChange={handleFileChange}
                                 className="file-input"
-                                style={{ display: 'none' }} // Hide default file input
                             />
+                            {formData.image && (
+                                <div className="image-preview-container">
+                                    <img src={formData.image} alt="Meal Plan Preview" className="image-preview" />
+                                </div>
+                            )}
                         </div>
+                    </div>
+
+                    <div className="form-section">
+                        <label htmlFor="description">Description</label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            className="description-textarea"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div className="form-section">
+                        <label htmlFor="recipe">Recipe (Each step on a new line)</label>
+                        <textarea
+                            id="recipe"
+                            name="recipe"
+                            value={formData.recipe}
+                            onChange={handleChange}
+                            className="recipe-textarea"
+                            rows="8"
+                        ></textarea>
                     </div>
                 </div>
 
                 <div className="right-column">
-                    <div className="photo-display-area">
-                        {formData.image ? (
-                            <img src={formData.image} alt="Meal Preview" className="meal-display-image" />
-                        ) : (
-                            '/photo preview'
-                        )}
+                    <div className="nutrient-info-section">
+                        <h2>Nutrient Information</h2>
+                        <div className="nutrient-inputs">
+                            <div className="nutrient-input-group">
+                                <label htmlFor="calories">Calories (kcal)</label>
+                                <input
+                                    type="number"
+                                    id="calories"
+                                    name="calories"
+                                    value={formData.calories}
+                                    onChange={handleChange}
+                                    min="0"
+                                />
+                            </div>
+                            <div className="nutrient-input-group">
+                                <label htmlFor="protein">Protein (g)</label>
+                                <input
+                                    type="number"
+                                    id="protein"
+                                    name="protein"
+                                    value={formData.protein}
+                                    onChange={handleChange}
+                                    min="0"
+                                />
+                            </div>
+                            <div className="nutrient-input-group">
+                                <label htmlFor="carbohydrates">Carbohydrates (g)</label>
+                                <input
+                                    type="number"
+                                    id="carbohydrates"
+                                    name="carbohydrates"
+                                    value={formData.carbohydrates}
+                                    onChange={handleChange}
+                                    min="0"
+                                />
+                            </div>
+                            <div className="nutrient-input-group">
+                                <label htmlFor="fats">Fats (g)</label>
+                                <input
+                                    type="number"
+                                    id="fats"
+                                    name="fats"
+                                    value={formData.fats}
+                                    onChange={handleChange}
+                                    min="0"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="form-section">
-                <label htmlFor="description">Description</label>
-                <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows="4"
-                    className="full-width-textarea"
-                ></textarea>
-            </div>
-
-            <div className="form-section">
-                <label htmlFor="recipe">Recipe</label>
-                <textarea
-                    id="recipe"
-                    name="recipe"
-                    value={formData.recipe}
-                    onChange={handleChange}
-                    rows="6"
-                    className="full-width-textarea"
-                ></textarea>
-            </div>
-
-            <h3>Nutrients Information</h3>
-            <div className="nutrients-grid">
-                <div className="nutrient-item">
-                    <label class="nutrient-label" htmlFor="calories">Calories</label>
-                    <input type="number" class="nutrient-input" id="calories" name="calories" value={formData.calories} onChange={handleChange} />
-                    <span className="unit">kcal</span>
-                </div>
-                <div className="nutrient-item">
-                    <label class="nutrient-label" htmlFor="protein">Protein</label>
-                    <input type="number" class="nutrient-input" id="protein" name="protein" value={formData.protein} onChange={handleChange} />
-                    <span className="unit">grams</span>
-                </div>
-                <div className="nutrient-item">
-                    <label class="nutrient-label" htmlFor="carbohydrates">Carbohydrates</label>
-                    <input type="number" class="nutrient-input" id="carbohydrates" name="carbohydrates" value={formData.carbohydrates} onChange={handleChange} />
-                    <span className="unit">grams</span>
-                </div>
-                <div className="nutrient-item">
-                    <label class="nutrient-label" htmlFor="fats">Fats</label>
-                    <input type="number" class="nutrient-input" id="fats" name="fats" value={formData.fats} onChange={handleChange} />
-                    <span className="unit">grams</span>
-                </div>
-            </div>
-
-            <div className="form-actions">
-                <button type="button" className="cancel-button" onClick={onBack}>cancel</button>
-                <button type="button" className="save-button" onClick={handleSave}>save</button>
-            </div>
+            <footer className="update-meal-plan-footer">
+                <button type="button" className="back-button" onClick={onBack}>
+                    BACK
+                </button>
+                <button type="button" className="save-button" onClick={handleSave} disabled={mealPlanViewModel.loading}>
+                    {mealPlanViewModel.loading ? 'SAVING...' : 'SAVE CHANGES'}
+                </button>
+            </footer>
         </div>
     );
-};
+});
 
 export default UpdateMealPlan;

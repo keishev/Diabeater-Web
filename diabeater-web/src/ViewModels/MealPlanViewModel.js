@@ -1,5 +1,4 @@
-// src/ViewModels/MealPlanViewModel.js
-import { makeAutoObservable, runInAction, computed } from 'mobx'; // Import computed
+import { makeAutoObservable, runInAction, computed } from 'mobx';
 import MealPlanRepository from '../Repositories/MealPlanRepository';
 import AuthService from '../Services/AuthService';
 
@@ -14,21 +13,18 @@ class MealPlanViewModel {
 
     currentUserId = null;
     currentUserRole = null;
+    currentUserName = null;
     selectedMealPlanForDetail = null;
-    selectedMealPlanForUpdate = null;
+    selectedMealPlanForUpdate = null; // This state must hold the full meal plan object for the UpdateMealPlan component
     notifications = [];
     unreadNotificationCount = 0;
 
-    adminActiveTab = 'PENDING_APPROVAL'; // Default tab for admin view
+    adminActiveTab = 'PENDING_APPROVAL';
+    _notificationsUnsubscribe = null;
 
     constructor() {
-        // Use makeAutoObservable to automatically make all properties observable
-        // and all actions methods (functions).
-        // Explicitly mark 'filteredMealPlans' as a computed property.
         makeAutoObservable(this, {
             filteredMealPlans: computed,
-            // Any other properties or methods that need specific MobX behavior
-            // (e.g., 'action.bound' for methods if you weren't using arrow functions for actions)
         });
 
         this.initializeUser();
@@ -41,26 +37,30 @@ class MealPlanViewModel {
             runInAction(() => {
                 this.currentUserId = user.uid;
                 this.currentUserRole = user.role;
-                if (user.role === 'admin') {
-                    // Call fetchAdminMealPlans with the default adminActiveTab
-                    this.fetchAdminMealPlans(this.adminActiveTab);
-                } else { // Nutritionist
-                    this.fetchNutritionistMealPlans(user.uid);
-                }
-                this.fetchNotifications(user.uid);
+                this.currentUserName = user.name || user.username || user.email;
             });
+            // Ensure meal plans are fetched here based on role
+            if (user.role === 'admin') {
+                this.fetchAdminMealPlans(this.adminActiveTab);
+            } else { // Nutritionist
+                this.fetchNutritionistMealPlans(user.uid);
+            }
+            this.fetchNotifications(user.uid);
         } else {
             console.warn("No authenticated user found in initializeUser.");
+            // If no user, ensure lists are cleared
+            runInAction(() => {
+                this.mealPlans = [];
+                this.allCategories = [];
+            });
         }
     };
 
-    // New method to update the active tab for admins
     setAdminActiveTab = async (tab) => {
         if (this.adminActiveTab !== tab) {
             runInAction(() => {
                 this.adminActiveTab = tab;
             });
-            // Re-fetch meal plans based on the new active tab
             if (this.currentUserRole === 'admin') {
                 await this.fetchAdminMealPlans(tab);
             }
@@ -68,25 +68,38 @@ class MealPlanViewModel {
     };
 
     setupNotificationListener = () => {
-        if (!this.currentUserId) {
-            setTimeout(this.setupNotificationListener, 500);
+        if (!this.currentUserId || this.currentUserRole !== 'nutritionist') {
+            if (!this.currentUserId) {
+                // Re-attempt after a short delay if user ID is not yet available
+                setTimeout(this.setupNotificationListener, 500);
+            }
             return;
         }
-        MealPlanRepository.onNotificationsSnapshot(this.currentUserId, (notifications) => {
+
+        if (this._notificationsUnsubscribe) {
+            this._notificationsUnsubscribe();
+            this._notificationsUnsubscribe = null;
+        }
+
+        this._notificationsUnsubscribe = MealPlanRepository.onNotificationsSnapshot(this.currentUserId, (notifications) => {
             runInAction(() => {
                 this.notifications = notifications;
-                this.unreadNotificationCount = notifications.filter(n => !n.read).length;
+                this.unreadNotificationCount = notifications.filter(n => !n.isRead).length;
             });
         });
     };
 
-    async fetchNotifications(userId) {
+    fetchNotifications = async (userId) => {
+        if (!userId) {
+            console.warn("User ID not available for fetching notifications.");
+            return;
+        }
         this.setLoading(true);
         try {
             const fetchedNotifications = await MealPlanRepository.getNotifications(userId);
             runInAction(() => {
                 this.notifications = fetchedNotifications;
-                this.unreadNotificationCount = fetchedNotifications.filter(n => !n.read).length;
+                this.unreadNotificationCount = fetchedNotifications.filter(n => !n.isRead).length;
             });
         } catch (err) {
             console.error('Error fetching notifications:', err);
@@ -96,15 +109,15 @@ class MealPlanViewModel {
         }
     }
 
-    async markNotificationAsRead(notificationId) {
+    markNotificationAsRead = async (notificationId) => {
         this.setLoading(true);
         try {
             await MealPlanRepository.markNotificationAsRead(notificationId);
             runInAction(() => {
-                const notification = this.notifications.find(n => n._id === notificationId);
+                const notification = this.notifications.find(n => n.id === notificationId);
                 if (notification) {
-                    notification.read = true;
-                    this.unreadNotificationCount = this.notifications.filter(n => !n.read).length;
+                    notification.isRead = true;
+                    this.unreadNotificationCount = this.notifications.filter(n => !n.isRead).length;
                 }
             });
             this.setSuccess('Notification marked as read.');
@@ -116,7 +129,7 @@ class MealPlanViewModel {
         }
     }
 
-    async loadMealPlanDetails(mealPlanId) {
+    loadMealPlanDetails = async (mealPlanId) => {
         this.setLoading(true);
         this.setError('');
         try {
@@ -132,21 +145,39 @@ class MealPlanViewModel {
         }
     }
 
-    selectMealPlanForUpdate(mealPlanId) {
-        const mealPlan = this.mealPlans.find(plan => plan._id === mealPlanId);
-        runInAction(() => {
-            this.selectedMealPlanForUpdate = mealPlan;
-        });
-    }
+    /**
+     * ⭐ CRITICAL FUNCTION: Sets the meal plan object to be used for the update form.
+     * This relies on `this.mealPlans` being correctly populated.
+     */
+    selectMealPlanForUpdate = (mealPlanId) => {
+        // Log to see what mealPlans contains
+        console.log("ViewModel: All meal plans:", this.mealPlans.map(p => ({ id: p._id, name: p.name })));
+        console.log("ViewModel: Looking for mealPlanId for update:", mealPlanId);
 
-    clearSelectedMealPlans() {
+        const mealPlan = this.mealPlans.find(plan => plan._id === mealPlanId);
+        if (mealPlan) {
+            runInAction(() => {
+                this.selectedMealPlanForUpdate = mealPlan;
+                console.log("ViewModel: selectedMealPlanForUpdate set to:", this.selectedMealPlanForUpdate);
+            });
+            this.setSuccess(`Ready to update meal plan: ${mealPlan.name}`);
+        } else {
+            console.error("ViewModel: Meal plan NOT found in 'mealPlans' array for ID:", mealPlanId);
+            runInAction(() => {
+                this.selectedMealPlanForUpdate = null; // Explicitly set to null if not found
+                this.setError("Could not find meal plan to update. Please refresh and try again.");
+            });
+        }
+    };
+
+    clearSelectedMealPlans = () => {
         runInAction(() => {
             this.selectedMealPlanForDetail = null;
             this.selectedMealPlanForUpdate = null;
         });
     }
 
-    async deleteMealPlan(mealPlanId, imageFileName) {
+    deleteMealPlan = async (mealPlanId, imageFileName) => {
         this.setLoading(true);
         this.setError('');
         this.setSuccess('');
@@ -166,30 +197,37 @@ class MealPlanViewModel {
         }
     }
 
-    async approveOrRejectMealPlan(mealPlanId, newStatus, authorId, adminName, adminId, rejectionReason = null) {
+    approveOrRejectMealPlan = async (mealPlanId, newStatus, authorId, adminName, adminId, rejectionReason = null) => {
         this.setLoading(true);
         this.setError('');
         this.setSuccess('');
         try {
+            const mealPlanToUpdate = this.mealPlans.find(p => p._id === mealPlanId);
+            if (!mealPlanToUpdate) {
+                throw new Error("Meal plan not found for approval/rejection.");
+            }
+
             await MealPlanRepository.updateMealPlanStatus(mealPlanId, newStatus, rejectionReason);
 
             let notificationMessage;
             if (newStatus === 'APPROVED') {
-                notificationMessage = `Your meal plan has been APPROVED by ${adminName}.`;
-            } else { // REJECTED
-                notificationMessage = `Your meal plan has been REJECTED by ${adminName}. Reason: ${rejectionReason || 'No reason provided.'}`;
+                notificationMessage = `Your meal plan "${mealPlanToUpdate.name}" has been APPROVED by ${adminName}.`;
+            } else {
+                notificationMessage = `Your meal plan "${mealPlanToUpdate.name}" has been REJECTED by ${adminName}. Reason: ${rejectionReason || 'No reason provided.'}`;
             }
 
             await MealPlanRepository.addNotification(
                 authorId,
-                newStatus === 'APPROVED' ? 'mealPlanApproval' : 'mealPlanRejection',
+                'MEAL_PLAN_STATUS_UPDATE',
                 notificationMessage,
                 mealPlanId,
-                rejectionReason
+                newStatus,
+                adminId,
+                adminName
             );
 
+            // Re-fetch meal plans to reflect status change immediately
             if (this.currentUserRole === 'admin') {
-                // After approval/rejection, refresh the admin's current active tab
                 await this.fetchAdminMealPlans(this.adminActiveTab);
             } else if (this.currentUserId === authorId) {
                 await this.fetchNutritionistMealPlans(this.currentUserId);
@@ -206,7 +244,7 @@ class MealPlanViewModel {
         }
     }
 
-    async createMealPlan(mealPlanData, imageFile) {
+    createMealPlan = async (mealPlanData, imageFile) => {
         this.setLoading(true);
         this.setError('');
         this.setSuccess('');
@@ -217,24 +255,24 @@ class MealPlanViewModel {
             }
 
             const authorId = currentUser.uid;
-            const authorName = currentUser.name || "Unknown Author";
+            const authorName = currentUser.name || currentUser.username || "Unknown Author";
 
             const newMealPlan = {
                 ...mealPlanData,
                 authorId: authorId,
                 author: authorName,
-                status: 'PENDING_APPROVAL', // Set initial status
+                status: 'PENDING_APPROVAL',
                 createdAt: new Date().toISOString(),
             };
 
-            const result = await MealPlanRepository.addMealPlan(newMealPlan, imageFile); // Corrected method name
-            runInAction(() => {
-                // If a nutritionist creates a plan, and they are viewing their own plans, add it to the list
-                if (this.currentUserRole === 'nutritionist' && this.currentUserId === authorId) {
-                    this.mealPlans.push(result);
-                }
-            });
+            await MealPlanRepository.addMealPlan(newMealPlan, imageFile);
             this.setSuccess('Meal plan created successfully and sent for approval!');
+            // After creation, trigger a refresh of the appropriate meal plan list
+            if (this.currentUserRole === 'admin') {
+                await this.fetchAdminMealPlans(this.adminActiveTab);
+            } else {
+                await this.fetchNutritionistMealPlans(authorId);
+            }
             return true;
         } catch (err) {
             console.error('Error creating meal plan:', err);
@@ -245,57 +283,75 @@ class MealPlanViewModel {
         }
     }
 
+    updateMealPlan = async (updatedMealPlanData) => {
+        this.setLoading(true);
+        this.setError('');
+        this.setSuccess('');
+        try {
+            const { _id, imageFile, originalImageFileName, ...dataToUpdate } = updatedMealPlanData;
 
-    setLoading(isLoading) {
-        this.loading = isLoading;
+            // The repository should return the updated meal plan object, especially if image URL changes
+            const returnedMealPlan = await MealPlanRepository.updateMealPlan(_id, dataToUpdate, imageFile, originalImageFileName);
+
+            runInAction(() => {
+                // Find and update the meal plan in the local array
+                const index = this.mealPlans.findIndex(plan => plan._id === _id);
+                if (index !== -1) {
+                    // Update the local meal plan with the data returned from the repository
+                    this.mealPlans[index] = { ...this.mealPlans[index], ...returnedMealPlan };
+                }
+                // Clear the selected meal plan for update after a successful update
+                this.selectedMealPlanForUpdate = null;
+            });
+
+            // Re-fetch the relevant list to ensure consistency, especially if status changed or image URL
+            if (this.currentUserRole === 'admin') {
+                await this.fetchAdminMealPlans(this.adminActiveTab);
+            } else if (this.currentUserId) {
+                await this.fetchNutritionistMealPlans(this.currentUserId);
+            }
+
+            this.setSuccess('Meal plan updated successfully!');
+            return true;
+        } catch (err) {
+            console.error('Error updating meal plan:', err);
+            this.setError('Failed to update meal plan: ' + err.message);
+            return false;
+        } finally {
+            this.setLoading(false);
+        }
     }
 
-    setError(errorMessage) {
-        this.error = errorMessage;
-    }
-
-    setSuccess(successMessage) {
-        this.success = successMessage;
-    }
-
-    setSearchTerm(term) {
-        this.searchTerm = term;
-    }
-
-    setSelectedCategory(category) {
-        this.selectedCategory = category;
-    }
-
-    setAllCategories(categories) {
-        this.allCategories = categories;
-    }
-
-    /**
-     * Fetches meal plans for an admin based on a status filter.
-     * @param {string} statusFilter - 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', or 'ALL'.
-     */
-    async fetchAdminMealPlans(statusFilter) {
+    fetchAdminMealPlans = async (statusFilter) => {
         this.setLoading(true);
         this.setError('');
         try {
             let fetchedPlans = [];
-            if (statusFilter === 'PENDING_APPROVAL') {
-                fetchedPlans = await MealPlanRepository.getPendingMealPlans();
-            } else if (statusFilter === 'APPROVED') {
-                // Fetch approved plans. Ensure MealPlanRepository has getApprovedMealPlans
-                fetchedPlans = await MealPlanRepository.getApprovedMealPlans();
-            } else if (statusFilter === 'REJECTED') {
-                fetchedPlans = await MealPlanRepository.getRejectedMealPlans();
-            } else { // Handle 'ALL' or other cases by fetching all
-                const pending = await MealPlanRepository.getPendingMealPlans();
-                const approved = await MealPlanRepository.getApprovedMealPlans(); // Use getApprovedMealPlans
-                const rejected = await MealPlanRepository.getRejectedMealPlans();
-                fetchedPlans = [...pending, ...approved, ...rejected];
+            // If `MealPlanRepository.getAllMealPlansByStatus` exists and handles all, use it.
+            // Otherwise, combine results from specific status fetches.
+            if (MealPlanRepository.getAllMealPlansByStatus) {
+                fetchedPlans = await MealPlanRepository.getAllMealPlansByStatus(statusFilter);
+            } else {
+                // Fallback if specific methods are needed and getAllMealPlansByStatus is not implemented
+                if (statusFilter === 'PENDING_APPROVAL') {
+                    fetchedPlans = await MealPlanRepository.getPendingMealPlans();
+                } else if (statusFilter === 'APPROVED') {
+                    fetchedPlans = await MealPlanRepository.getApprovedMealPlans();
+                } else if (statusFilter === 'REJECTED') {
+                    fetchedPlans = await MealPlanRepository.getRejectedMealPlans();
+                } else { // Default or 'ALL' case
+                    const pending = await MealPlanRepository.getPendingMealPlans();
+                    const approved = await MealPlanRepository.getApprovedMealPlans();
+                    const rejected = await MealPlanRepository.getRejectedMealPlans();
+                    fetchedPlans = [...pending, ...approved, ...rejected];
+                }
             }
+
 
             runInAction(() => {
                 this.mealPlans = fetchedPlans;
-                const categories = [...new Set(this.mealPlans.flatMap(plan => plan.categories || []))];
+                // Ensure `plan.categories` is an array for flatMap to work, or use `plan.category` if it's a single string
+                const categories = [...new Set(this.mealPlans.flatMap(plan => plan.categories || (plan.category ? [plan.category] : [])))];
                 this.setAllCategories(categories.sort());
             });
         } catch (err) {
@@ -310,14 +366,19 @@ class MealPlanViewModel {
         }
     }
 
-    async fetchNutritionistMealPlans(authorId) {
+    fetchNutritionistMealPlans = async (authorId) => {
+        if (!authorId) {
+            console.warn("Author ID not available for fetching nutritionist meal plans.");
+            return;
+        }
         this.setLoading(true);
         this.setError('');
         try {
             const nutritionistPlans = await MealPlanRepository.getMealPlansByAuthor(authorId);
             runInAction(() => {
                 this.mealPlans = nutritionistPlans;
-                const categories = [...new Set(nutritionistPlans.flatMap(plan => plan.categories || []))];
+                // Ensure `plan.categories` is an array for flatMap to work, or use `plan.category` if it's a single string
+                const categories = [...new Set(nutritionistPlans.flatMap(plan => plan.categories || (plan.category ? [plan.category] : [])))];
                 this.setAllCategories(categories.sort());
             });
         } catch (err) {
@@ -332,28 +393,77 @@ class MealPlanViewModel {
         }
     }
 
+    setLoading = (isLoading) => {
+        runInAction(() => {
+            this.loading = isLoading;
+        });
+    }
+
+    setError = (message) => {
+        runInAction(() => {
+            this.error = message;
+            if (message) {
+                setTimeout(() => runInAction(() => this.error = ''), 5000);
+            }
+        });
+    }
+
+    setSuccess = (message) => {
+        runInAction(() => {
+            this.success = message;
+            if (message) {
+                setTimeout(() => runInAction(() => this.success = ''), 5000);
+            }
+        });
+    }
+
+    setSearchTerm = (term) => {
+        runInAction(() => {
+            this.searchTerm = term;
+        });
+    }
+
+    setSelectedCategory = (category) => {
+        runInAction(() => {
+            this.selectedCategory = category;
+        });
+    }
+
+    setAllCategories = (categories) => {
+        runInAction(() => {
+            this.allCategories = categories;
+        });
+    }
+
     dispose = () => {
-        // Unsubscribe from Firebase listeners here if they were set up using onSnapshot
-        // For example: if (this.notificationsUnsubscribe) this.notificationsUnsubscribe();
+        if (this._notificationsUnsubscribe) {
+            this._notificationsUnsubscribe();
+            console.log("Unsubscribed from notifications listener.");
+        }
     };
 
-    // This is a computed property, automatically derived from other observables
     get filteredMealPlans() {
         let plansToFilter = this.mealPlans;
 
-        // Apply admin tab filter if current user is an admin
         if (this.currentUserRole === 'admin') {
+            // Admin filters by `adminActiveTab` which is a status
             plansToFilter = plansToFilter.filter(plan => plan.status === this.adminActiveTab);
         }
 
-        // Apply search term and category filters
         return plansToFilter.filter(plan => {
             const matchesSearchTerm = plan.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                (plan.author && plan.author.toLowerCase().includes(this.searchTerm.toLowerCase())); // Ensure 'author' property exists
-            const matchesCategory = this.selectedCategory === '' || (plan.categories && plan.categories.includes(this.selectedCategory));
+                (plan.author && plan.author.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
+                (plan.description && plan.description.toLowerCase().includes(this.searchTerm.toLowerCase())); // Also search description
+
+            // Check if plan.categories is an array, or if plan.category exists
+            const matchesCategory = this.selectedCategory === '' ||
+                                    (Array.isArray(plan.categories) && plan.categories.includes(this.selectedCategory)) ||
+                                    (plan.category && plan.category === this.selectedCategory);
+
             return matchesSearchTerm && matchesCategory;
         });
     }
 }
 
-export default new MealPlanViewModel();
+const mealPlanViewModel = new MealPlanViewModel();
+export default mealPlanViewModel;

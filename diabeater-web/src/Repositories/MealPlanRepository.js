@@ -1,4 +1,3 @@
-// src/Repositories/MealPlanRepository.js
 import MealPlanService from '../Services/MealPlanService';
 
 class MealPlanRepository {
@@ -49,6 +48,11 @@ class MealPlanRepository {
 
     async deleteMealPlan(mealPlanId, imageFileName) {
         return await MealPlanService.deleteMealPlan(mealPlanId, imageFileName);
+    }
+
+    // ⭐ ADDED: updateMealPlan method ⭐
+    async updateMealPlan(mealPlanId, mealPlanData, newImageFile, originalImageFileName) {
+        return await MealPlanService.updateMealPlan(mealPlanId, mealPlanData, newImageFile, originalImageFileName);
     }
 }
 

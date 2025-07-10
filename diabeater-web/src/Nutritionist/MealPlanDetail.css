@@ -1,283 +1,278 @@
 /* src/Nutritionist/MealPlanDetail.css */
 
-.meal-detail-page {
-    padding: 30px;
-    background-color: #fffaf3;
+.meal-plan-detail-container {
+    padding: 20px; /* Reduced padding for a smaller feel */
+    background-color: #fcf8f3; /* Light, warm background color */
     flex-grow: 1;
-    color: #333;
-}
-
-.meal-detail-header {
     display: flex;
-    flex-direction: column; /* Changed to column to stack title and author */
-    align-items: center;   /* Center items horizontally */
-    margin-bottom: 30px;
-    position: relative;
+    flex-direction: column;
+    overflow-y: auto;
 }
 
 .back-button {
-    position: absolute;
-    left: 0;
-    top: 5px;
     background: none;
     border: none;
-    color: #ED873F;
-    font-size: 16px;
+    color: #007bff; /* Standard link blue, or adjust to match your brand */
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: bold;
-    transition: color 0.2s ease;
+    font-size: 14px; /* Smaller font size */
+    margin-bottom: 15px; /* Reduced margin */
+    align-self: flex-start;
+    padding: 3px 8px; /* Smaller padding */
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .back-button:hover {
-    color: #d67a36;
+    background-color: #e2e6ea;
+    color: #0056b3;
 }
 
-.meal-detail-title {
-    font-size: 38px;
-    color: #1E525C;
-    margin: 0; /* Remove default margin to control spacing with author */
-    text-align: center;
-}
-
-.meal-detail-author {
-    font-size: 16px;
-    color: #777;
-    margin-right: 600px;
-    margin-top: 1px; /* Add a small margin to separate from the title */
-    /* text-align: center; This might not be needed if align-items: center on parent */
-}
-
-
-.meal-detail-image-container {
-    width: 100%;
-    max-width: 700px; /* Adjust as needed */
-    margin: 20px auto;
-    position: relative;
-    margin-bottom: 30px;
-    margin-top: -10px;
-    border-radius: 20px; /* Rounded corners for the image container */
-    overflow: hidden; /* Ensures image respects border-radius */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-}
-
-.meal-detail-main-image {
-    width: 100%;
-    height: 400px; /* Fixed height for consistency, adjust as needed */
-    object-fit: cover; /* Cover the area, cropping if necessary */
-    display: block;
-}
-
-.meal-detail-likes-count {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 8px 12px;
-    border-radius: 15px;
-    font-weight: bold;
-    color: #ED873F;
-    font-size: 16px;
+.meal-plan-detail-card {
+    background-color: #fff;
+    border-radius: 8px; /* Slightly less rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    padding: 20px; /* Reduced padding */
     display: flex;
-    align-items: center;
-    gap: 5px;
+    flex-direction: column;
+    align-items: flex-start; /* Align content to the start (left) */
+    max-width: 700px; /* Make it significantly smaller */
+    margin: 0 auto; /* Center the card */
 }
 
-/* You might need an icon for likes here, e.g., Font Awesome heart */
-/* .meal-detail-likes-count::before {
-    content: '\f004'; // Font Awesome heart icon
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    color: #ED873F;
-} */
-
-
-.meal-detail-section {
-    background-color: #fcf6ed; /* Lighter background for sections */
-    padding: 25px;
-    border-radius: 15px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+.meal-plan-detail-image {
+    width: 100%;
+    max-width: 400px; /* Smaller image size */
+    height: auto;
+    border-radius: 6px; /* Slightly less rounded */
+    margin-bottom: 20px; /* Reduced space below image */
+    object-fit: cover;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add shadow to image as in reference */
 }
 
-.meal-detail-section h2 {
-    color: #1E525C;
-    font-size: 20px;
-    margin-top: 0;
+.meal-plan-detail-info {
+    width: 100%;
+    /* No max-width here, it will take remaining space in row layout */
+    text-align: left;
+}
+
+.meal-plan-detail-name {
+    font-size: 1.8em; /* Smaller title font */
+    color: #333;
+    margin-bottom: 5px; /* Reduced margin */
+    border-bottom: 1px solid #eee; /* Lighter separator */
+    padding-bottom: 8px; /* Reduced padding */
+}
+
+.meal-plan-detail-author {
+    font-size: 0.9em; /* Smaller author font */
+    color: #777;
     margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+    font-style: italic;
 }
 
-.meal-detail-section h3 {
-    color: #ED873F;
-    font-size: 20px;
-    margin-top: 20px;
-    margin-bottom: 10px;
+/* Common section styling */
+.meal-plan-detail-section {
+    margin-top: 15px; /* Reduced top margin */
+    padding-top: 10px; /* Reduced padding */
+    border-top: 1px solid #f0f0f0; /* Very light separator */
+    text-align: left;
 }
 
-.meal-detail-section p {
-    line-height: 1.6;
-    margin-bottom: 10px;
-    color: #555;
-    font-size: 16px;
+.meal-plan-detail-section h3 {
+    font-size: 1.2em; /* Smaller section heading */
+    color: #333;
+    margin-bottom: 10px; /* Reduced margin */
 }
 
-.meal-detail-section ul {
-    list-style: disc; /* Or 'none' if you want custom styling */
-    padding-left: 25px;
-    margin: 10px 0;
-}
-
-.meal-detail-section ul li {
-    margin-bottom: 5px;
+.meal-plan-detail-section p,
+.meal-plan-detail-section ul,
+.meal-plan-detail-section ol {
+    font-size: 0.9em; /* Smaller body text font */
     line-height: 1.5;
     color: #555;
-    font-size: 16px;
+    margin-bottom: 5px; /* Reduced margin */
 }
 
-/* --- NEW: Styles for side-by-side layout --- */
-.allergens-nutrients-section-wrapper {
-    display: flex; /* Makes children display horizontally */
-    gap: 30px; /* Space between the two columns */
-    margin-bottom: 25px; /* Space below this whole section */
+.meal-plan-detail-section ul,
+.meal-plan-detail-section ol {
+    padding-left: 20px; /* Reduced padding */
 }
 
-.allergens-info-section,
-.nutrient-info-section {
-    flex: 1; /* Each section takes equal width */
-    /* Inherits .meal-detail-section padding, background, etc. */
+.meal-plan-detail-section li {
+    margin-bottom: 4px; /* Reduced margin */
 }
 
-
-/* Nutrient Information Cards */
-/* --- NEW: Nutrient Information Display Layout --- */
-.nutrient-info-section h2 {
-    text-align: center;
-    border-bottom: none; /* No line under "Nutrient Information" title */
-    padding-bottom: 0;
-    margin-bottom: 20px; /* More space below title */
-}
-
-.nutrients-display-container {
+/* Nutrient Information Styling - Revert to original compact look */
+.meal-plan-detail-macros {
     display: flex;
-    align-items: center; /* Vertically align the circle and rectangle groups */
-    justify-content: center; /* Center the entire nutrient block */
-    gap: 40px; /* Space between the circle and the rectangular cards */
-    padding: 20px; /* Add some padding around the whole nutrient section */
-    background-color: none; /* A slightly lighter background for this section */
-    border-radius: 15px;
-
-}
-
-/* Calories Circle Display */
-.nutrient-circle-display-wrapper {
-    display: flex;
-    justify-content: center;
+    justify-content: flex-start; /* Align to start for compact layout */
     align-items: center;
-    flex-shrink: 0; /* Prevent shrinking on smaller screens */
+    margin-top: 15px; /* Reduced margin */
+    margin-bottom: 15px;
+    padding: 10px 0; /* Reduced padding */
+    border-top: 1px solid #eee; /* Separator */
+    border-bottom: 1px solid #eee; /* Separator */
+    flex-wrap: wrap; /* Allow wrapping */
+    gap: 15px; /* Space between macro items */
 }
 
-.nutrient-display-circle {
-    width: 180px; /* Size of the circle */
-    height: 180px;
+.macro-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.9em; /* Smaller font */
+    color: #333;
+}
+
+.macro-circle {
+    width: 60px; /* Smaller circle */
+    height: 60px;
     border-radius: 50%;
-    background-color: #ff9800; /* Orange background as per image */
     display: flex;
-    flex-direction: column; /* Stack value and kcal unit */
+    flex-direction: column; /* Stack value and 'cal' */
     justify-content: center;
     align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Stronger shadow */
-}
-
-.nutrient-display-circle .nutrient-value-kcal {
-    font-size: 48px; /* Large font size for the value */
-    color: white; /* White text color */
     font-weight: bold;
-    line-height: 1; /* Adjust line height for tight fit */
-    margin-bottom: 5px; /* Space between value and unit */
+    font-size: 1.1em; /* Smaller value font */
+    color: #fff;
+    background-color: #ff9800; /* Orange for calories */
+    border: 3px solid #1E525C; /* Darker border matching example */
+    position: relative; /* For the outline circle */
 }
 
-.nutrient-display-circle .nutrient-unit-kcal {
-    font-size: 24px; /* Size of "kcal" text */
-    color: white;
-    font-weight: bold;
-    text-transform: uppercase;
+/* The concentric circle for calories */
+.macro-circle::before {
+    content: '';
+    position: absolute;
+    top: -5px; /* Adjust to move it slightly outside */
+    left: -5px; /* Adjust to move it slightly outside */
+    right: -5px; /* Adjust to move it slightly outside */
+    bottom: -5px; /* Adjust to move it slightly outside */
+    border: 3px solid #eee; /* Lighter color for the outer ring */
+    border-radius: 50%;
+    z-index: -1; /* Place behind the main circle */
 }
 
 
-/* Rectangular Nutrient Displays */
-.nutrient-rectangular-display-wrapper {
+.macro-value {
+    font-size: 1.3em; /* Value inside circle */
+    color: #fff;
+    line-height: 1; /* Tighter line height */
+}
+
+.macro-unit {
+    font-size: 0.7em; /* "cal" text size */
+    color: #fff;
+    margin-top: 2px;
+}
+
+.macro-square {
+    width: 70px; /* Smaller square width */
+    height: 70px; /* Smaller square height */
+    border-radius: 5px; /* Less rounded corners */
     display: flex;
-    flex-direction: column; /* Stack cards vertically */
-    gap: 15px; /* Space between rectangular cards */
-}
-
-.nutrient-display-card {
-    background-color: #ff9800; /* Orange background as per image */
-    border-radius: 30px; /* Highly rounded corners for pill shape */
-    padding: 12px 25px; /* Padding inside the card */
-    display: flex;
-    justify-content: space-between; /* Space out label and value */
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    min-width: 250px; /* Ensure a decent width */
+    font-weight: bold;
+    font-size: 0.9em; /* Smaller font for square values */
+    color: #333;
+    background-color: #fff; /* White background */
+    border: 1px solid #ED873F; /* Orange border matching example */
+    box-shadow: none; /* No shadow */
+    padding: 5px; /* Reduced padding */
 }
 
-.nutrient-display-card .nutrient-label-text {
-    font-size: 18px; /* Label text size */
-    color: white; /* White text color */
-    font-weight: bold;
-    text-transform: lowercase; /* As seen in the image */
+.macro-square span:first-child { /* Value e.g., "10 g" */
+    font-size: 1.1em; /* Smaller value font */
+    margin-bottom: 2px;
+    color: #1E525C; /* Darker text */
 }
 
-.nutrient-display-card .nutrient-value-g {
-    font-size: 18px; /* Value text size */
-    color: white; /* White text color */
-    font-weight: bold;
-    /* Optional: If you want to bold the 'g' as well, or apply different style */
+.macro-square span:last-child { /* Label e.g., "Carbs" */
+    font-size: 0.7em; /* Smaller label font */
+    text-transform: uppercase;
+    color: #777; /* Softer text */
 }
 
 /* Category Tags */
-.category-tags {
+.meal-plan-detail-categories-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px; /* Smaller gap */
     margin-top: 10px;
 }
 
-.category-tag {
-    background-color: #fef1e5;
-    border: 2px solid #ED873F;
-    color: #1E525C;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 15px;
+.meal-plan-detail-category-tag {
+    background-color: #fef1e5; /* Light orange background */
+    border: 1px solid #ED873F; /* Orange border */
+    color: #1E525C; /* Dark blue text */
+    padding: 6px 12px; /* Smaller padding */
+    border-radius: 15px; /* Rounded corners */
+    font-size: 0.8em; /* Smaller font */
     white-space: nowrap;
+    font-weight: normal; /* Normal weight */
 }
 
-/* Action Button */
-.meal-detail-actions {
+/* Delete Button Styling */
+.meal-plan-detail-actions {
+    width: 100%; /* Ensure actions take full width */
     display: flex;
     justify-content: flex-end; /* Align delete button to the right */
-    margin-top: 30px;
+    margin-top: 25px; /* Reduced top margin */
 }
 
-.delete-plan-button {
+.delete-button { /* Renamed for consistency with JS */
     background-color: #DC3545; /* Red color for delete */
     color: white;
-    padding: 12px 25px;
+    padding: 10px 20px; /* Smaller padding */
     border: none;
-    border-radius: 25px;
-    font-size: 20px;
+    border-radius: 20px; /* More rounded */
+    font-size: 0.9em; /* Smaller font */
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: background-color 0.2s ease;
 }
 
-.delete-plan-button:hover {
+.delete-button:hover {
     background-color: #c82333;
-    transform: translateY(-2px);
+}
+
+/* Media Queries for Responsiveness */
+@media (min-width: 768px) {
+    .meal-plan-detail-card {
+        flex-direction: row; /* Side-by-side layout for larger screens */
+        align-items: flex-start;
+        padding: 25px; /* Slightly more padding for desktop */
+    }
+
+    .meal-plan-detail-image {
+        flex: 0 0 45%; /* Image takes about 45% of width */
+        margin-right: 25px; /* Space between image and info */
+        max-width: none;
+    }
+
+    .meal-plan-detail-info {
+        flex: 1; /* Info section takes remaining space */
+    }
+}
+
+@media (max-width: 767px) {
+    .meal-plan-detail-card {
+        padding: 15px;
+    }
+    .meal-plan-detail-name {
+        font-size: 1.5em;
+    }
+    .meal-plan-detail-section h3 {
+        font-size: 1.1em;
+    }
+    .meal-plan-detail-macros {
+        flex-direction: row; /* Keep macros in a row even on smaller screens, they should fit */
+        justify-content: center; /* Center them when they wrap */
+        gap: 10px;
+    }
+    .macro-item {
+        flex-basis: auto; /* Let items size naturally */
+    }
 }

@@ -1,4 +1,3 @@
-// src/Services/MealPlanService.js
 import {
     getFirestore,
     collection,
@@ -231,6 +230,72 @@ class MealPlanService {
             }
         }
         return true;
+    }
+
+    // ⭐ ADDED: updateMealPlan method ⭐
+    async updateMealPlan(mealPlanId, mealPlanData, newImageFile = null, originalImageFileName = null) {
+        const user = this.auth.currentUser;
+        const nutritionistInfo = AuthService.getCurrentUser();
+
+        if (!user || !nutritionistInfo || nutritionistInfo.role !== 'nutritionist') {
+            throw new Error('You must be logged in as an an approved nutritionist to update a meal plan.');
+        }
+
+        const mealPlanRef = doc(this.db, 'meal_plans', mealPlanId);
+        const updatePayload = { ...mealPlanData };
+
+        if (newImageFile) {
+            // Delete old image if it exists and a new one is being uploaded
+            if (originalImageFileName) {
+                const oldImageRef = ref(this.storage, `meal_plan_images/${originalImageFileName}`);
+                try {
+                    await deleteObject(oldImageRef);
+                    console.log(`Old image ${originalImageFileName} deleted from storage.`);
+                } catch (error) {
+                    if (error.code === 'storage/object-not-found') {
+                        console.warn(`Old image ${originalImageFileName} not found in storage. Skipping deletion.`);
+                    } else {
+                        console.error(`Error deleting old image ${originalImageFileName} from storage:`, error);
+                    }
+                }
+            }
+
+            // Upload new image
+            const newImageFileName = `${Date.now()}_${newImageFile.name}`;
+            const storageRef = ref(this.storage, `meal_plan_images/${newImageFileName}`);
+            const snapshot = await uploadBytes(storageRef, newImageFile);
+            const newImageUrl = await getDownloadURL(snapshot.ref);
+
+            updatePayload.imageUrl = newImageUrl;
+            updatePayload.imageFileName = newImageFileName;
+        } else if (originalImageFileName && !mealPlanData.imageUrl) {
+            // If originalImageFileName exists but no new image and no imageUrl in updatePayload,
+            // it means the user removed the image. Delete from storage.
+            const oldImageRef = ref(this.storage, `meal_plan_images/${originalImageFileName}`);
+            try {
+                await deleteObject(oldImageRef);
+                console.log(`Image ${originalImageFileName} deleted from storage (user removed).`);
+            } catch (error) {
+                if (error.code === 'storage/object-not-found') {
+                    console.warn(`Image ${originalImageFileName} not found in storage. Skipping deletion.`);
+                } else {
+                    console.error(`Error deleting image ${originalImageFileName} from storage:`, error);
+                }
+            }
+            updatePayload.imageUrl = ''; // Clear the URL in Firestore
+            updatePayload.imageFileName = ''; // Clear the filename in Firestore
+        }
+        // If newImageFile is null and mealPlanData.imageUrl is present, it means no change to image.
+        // We don't need to do anything with the image in this case.
+
+        // Ensure status is updated if it's set in the payload, otherwise keep existing.
+        // For simplicity, we'll assume status is not directly changed via this update method
+        // but rather via approveOrRejectMealPlan. If it can be changed, add logic here.
+        delete updatePayload.imageFile; // Remove the file object as it's not for Firestore
+        delete updatePayload.originalImageFileName; // Remove this helper prop
+
+        await updateDoc(mealPlanRef, updatePayload);
+        return { _id: mealPlanId, ...updatePayload };
     }
 }
 
