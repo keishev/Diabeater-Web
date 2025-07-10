@@ -335,7 +335,6 @@
     text-align: center;
     width: 100%; /* Ensure it takes full width */
     box-sizing: border-box;
-    margin-left: 100px;
 }
 
 .meal-plan-status {

@@ -104,7 +104,7 @@ const MyMealPlansContent = ({
             ];
         } else { // Nutritionist
             return [
-                { id: 'UPLOADED', name: 'PUBLISHED' },
+                { id: 'APPROVED', name: 'PUBLISHED' },
                 { id: 'PENDING_APPROVAL', name: 'PENDING VERIFICATION' },
                 { id: 'REJECTED', name: 'REJECTED' }
             ];
@@ -113,13 +113,13 @@ const MyMealPlansContent = ({
 
     const tabs = getTabs();
 
-    const filteredByTab = mealPlans.filter(plan => {
-        // Admins see "APPROVED" instead of "UPLOADED" in their approved tab
-        if (userRole === 'admin' && activeTab === 'APPROVED') {
-            return plan.status === 'UPLOADED'; // Admins manage "UPLOADED" as "APPROVED"
-        }
-        return plan.status === activeTab;
-    });
+        const filteredByTab = mealPlans.filter(plan => {
+        // Admins see "APPROVED" instead of "UPLOADED" in their approved tab
+        if (userRole === 'admin' && activeTab === 'APPROVED') {
+        return plan.status === 'APPROVED'; // Admins see 'APPROVED' plans in their 'APPROVED' tab
+        }
+        return plan.status === activeTab;
+    });
 
     const filteredAndSearchedMealPlans = filteredByTab.filter(plan => {
         const matchesSearchTerm = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
