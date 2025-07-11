@@ -22,11 +22,7 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
     // Determine if update/delete buttons should be disabled for nutritionists
     // Nutritionists can update/delete if it's PENDING_APPROVAL, REJECTED, or UPLOADED.
     // They cannot modify APPROVED plans.
-    // ⭐ CHANGE STARTS HERE ⭐
-    // PREVIOUS: const isNutritionistActionDisabled = mealPlan.status === 'APPROVED';
-    // NEW: Allow nutritionists to always update their plans (which then get sent for re-approval)
     const isNutritionistActionDisabled = false; // Set to false to always enable for nutritionists
-    // ⭐ CHANGE ENDS HERE ⭐
 
     return (
         <div className={cardClassName} onClick={() => onClick(mealPlan._id)}> {/* Pass ID to select for detail */}
@@ -117,7 +113,7 @@ const MyMealPlansContent = observer(({
             ];
         } else { // Nutritionist
             return [
-                { id: 'APPROVED', name: 'PUBLISHED' },
+                { id: 'APPROVED', name: 'PUBLISHED' }, // This should be the default for nutritionist
                 { id: 'PENDING_APPROVAL', name: 'PENDING VERIFICATION' },
                 { id: 'REJECTED', name: 'REJECTED' },
                 { id: 'UPLOADED', name: 'DRAFT / UNSUBMITTED' } // Nutritionist can have 'UPLOADED' plans
@@ -127,19 +123,34 @@ const MyMealPlansContent = observer(({
 
     const tabs = getTabs();
 
-    // Use a local state for the active tab, but sync with ViewModel's adminActiveTab if admin
-    // Initialize with 'UPLOADED' for nutritionists if no specific valid tab is found
-    const initialTab = userRole === 'admin' ? adminActiveTab : (tabs.some(tab => tab.id === 'UPLOADED') ? 'UPLOADED' : tabs[0]?.id);
-    const [localActiveTab, setLocalActiveTab] = useState(initialTab);
+    // Initialize with 'APPROVED' for nutritionists or 'APPROVED' for admins
+    // This ensures "Published" (nutritionist) or "Approved" (admin) is the default.
+    const initialTabStatus = 'APPROVED';
+    const [localActiveTab, setLocalActiveTab] = useState(initialTabStatus);
 
+    // Effect to set the initial active tab and trigger the initial fetch
+    // This useEffect will run once when the component mounts.
+    useEffect(() => {
+        // Set the initial tab directly in local state
+        setLocalActiveTab(initialTabStatus);
+
+        // Also ensure the ViewModel's adminActiveTab is set if user is admin,
+        // as this property in the ViewModel dictates the data fetched for admins.
+        if (userRole === 'admin') {
+            mealPlanViewModel.setAdminActiveTab(initialTabStatus);
+        }
+        // For nutritionists, the ViewModel's initializeUser (called in parent)
+        // should fetch all relevant plans, and `filteredMealPlans` will correctly
+        // display 'APPROVED' ones when `localActiveTab` is 'APPROVED' (mapped to 'PUBLISHED').
+    }, [userRole]); // Dependency on userRole ensures it runs when user role is determined
 
     // Effect to keep localActiveTab in sync with ViewModel's adminActiveTab for admins
+    // This is still important if the adminActiveTab in ViewModel can be changed from elsewhere.
     useEffect(() => {
-        if (userRole === 'admin') {
+        if (userRole === 'admin' && adminActiveTab !== localActiveTab) {
             setLocalActiveTab(adminActiveTab);
         }
-    }, [userRole, adminActiveTab]);
-
+    }, [userRole, adminActiveTab, localActiveTab]);
 
     const handleTabChange = (tabId) => {
         setLocalActiveTab(tabId);
@@ -147,10 +158,10 @@ const MyMealPlansContent = observer(({
             // If it's an admin, update the ViewModel's adminActiveTab which triggers data re-fetch
             mealPlanViewModel.setAdminActiveTab(tabId);
         } else {
-            // For nutritionists, a change in localActiveTab will trigger re-filtering of filteredMealPlans.
-            // No explicit fetch needed here as filteredMealPlans is a computed property.
-            // However, a refresh of the base data might be good if the list is stale.
-            // mealPlanViewModel.fetchNutritionistMealPlans(mealPlanViewModel.currentUserId); // Uncomment if needed
+            // For nutritionists, the ViewModel's filteredMealPlans computed property will react
+            // to the change in localActiveTab when it's used in the display logic.
+            // No explicit fetch needed here, assuming the base data for the nutritionist
+            // is already fetched or will be by ViewModel's 'filteredMealPlans' reaction.
         }
     };
 

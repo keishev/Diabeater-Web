@@ -1,278 +1,311 @@
-/* src/Nutritionist/MealPlanDetail.css */
-
+/* General container for the detail view */
 .meal-plan-detail-container {
-    padding: 20px; /* Reduced padding for a smaller feel */
-    background-color: #fcf8f3; /* Light, warm background color */
-    flex-grow: 1;
+    background-color: #f8f8f8; /* Light background similar to image */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    min-height: 100vh; /* Ensure it takes full height */
     display: flex;
-    flex-direction: column;
-    overflow-y: auto;
+    flex-direction: column; /* For top bar, main layout, and bottom elements */
+    padding-bottom: 20px; /* Space for potential bottom elements */
+}
+
+/* Top Bar Styling - "DioBeater" and Back Button */
+.detail-top-bar {
+    display: flex;
+    justify-content: space-between; /* Pushes branding to left, button to right */
+    align-items: center;
+    padding: 15px 40px; /* Padding similar to image */
+    background-color: #fff; /* White background for top bar */
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #eee;
+}
+
+.branding .diobeater-logo {
+    height: 30px; /* Adjust size as needed */
+    width: auto;
+    display: block; /* Ensures no extra space below if it's an img */
 }
 
 .back-button {
     background: none;
     border: none;
-    color: #007bff; /* Standard link blue, or adjust to match your brand */
+    color: #007bff; /* A distinct blue for the button */
+    font-size: 1em;
     cursor: pointer;
-    font-size: 14px; /* Smaller font size */
-    margin-bottom: 15px; /* Reduced margin */
-    align-self: flex-start;
-    padding: 3px 8px; /* Smaller padding */
-    border-radius: 4px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .back-button:hover {
-    background-color: #e2e6ea;
+    background-color: #e0f0ff;
     color: #0056b3;
 }
 
-.meal-plan-detail-card {
-    background-color: #fff;
-    border-radius: 8px; /* Slightly less rounded corners */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* Softer shadow */
-    padding: 20px; /* Reduced padding */
+/* Main Two-Column Layout */
+.detail-main-layout {
+    display: flex;
+    flex-wrap: wrap; /* Allows columns to wrap on smaller screens */
+    gap: 30px; /* Space between columns */
+    padding: 30px 40px; /* Padding around the main content area */
+    flex-grow: 1; /* Allows it to take available space */
+}
+
+.detail-left-column {
+    flex: 1; /* Allows it to grow and shrink */
+    min-width: 350px; /* Minimum width for the left column */
+    max-width: 55%; /* Max width for left column to favor right, adjust as needed */
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Align content to the start (left) */
-    max-width: 700px; /* Make it significantly smaller */
-    margin: 0 auto; /* Center the card */
+    gap: 20px; /* Space between sections in the left column */
 }
 
-.meal-plan-detail-image {
-    width: 100%;
-    max-width: 400px; /* Smaller image size */
-    height: auto;
-    border-radius: 6px; /* Slightly less rounded */
-    margin-bottom: 20px; /* Reduced space below image */
-    object-fit: cover;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add shadow to image as in reference */
+.detail-right-column {
+    flex: 1; /* Allows it to grow and shrink */
+    min-width: 300px; /* Minimum width for the right column */
+    max-width: 40%; /* Max width for right column, adjust as needed */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between sections in the right column */
 }
 
-.meal-plan-detail-info {
-    width: 100%;
-    /* No max-width here, it will take remaining space in row layout */
+@media (max-width: 992px) {
+    .detail-main-layout {
+        flex-direction: column; /* Stack columns on medium/small screens */
+        padding: 20px;
+    }
+    .detail-left-column, .detail-right-column {
+        max-width: 100%; /* Full width when stacked */
+        min-width: unset;
+    }
+}
+
+/* Meal Header (Title and Author) */
+.meal-header {
     text-align: left;
+    margin-bottom: 20px; /* Space below header */
+    padding: 0 10px; /* Small padding to align with other content */
 }
 
-.meal-plan-detail-name {
-    font-size: 1.8em; /* Smaller title font */
+.meal-title {
+    font-size: 2.5em;
     color: #333;
-    margin-bottom: 5px; /* Reduced margin */
-    border-bottom: 1px solid #eee; /* Lighter separator */
-    padding-bottom: 8px; /* Reduced padding */
+    margin-bottom: 5px;
+    font-weight: 600;
+    line-height: 1.2;
 }
 
-.meal-plan-detail-author {
-    font-size: 0.9em; /* Smaller author font */
+.meal-author {
+    font-size: 1.1em;
     color: #777;
-    margin-bottom: 15px;
-    font-style: italic;
+    margin-top: 0;
 }
 
-/* Common section styling */
-.meal-plan-detail-section {
-    margin-top: 15px; /* Reduced top margin */
-    padding-top: 10px; /* Reduced padding */
-    border-top: 1px solid #f0f0f0; /* Very light separator */
-    text-align: left;
+/* Image Styling */
+.detail-image-wrapper {
+    text-align: center;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px; /* Space below image before next section */
 }
 
-.meal-plan-detail-section h3 {
-    font-size: 1.2em; /* Smaller section heading */
-    color: #333;
-    margin-bottom: 10px; /* Reduced margin */
+.detail-image {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Remove extra space below image */
 }
 
-.meal-plan-detail-section p,
-.meal-plan-detail-section ul,
-.meal-plan-detail-section ol {
-    font-size: 0.9em; /* Smaller body text font */
-    line-height: 1.5;
+.no-image-placeholder {
+    background-color: #e0e0e0;
+    color: #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 250px; /* Fixed height for placeholder */
+    font-size: 1.2em;
+    border-radius: 8px;
+}
+
+/* General Section Styling for content blocks */
+.detail-section {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.detail-section h2 {
     color: #555;
-    margin-bottom: 5px; /* Reduced margin */
-}
-
-.meal-plan-detail-section ul,
-.meal-plan-detail-section ol {
-    padding-left: 20px; /* Reduced padding */
-}
-
-.meal-plan-detail-section li {
-    margin-bottom: 4px; /* Reduced margin */
-}
-
-/* Nutrient Information Styling - Revert to original compact look */
-.meal-plan-detail-macros {
-    display: flex;
-    justify-content: flex-start; /* Align to start for compact layout */
-    align-items: center;
-    margin-top: 15px; /* Reduced margin */
+    font-size: 1.6em;
+    margin-top: 0;
     margin-bottom: 15px;
-    padding: 10px 0; /* Reduced padding */
-    border-top: 1px solid #eee; /* Separator */
-    border-bottom: 1px solid #eee; /* Separator */
-    flex-wrap: wrap; /* Allow wrapping */
-    gap: 15px; /* Space between macro items */
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
 }
 
-.macro-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 0.9em; /* Smaller font */
-    color: #333;
+/* For consistent text formatting from multiline inputs */
+.pre-formatted-text {
+    white-space: pre-wrap; /* Preserves line breaks and spaces */
+    line-height: 1.7;
+    font-size: 1em;
+    color: #444;
 }
 
-.macro-circle {
-    width: 60px; /* Smaller circle */
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column; /* Stack value and 'cal' */
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.1em; /* Smaller value font */
-    color: #fff;
-    background-color: #ff9800; /* Orange for calories */
-    border: 3px solid #1E525C; /* Darker border matching example */
-    position: relative; /* For the outline circle */
+/* Nutrient Information Section */
+.nutrients-section h2 {
+    /* Styles are already fine from .detail-section h2 */
+    margin-bottom: 20px; /* More space before nutrient boxes */
 }
 
-/* The concentric circle for calories */
-.macro-circle::before {
-    content: '';
-    position: absolute;
-    top: -5px; /* Adjust to move it slightly outside */
-    left: -5px; /* Adjust to move it slightly outside */
-    right: -5px; /* Adjust to move it slightly outside */
-    bottom: -5px; /* Adjust to move it slightly outside */
-    border: 3px solid #eee; /* Lighter color for the outer ring */
-    border-radius: 50%;
-    z-index: -1; /* Place behind the main circle */
-}
-
-
-.macro-value {
-    font-size: 1.3em; /* Value inside circle */
-    color: #fff;
-    line-height: 1; /* Tighter line height */
-}
-
-.macro-unit {
-    font-size: 0.7em; /* "cal" text size */
-    color: #fff;
-    margin-top: 2px;
-}
-
-.macro-square {
-    width: 70px; /* Smaller square width */
-    height: 70px; /* Smaller square height */
-    border-radius: 5px; /* Less rounded corners */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 0.9em; /* Smaller font for square values */
-    color: #333;
-    background-color: #fff; /* White background */
-    border: 1px solid #ED873F; /* Orange border matching example */
-    box-shadow: none; /* No shadow */
-    padding: 5px; /* Reduced padding */
-}
-
-.macro-square span:first-child { /* Value e.g., "10 g" */
-    font-size: 1.1em; /* Smaller value font */
-    margin-bottom: 2px;
-    color: #1E525C; /* Darker text */
-}
-
-.macro-square span:last-child { /* Label e.g., "Carbs" */
-    font-size: 0.7em; /* Smaller label font */
-    text-transform: uppercase;
-    color: #777; /* Softer text */
-}
-
-/* Category Tags */
-.meal-plan-detail-categories-list {
+.nutrients-display-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px; /* Smaller gap */
+    gap: 15px; /* Space between nutrient boxes */
+    justify-content: center; /* Center boxes if they don't fill the row */
+}
+
+.nutrient-circle, .nutrient-square {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    min-width: 90px; /* Adjust size */
+    min-height: 90px; /* Adjust size */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease-in-out;
+    text-align: center;
+    box-sizing: border-box; /* Include padding in width/height */
+}
+
+.nutrient-circle {
+    border-radius: 50%; /* Make it circular */
+    /* Dynamic conic-gradient for calories ring (example, needs actual data logic) */
+    background: conic-gradient(#ff6b6b 0% 70%, #f0f0f0 70% 100%); /* Example based on 70% fill */
+    color: #333; /* Text color inside circle */
+    border: none;
+}
+
+.nutrient-square {
+    border-radius: 8px; /* Make it square */
+    background-color: #eaf7ff; /* Light blue background */
+    border: 1px solid #cceeff;
+}
+
+.nutrient-circle .nutrient-value {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: inherit; /* Inherit color from parent, or set specifically */
+}
+.nutrient-circle .nutrient-label {
+    font-size: 0.85em;
+    color: #555;
+    margin-top: 5px;
+}
+
+
+.nutrient-square .nutrient-value {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #0056b3; /* Blue text for square values */
+}
+.nutrient-square .nutrient-label {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 5px;
+}
+
+
+/* Category Buttons Section */
+.category-buttons-section {
+    padding-bottom: 10px; /* Less padding if categories are at the bottom */
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-top: 10px;
 }
 
-.meal-plan-detail-category-tag {
-    background-color: #fef1e5; /* Light orange background */
-    border: 1px solid #ED873F; /* Orange border */
-    color: #1E525C; /* Dark blue text */
-    padding: 6px 12px; /* Smaller padding */
-    border-radius: 15px; /* Rounded corners */
-    font-size: 0.8em; /* Smaller font */
-    white-space: nowrap;
-    font-weight: normal; /* Normal weight */
+.category-tag {
+    background-color: #e0e0e0;
+    color: #555;
+    padding: 8px 15px;
+    border-radius: 20px; /* Pill shape */
+    font-size: 0.9em;
+    font-weight: 500;
+    border: 1px solid #d0d0d0;
 }
 
-/* Delete Button Styling */
-.meal-plan-detail-actions {
-    width: 100%; /* Ensure actions take full width */
-    display: flex;
-    justify-content: flex-end; /* Align delete button to the right */
-    margin-top: 25px; /* Reduced top margin */
+
+/* Action Buttons (Delete Plan) */
+.detail-actions {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee; /* Separator line above buttons */
 }
 
-.delete-button { /* Renamed for consistency with JS */
-    background-color: #DC3545; /* Red color for delete */
-    color: white;
-    padding: 10px 20px; /* Smaller padding */
-    border: none;
-    border-radius: 20px; /* More rounded */
-    font-size: 0.9em; /* Smaller font */
+.button-base {
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1em;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border: none;
+    color: #fff; /* Default text color */
 }
 
-.delete-button:hover {
+.delete-plan-button {
+    background-color: #dc3545; /* Red for delete */
+}
+
+.delete-plan-button:hover {
     background-color: #c82333;
+    transform: translateY(-2px);
 }
 
-/* Media Queries for Responsiveness */
-@media (min-width: 768px) {
-    .meal-plan-detail-card {
-        flex-direction: row; /* Side-by-side layout for larger screens */
-        align-items: flex-start;
-        padding: 25px; /* Slightly more padding for desktop */
-    }
-
-    .meal-plan-detail-image {
-        flex: 0 0 45%; /* Image takes about 45% of width */
-        margin-right: 25px; /* Space between image and info */
-        max-width: none;
-    }
-
-    .meal-plan-detail-info {
-        flex: 1; /* Info section takes remaining space */
-    }
+/* Loading, Error, Message states */
+.detail-loading, .detail-error, .detail-message {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1em;
+    color: #555;
+    margin: 20px auto; /* Center messages horizontally */
+    max-width: 600px;
+    border-radius: 4px;
 }
 
-@media (max-width: 767px) {
-    .meal-plan-detail-card {
-        padding: 15px;
-    }
-    .meal-plan-detail-name {
-        font-size: 1.5em;
-    }
-    .meal-plan-detail-section h3 {
-        font-size: 1.1em;
-    }
-    .meal-plan-detail-macros {
-        flex-direction: row; /* Keep macros in a row even on smaller screens, they should fit */
-        justify-content: center; /* Center them when they wrap */
-        gap: 10px;
-    }
-    .macro-item {
-        flex-basis: auto; /* Let items size naturally */
-    }
+.detail-error {
+    color: #d9534f;
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
+}
+
+/* Optional: Bottom Log Out button - if you decide to place it here */
+.bottom-logout-button-wrapper {
+    width: 100%;
+    text-align: left; /* Align to the left */
+    padding: 20px 40px; /* Match left column padding */
+    box-sizing: border-box; /* Include padding in element's total width/height */
+}
+
+.bottom-logout-button {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.bottom-logout-button:hover {
+    background-color: #e0e0e0;
 }
