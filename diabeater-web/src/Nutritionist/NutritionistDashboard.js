@@ -7,18 +7,26 @@ import MealPlanDetail from './MealPlanDetail'; // Correct path for MealPlanDetai
 import UpdateMealPlan from './UpdateMealPlan';
 import NotificationList from './NotificationList';
 import mealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the MobX ViewModel
-import AuthService from '../Services/AuthService';
+import AuthService from '../Services/AuthService'; // Assuming this provides current user data
 
 // --- MealPlanCard component ---
 // This component can remain largely the same, as it receives props
-const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onApproveClick, isAdmin }) => {
-    const displayStatus = mealPlan.status === 'UPLOADED' ? 'PUBLISHED' : mealPlan.status.replace(/_/g, ' ');
+const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onApproveClick, onRejectClick, isAdmin }) => {
+    // Determine the display status for clarity
+    const displayStatus = mealPlan.status === 'UPLOADED' ? 'DRAFT / UNSUBMITTED' : mealPlan.status.replace(/_/g, ' ');
+    // Use imageUrl from mealPlan data directly, fallback to a local asset path if needed
     const imageUrl = mealPlan.imageUrl || `/assetscopy/${mealPlan.imageFileName}`;
 
-    const cardClassName = `meal-plan-card meal-plan-card--${mealPlan.status.toLowerCase()}`;
+    const cardClassName = `meal-plan-card meal-plan-card--${mealPlan.status.toLowerCase().replace(/\s|\//g, '-')}`;
 
     // Determine if update/delete buttons should be disabled for nutritionists
-    const isNutritionistActionDisabled = mealPlan.status === 'APPROVED' || mealPlan.status === 'PENDING_APPROVAL';
+    // Nutritionists can update/delete if it's PENDING_APPROVAL, REJECTED, or UPLOADED.
+    // They cannot modify APPROVED plans.
+    // ⭐ CHANGE STARTS HERE ⭐
+    // PREVIOUS: const isNutritionistActionDisabled = mealPlan.status === 'APPROVED';
+    // NEW: Allow nutritionists to always update their plans (which then get sent for re-approval)
+    const isNutritionistActionDisabled = false; // Set to false to always enable for nutritionists
+    // ⭐ CHANGE ENDS HERE ⭐
 
     return (
         <div className={cardClassName} onClick={() => onClick(mealPlan._id)}> {/* Pass ID to select for detail */}
@@ -57,13 +65,14 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
                     )}
                     {/* Admin actions */}
                     {isAdmin && mealPlan.status === 'PENDING_APPROVAL' && (
-                        <button className="button-base approve-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'APPROVED', mealPlan.authorId); }}>APPROVE</button>
+                        <>
+                            <button className="button-base approve-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'APPROVED', mealPlan.authorId); }}>APPROVE</button>
+                            <button className="button-base admin-reject-button" onClick={(e) => { e.stopPropagation(); onRejectClick(mealPlan._id, 'REJECTED', mealPlan.authorId); }}>REJECT</button>
+                        </>
                     )}
+                    {/* Admins can delete approved/rejected plans directly if needed, or modify behavior */}
                     {isAdmin && mealPlan.status !== 'PENDING_APPROVAL' && (
                         <button className="button-base delete-button" onClick={(e) => { e.stopPropagation(); onDeleteClick(mealPlan._id, mealPlan.imageFileName); }}>DELETE</button>
-                    )}
-                    {isAdmin && mealPlan.status === 'APPROVED' && (
-                        <button className="button-base admin-reject-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'REJECTED', mealPlan.authorId); }}>REJECT</button>
                     )}
                 </div>
             </div>
@@ -74,10 +83,11 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
 // --- MyMealPlansContent component ---
 // This component needs to observe the ViewModel's state
 const MyMealPlansContent = observer(({
-    onSelectMealPlan, // Calls ViewModel action
-    onUpdateMealPlan, // Calls ViewModel action
-    onDeleteMealPlan, // Calls ViewModel action
-    onApproveMealPlan, // Calls ViewModel action
+    onSelectMealPlan, // Calls ViewModel action for detail view
+    onUpdateMealPlan, // Calls ViewModel action for update view
+    onDeleteMealPlan, // Calls ViewModel action for deletion
+    onApproveMealPlan, // Calls ViewModel action for admin approval
+    onRejectMealPlan, // Calls ViewModel action for admin rejection
     userRole
 }) => {
     // Access MobX state and actions directly
@@ -87,7 +97,7 @@ const MyMealPlansContent = observer(({
         selectedCategory,
         setSelectedCategory,
         allCategories,
-        filteredMealPlans, // Use the computed property
+        filteredMealPlans, // Use the computed property from ViewModel
         loading,
         error,
         success,
@@ -110,7 +120,7 @@ const MyMealPlansContent = observer(({
                 { id: 'APPROVED', name: 'PUBLISHED' },
                 { id: 'PENDING_APPROVAL', name: 'PENDING VERIFICATION' },
                 { id: 'REJECTED', name: 'REJECTED' },
-                { id: 'UPLOADED', name: 'DRAFT/UNSUBMITTED' } // Nutritionist can have 'UPLOADED' plans
+                { id: 'UPLOADED', name: 'DRAFT / UNSUBMITTED' } // Nutritionist can have 'UPLOADED' plans
             ];
         }
     };
@@ -118,21 +128,17 @@ const MyMealPlansContent = observer(({
     const tabs = getTabs();
 
     // Use a local state for the active tab, but sync with ViewModel's adminActiveTab if admin
-    const [localActiveTab, setLocalActiveTab] = useState(userRole === 'admin' ? adminActiveTab : 'UPLOADED');
+    // Initialize with 'UPLOADED' for nutritionists if no specific valid tab is found
+    const initialTab = userRole === 'admin' ? adminActiveTab : (tabs.some(tab => tab.id === 'UPLOADED') ? 'UPLOADED' : tabs[0]?.id);
+    const [localActiveTab, setLocalActiveTab] = useState(initialTab);
 
+
+    // Effect to keep localActiveTab in sync with ViewModel's adminActiveTab for admins
     useEffect(() => {
         if (userRole === 'admin') {
-            // Ensure localActiveTab always reflects adminActiveTab for admins
             setLocalActiveTab(adminActiveTab);
-        } else {
-            // For nutritionist, the initial tab needs to be set properly.
-            // Default to 'UPLOADED' for nutritionists if no specific tab is selected.
-            // This ensures a valid tab is always active.
-            if (!tabs.some(tab => tab.id === localActiveTab)) {
-                setLocalActiveTab('UPLOADED'); // Fallback to a valid default
-            }
         }
-    }, [userRole, adminActiveTab, tabs]);
+    }, [userRole, adminActiveTab]);
 
 
     const handleTabChange = (tabId) => {
@@ -140,8 +146,12 @@ const MyMealPlansContent = observer(({
         if (userRole === 'admin') {
             // If it's an admin, update the ViewModel's adminActiveTab which triggers data re-fetch
             mealPlanViewModel.setAdminActiveTab(tabId);
+        } else {
+            // For nutritionists, a change in localActiveTab will trigger re-filtering of filteredMealPlans.
+            // No explicit fetch needed here as filteredMealPlans is a computed property.
+            // However, a refresh of the base data might be good if the list is stale.
+            // mealPlanViewModel.fetchNutritionistMealPlans(mealPlanViewModel.currentUserId); // Uncomment if needed
         }
-        // For nutritionists, filteredMealPlans computed property will handle the filtering based on activeTab
     };
 
     // The actual filtering for display should consider the localActiveTab
@@ -231,6 +241,7 @@ const MyMealPlansContent = observer(({
                             onUpdateClick={onUpdateMealPlan} // This handler is called by MealPlanCard
                             onDeleteClick={onDeleteMealPlan}
                             onApproveClick={onApproveMealPlan}
+                            onRejectClick={onRejectMealPlan} // Pass new reject handler
                             isAdmin={userRole === 'admin'}
                         />
                     ))
@@ -247,7 +258,10 @@ const MyMealPlansContent = observer(({
 
 // --- Sidebar component ---
 // This component does not need to be an observer, but receives props
-const Sidebar = ({ currentView, onNavigate, unreadCount, onLogout, userRole }) => {
+const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
+    // Directly access unreadNotificationCount from the ViewModel
+    const unreadCount = mealPlanViewModel.unreadNotificationCount;
+
     return (
         <div className="sidebar">
             <div className="logo">
@@ -296,7 +310,7 @@ const Sidebar = ({ currentView, onNavigate, unreadCount, onLogout, userRole }) =
             <button className="logout-button" onClick={onLogout}>Log out</button>
         </div>
     );
-};
+});
 
 
 // --- NutritionistDashboard Main Component ---
@@ -308,7 +322,7 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
         loading,
         error,
         success,
-        unreadNotificationCount,
+        unreadNotificationCount, // Still good to have for direct use if needed
         notifications,
         selectedMealPlanForDetail, // Get the selected meal plan for detail view
         selectedMealPlanForUpdate, // Get the selected meal plan for update view
@@ -350,18 +364,24 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
         if (window.confirm("Are you sure you want to delete this meal plan? This action cannot be undone.")) {
             const success = await deleteMealPlan(mealPlanId, imageFileName);
             if (success) {
-                // If deletion was successful, navigate back to the list
-                setCurrentView('myMealPlans');
+                // If deletion was successful, the ViewModel's internal list is already updated.
+                // You might not need to explicitly navigate back to 'myMealPlans' if the current list
+                // automatically re-renders due to MobX's observation.
+                // However, if you were in MealPlanDetail, you'd want to go back.
+                if (currentView === 'mealPlanDetail') {
+                    setCurrentView('myMealPlans');
+                }
             }
         }
     };
 
     const handleApproveOrRejectMealPlan = async (mealPlanId, newStatus, authorId) => {
-        const adminName = AuthService.getCurrentUser()?.name || AuthService.getCurrentUser()?.username || 'Admin';
-        const adminId = AuthService.getCurrentUser()?.uid;
+        const adminInfo = AuthService.getCurrentUser();
+        const adminName = adminInfo?.name || adminInfo?.username || 'Admin';
+        const adminId = adminInfo?.uid;
 
         if (!adminName || !adminId) {
-            alert("Admin user data not available. Cannot perform action.");
+            mealPlanViewModel.setError("Admin user data not available. Cannot perform action.");
             return;
         }
 
@@ -373,31 +393,25 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
             }
             await approveOrRejectMealPlan(mealPlanId, newStatus, authorId, adminName, adminId, rejectionReason);
             // ViewModel will re-fetch meal plans automatically after approval/rejection
+            // No explicit setCurrentView needed as the list will update due to MobX
         }
     };
 
     const handleBack = () => {
         clearSelectedMealPlans(); // Clear selected meal plans in ViewModel
         setCurrentView('myMealPlans');
-        // No explicit fetch here, as ViewModel might handle refreshing data based on active tab
-        // However, if the data in the current tab might have changed due to external actions,
-        // you might want to trigger a refresh. For now, rely on MobX reactivity.
     };
 
+    // Handler for when a new meal plan is successfully submitted (from CreateMealPlan)
     const handleMealPlanSubmitted = async () => {
-        setCurrentView('myMealPlans');
-        // Refresh the meal plans after submission
-        if (currentUserRole === 'admin') {
-            await fetchAdminMealPlans(mealPlanViewModel.adminActiveTab);
-        } else {
-            await fetchNutritionistMealPlans(currentUserId);
-        }
-        mealPlanViewModel.setSuccess('Meal plan submitted successfully!');
+        setCurrentView('myMealPlans'); // Go back to the main list view
+        // The ViewModel's createMealPlan method already triggers a re-fetch of meal plans,
+        // so the list will refresh automatically.
     };
 
-    // Handler for when an update is successfully completed
+    // Handler for when an update is successfully completed (from UpdateMealPlan)
     const handleMealPlanUpdated = async () => {
-        mealPlanViewModel.setSuccess('Meal plan updated successfully!');
+        mealPlanViewModel.setSuccess('Meal plan updated successfully and sent for re-approval!');
         handleBack(); // Go back to myMealPlans view
         // The ViewModel's updateMealPlan method already triggers a re-fetch of meal plans,
         // so data in the list should automatically refresh.
@@ -412,11 +426,15 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
             <Sidebar
                 currentView={currentView}
                 onNavigate={setCurrentView}
-                unreadCount={unreadNotificationCount}
                 onLogout={onLogout}
                 userRole={currentUserRole}
             />
             <div className="main-content">
+                {/* Global loading/error/success messages from ViewModel */}
+                {loading && <p className="dashboard-message loading-message">Loading...</p>}
+                {error && <p className="dashboard-message error-message">{error}</p>}
+                {success && <p className="dashboard-message success-message">{success}</p>}
+
                 {currentView === 'nutritionistProfile' && currentUserRole === 'nutritionist' && <NutritionistProfile />}
 
                 {currentView === 'myMealPlans' && (
@@ -425,6 +443,7 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
                         onUpdateMealPlan={handleUpdateMealPlan} // This handler is called by MealPlanCard
                         onDeleteMealPlan={handleDeleteMealPlan}
                         onApproveMealPlan={handleApproveOrRejectMealPlan}
+                        onRejectMealPlan={handleApproveOrRejectMealPlan} // Use the same handler for reject
                         userRole={currentUserRole}
                     />
                 )}
@@ -448,7 +467,11 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
                     <UpdateMealPlan
                         mealPlan={selectedMealPlanForUpdate} // Pass the selected meal plan for update
                         onBack={handleBack}
-                        onMealPlanUpdated={handleMealPlanUpdated} // Pass the new handler
+                        // onMealPlanUpdated is handled by UpdateMealPlan component itself,
+                        // it calls mealPlanViewModel.updateMealPlan, which in turn
+                        // sets success message and re-fetches data in ViewModel.
+                        // Then this parent component's useEffect reacting to selectedMealPlanForUpdate
+                        // being cleared, will navigate back to 'myMealPlans'.
                     />
                 )}
 

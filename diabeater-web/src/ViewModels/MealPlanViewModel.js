@@ -28,7 +28,11 @@ class MealPlanViewModel {
         });
 
         this.initializeUser();
-        this.setupNotificationListener();
+        // Setup listener after potential user initialization delay, for nutritionists
+        // This will be called again by initializeUser once currentUserId is set
+        // if (this.currentUserRole === 'nutritionist' && this.currentUserId) {
+        //     this.setupNotificationListener();
+        // }
     }
 
     initializeUser = () => {
@@ -44,6 +48,7 @@ class MealPlanViewModel {
                 this.fetchAdminMealPlans(this.adminActiveTab);
             } else { // Nutritionist
                 this.fetchNutritionistMealPlans(user.uid);
+                this.setupNotificationListener(); // Setup listener only for nutritionists
             }
             this.fetchNotifications(user.uid);
         } else {
@@ -52,7 +57,11 @@ class MealPlanViewModel {
             runInAction(() => {
                 this.mealPlans = [];
                 this.allCategories = [];
+                this.currentUserId = null;
+                this.currentUserRole = null;
+                this.currentUserName = null;
             });
+            this.dispose(); // Unsubscribe from notifications if user logs out
         }
     };
 
@@ -68,23 +77,26 @@ class MealPlanViewModel {
     };
 
     setupNotificationListener = () => {
+        // Only set up listener if currentUserId and role are confirmed as nutritionist
         if (!this.currentUserId || this.currentUserRole !== 'nutritionist') {
-            if (!this.currentUserId) {
-                // Re-attempt after a short delay if user ID is not yet available
-                setTimeout(this.setupNotificationListener, 500);
-            }
+            console.warn("Cannot setup notification listener: User ID not available or not a nutritionist.");
             return;
         }
 
+        // Unsubscribe from any previous listener to prevent duplicates
         if (this._notificationsUnsubscribe) {
             this._notificationsUnsubscribe();
             this._notificationsUnsubscribe = null;
+            console.log("Existing notification listener unsubscribed.");
         }
 
+        console.log(`Setting up notification listener for user: ${this.currentUserId}`);
         this._notificationsUnsubscribe = MealPlanRepository.onNotificationsSnapshot(this.currentUserId, (notifications) => {
             runInAction(() => {
                 this.notifications = notifications;
-                this.unreadNotificationCount = notifications.filter(n => !n.isRead).length;
+                // 'isRead' is the Firestore field, 'read' is what you mapped it to in the repository.
+                // Use 'read' here for consistency with the mapped data.
+                this.unreadNotificationCount = notifications.filter(n => !n.read).length;
             });
         });
     };
@@ -99,7 +111,8 @@ class MealPlanViewModel {
             const fetchedNotifications = await MealPlanRepository.getNotifications(userId);
             runInAction(() => {
                 this.notifications = fetchedNotifications;
-                this.unreadNotificationCount = fetchedNotifications.filter(n => !n.isRead).length;
+                // Use 'read' property as mapped in repository
+                this.unreadNotificationCount = fetchedNotifications.filter(n => !n.read).length;
             });
         } catch (err) {
             console.error('Error fetching notifications:', err);
@@ -114,17 +127,18 @@ class MealPlanViewModel {
         try {
             await MealPlanRepository.markNotificationAsRead(notificationId);
             runInAction(() => {
-                const notification = this.notifications.find(n => n.id === notificationId);
+                // Find the notification and update its 'read' status locally
+                const notification = this.notifications.find(n => n._id === notificationId); // Use _id here
                 if (notification) {
-                    notification.isRead = true;
-                    this.unreadNotificationCount = this.notifications.filter(n => !n.isRead).length;
+                    notification.read = true; // Update the local observable
+                    this.unreadNotificationCount = this.notifications.filter(n => !n.read).length;
                 }
             });
             this.setSuccess('Notification marked as read.');
         } catch (err) {
             console.error('Error marking notification as read:', err);
             this.setError('Failed to mark notification as read.');
-        } finally {
+         } finally {
             this.setLoading(false);
         }
     }
@@ -216,20 +230,21 @@ class MealPlanViewModel {
                 notificationMessage = `Your meal plan "${mealPlanToUpdate.name}" has been REJECTED by ${adminName}. Reason: ${rejectionReason || 'No reason provided.'}`;
             }
 
+            // Note: The createNotification in service only takes recipientId, type, message, mealPlanId, rejectionReason.
+            // If you need adminId/adminName in the notification data itself, you'd need to modify createNotification.
             await MealPlanRepository.addNotification(
                 authorId,
                 'MEAL_PLAN_STATUS_UPDATE',
                 notificationMessage,
                 mealPlanId,
-                newStatus,
-                adminId,
-                adminName
+                rejectionReason // Pass rejectionReason if applicable
             );
 
             // Re-fetch meal plans to reflect status change immediately
             if (this.currentUserRole === 'admin') {
                 await this.fetchAdminMealPlans(this.adminActiveTab);
             } else if (this.currentUserId === authorId) {
+                // If it's a nutritionist looking at their own plans, refresh their list
                 await this.fetchNutritionistMealPlans(this.currentUserId);
             }
 
@@ -262,7 +277,7 @@ class MealPlanViewModel {
                 authorId: authorId,
                 author: authorName,
                 status: 'PENDING_APPROVAL',
-                createdAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(), // This will be overwritten by serverTimestamp in service but good for client-side representation initially
             };
 
             await MealPlanRepository.addMealPlan(newMealPlan, imageFile);
@@ -283,35 +298,42 @@ class MealPlanViewModel {
         }
     }
 
+    // ⭐ UPDATED: updateMealPlan method to set status to PENDING_APPROVAL ⭐
     updateMealPlan = async (updatedMealPlanData) => {
         this.setLoading(true);
         this.setError('');
         this.setSuccess('');
         try {
+            // Extract _id, imageFile, and originalImageFileName as these are for ViewModel/Repository logic,
+            // not directly for Firestore `updateDoc` payload.
             const { _id, imageFile, originalImageFileName, ...dataToUpdate } = updatedMealPlanData;
 
-            // The repository should return the updated meal plan object, especially if image URL changes
+            // ⭐ CRITICAL CHANGE: Set status to PENDING_APPROVAL on update ⭐
+            // This ensures updated meal plans go through the re-approval process.
+            dataToUpdate.status = 'PENDING_APPROVAL';
+
+            // Call the repository with the meal plan ID, the payload, new image file, and original image filename
+            // The repository will handle the image upload/deletion and Firestore update.
             const returnedMealPlan = await MealPlanRepository.updateMealPlan(_id, dataToUpdate, imageFile, originalImageFileName);
 
             runInAction(() => {
-                // Find and update the meal plan in the local array
+                // Update the local mealPlans array with the data returned from the repository
                 const index = this.mealPlans.findIndex(plan => plan._id === _id);
                 if (index !== -1) {
-                    // Update the local meal plan with the data returned from the repository
+                    // Spread existing data, then override with returnedMealPlan (which includes updated imageUrl/imageFileName)
                     this.mealPlans[index] = { ...this.mealPlans[index], ...returnedMealPlan };
                 }
                 // Clear the selected meal plan for update after a successful update
                 this.selectedMealPlanForUpdate = null;
             });
 
-            // Re-fetch the relevant list to ensure consistency, especially if status changed or image URL
-            if (this.currentUserRole === 'admin') {
-                await this.fetchAdminMealPlans(this.adminActiveTab);
-            } else if (this.currentUserId) {
+            // ⭐ AFTER UPDATE: Re-fetch the nutritionist's own meal plans ⭐
+            // This is important so the nutritionist immediately sees the updated status (PENDING_APPROVAL).
+            if (this.currentUserId) {
                 await this.fetchNutritionistMealPlans(this.currentUserId);
             }
 
-            this.setSuccess('Meal plan updated successfully!');
+            this.setSuccess('Meal plan updated successfully and sent for re-approval!');
             return true;
         } catch (err) {
             console.error('Error updating meal plan:', err);
@@ -327,24 +349,19 @@ class MealPlanViewModel {
         this.setError('');
         try {
             let fetchedPlans = [];
-            // If `MealPlanRepository.getAllMealPlansByStatus` exists and handles all, use it.
-            // Otherwise, combine results from specific status fetches.
-            if (MealPlanRepository.getAllMealPlansByStatus) {
-                fetchedPlans = await MealPlanRepository.getAllMealPlansByStatus(statusFilter);
+            // Use the specific methods if getAllMealPlansByStatus is not a generic query function
+            if (statusFilter === 'PENDING_APPROVAL') {
+                fetchedPlans = await MealPlanRepository.getPendingMealPlans();
+            } else if (statusFilter === 'APPROVED') {
+                fetchedPlans = await MealPlanRepository.getApprovedMealPlans();
+            } else if (statusFilter === 'REJECTED') {
+                fetchedPlans = await MealPlanRepository.getRejectedMealPlans();
             } else {
-                // Fallback if specific methods are needed and getAllMealPlansByStatus is not implemented
-                if (statusFilter === 'PENDING_APPROVAL') {
-                    fetchedPlans = await MealPlanRepository.getPendingMealPlans();
-                } else if (statusFilter === 'APPROVED') {
-                    fetchedPlans = await MealPlanRepository.getApprovedMealPlans();
-                } else if (statusFilter === 'REJECTED') {
-                    fetchedPlans = await MealPlanRepository.getRejectedMealPlans();
-                } else { // Default or 'ALL' case
-                    const pending = await MealPlanRepository.getPendingMealPlans();
-                    const approved = await MealPlanRepository.getApprovedMealPlans();
-                    const rejected = await MealPlanRepository.getRejectedMealPlans();
-                    fetchedPlans = [...pending, ...approved, ...rejected];
-                }
+                // Fallback for 'ALL' or undefined filter (though adminActiveTab should be one of the above)
+                const pending = await MealPlanRepository.getPendingMealPlans();
+                const approved = await MealPlanRepository.getApprovedMealPlans();
+                const rejected = await MealPlanRepository.getRejectedMealPlans();
+                fetchedPlans = [...pending, ...approved, ...rejected];
             }
 
 

@@ -1,300 +1,365 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { observer } from 'mobx-react-lite'; // Import observer
-import mealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the ViewModel
-import './UpdateMealPlan.css'; // Make sure this CSS file is correctly linked
+// src/components/UpdateMealPlan.js (or wherever you keep it)
+import React, { useState, useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
+import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
+import './UpdateMealPlan.css'; // Assuming you have a CSS file for styling
 
-const UpdateMealPlan = observer(({ mealPlan, onBack }) => { // Removed onSave prop
-    // Initialize form state with data from the mealPlan prop
-    const [formData, setFormData] = useState({
-        name: mealPlan?.name || '',
-        selectedCategories: mealPlan?.categories || [],
-        // Use mealPlan.imageUrl for display if available, otherwise fallback to mealPlan.imageFileName
-        // For actual file upload, imageFile will be set
-        image: mealPlan?.imageUrl || (mealPlan?.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : ''),
-        imageFile: null, // To hold the actual file object if a new one is selected
-        description: mealPlan?.description || '',
-        recipe: mealPlan?.recipe ? mealPlan.recipe.join('\n') : '', // Join array for textarea
-        calories: mealPlan?.nutrientInfo?.calories || '',
-        protein: mealPlan?.nutrientInfo?.protein || '',
-        carbohydrates: mealPlan?.nutrientInfo?.carbs || '',
-        fats: mealPlan?.nutrientInfo?.fat || '',
-    });
+const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
+    // Initialize form state with existing meal plan data
+    const [mealName, setMealName] = useState('');
+    const [category, setCategory] = useState(''); // Assuming single category selection for simplicity
+    const [imageFile, setImageFile] = useState(null);
+    const [imageUrl, setImageUrl] = useState(''); // To display current image or new preview
+    const [description, setDescription] = useState('');
+    const [recipe, setRecipe] = useState(''); // Assuming recipe is multiline text - for 'Ingredients' field
+    const [preparationSteps, setPreparationSteps] = useState(''); // For 'Preparation Steps' field
+    const [generalNotes, setGeneralNotes] = useState(''); // For 'General Description & Notes' field
 
-    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-    const categoryDropdownRef = useRef(null);
+    // Basic Nutrients
+    const [calories, setCalories] = useState('');
+    const [protein, setProtein] = useState('');
+    const [carbohydrates, setCarbohydrates] = useState('');
+    const [fats, setFats] = useState('');
 
-    // Dummy categories (these should ideally come from ViewModel if dynamic)
-    const categoryOptions = [
-        "Improved Energy",
-        "Weight Loss",
-        "Weight Management",
-        "Heart Health",
-        "Low Carb",
-        "High Protein",
-        "Gluten-Free",
-        "Snack"
-    ];
+    // Advanced Nutrients (Optional) - NEW FIELDS
+    const [sugar, setSugar] = useState('');
+    const [saturatedFat, setSaturatedFat] = useState('');
+    const [unsaturatedFat, setUnsaturatedFat] = useState('');
+    const [cholesterol, setCholesterol] = useState('');
+    const [sodium, setSodium] = useState('');
+    const [potassium, setPotassium] = useState('');
 
-    // Effect for handling click outside to close dropdown
+
+    // Effect to populate form fields when mealPlan prop changes
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
-                setIsCategoryDropdownOpen(false);
-            }
-        };
+        if (mealPlan) {
+            setMealName(mealPlan.name || '');
+            setCategory(mealPlan.category || '');
+            // Prioritize imageUrl if available, otherwise construct from imageFileName
+            setImageUrl(mealPlan.imageUrl || (mealPlan.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : ''));
+            setDescription(mealPlan.description || ''); // This now maps to 'General Description & Notes'
+            setRecipe(mealPlan.recipe || ''); // This maps to 'Ingredients'
+            setPreparationSteps(mealPlan.preparationSteps || ''); // Assuming this field exists in your data
+            setGeneralNotes(mealPlan.generalNotes || ''); // Assuming this field exists in your data
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+            // Basic Nutrients
+            setCalories(mealPlan.nutrients?.calories || '');
+            setProtein(mealPlan.nutrients?.protein || '');
+            setCarbohydrates(mealPlan.nutrients?.carbohydrates || '');
+            setFats(mealPlan.nutrients?.fats || '');
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+            // Advanced Nutrients - Initialization
+            setSugar(mealPlan.nutrients?.sugar || '');
+            setSaturatedFat(mealPlan.nutrients?.saturatedFat || '');
+            setUnsaturatedFat(mealPlan.nutrients?.unsaturatedFat || '');
+            setCholesterol(mealPlan.nutrients?.cholesterol || '');
+            setSodium(mealPlan.nutrients?.sodium || '');
+            setPotassium(mealPlan.nutrients?.potassium || '');
 
-    const handleFileChange = (e) => {
+            // Clear any previously selected image file when a new mealPlan is loaded
+            setImageFile(null);
+        }
+    }, [mealPlan]);
+
+    // Handle image file selection
+    const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData(prev => ({
-                    ...prev,
-                    image: reader.result, // Set the image to base64 for preview
-                    imageFile: file, // Store the actual file
-                }));
-            };
-            reader.readAsDataURL(file);
+            setImageFile(file);
+            setImageUrl(URL.createObjectURL(file)); // For image preview
         } else {
-            setFormData(prev => ({
-                ...prev,
-                // Revert to original image URL if no new file is selected,
-                // otherwise clear if it was a new upload that's now deselected.
-                image: mealPlan?.imageUrl || (mealPlan?.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : ''),
-                imageFile: null,
-            }));
+            setImageFile(null);
+            // Revert to original image if user clears selection
+            setImageUrl(mealPlan?.imageUrl || (mealPlan?.imageFileName ? `/assetscopy/${mealPlan?.imageFileName}` : ''));
         }
     };
 
-    const handleCategoryChange = (e) => {
-        const { value, checked } = e.target;
-        setFormData(prev => {
-            const newSelectedCategories = checked
-                ? [...prev.selectedCategories, value]
-                : prev.selectedCategories.filter(category => category !== value);
-            return {
-                ...prev,
-                selectedCategories: newSelectedCategories
-            };
-        });
-    };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    // Refactored handleSave to use mealPlanViewModel
-    const handleSave = async () => {
-        // Construct the payload for the update operation
+        // Basic validation for required fields (adjust as per your actual requirements)
+        if (!mealName || !category || !description || !recipe || !preparationSteps || !calories || !protein || !carbohydrates || !fats) {
+            mealPlanViewModel.setError('Please fill in all required fields (Meal Name, Category, Meal Details, Nutrients Information).');
+            return;
+        }
+
         const updatedMealPlanData = {
-            _id: mealPlan._id, // Essential: Pass the ID of the meal plan to update
-            name: formData.name,
-            categories: formData.selectedCategories,
-            description: formData.description,
-            recipe: formData.recipe.split('\n').filter(line => line.trim() !== ''),
-            nutrientInfo: {
-                calories: parseInt(formData.calories) || 0,
-                protein: parseInt(formData.protein) || 0,
-                carbs: parseInt(formData.carbohydrates) || 0,
-                fat: parseInt(formData.fats) || 0,
+            _id: mealPlan._id, // Crucial: Send the ID for the update operation
+            name: mealName,
+            category: category,
+            description: description, // General Description & Notes
+            recipe: recipe, // Ingredients
+            preparationSteps: preparationSteps, // New field for Preparation Steps
+            generalNotes: generalNotes, // New field for General Notes
+
+            nutrients: {
+                calories: Number(calories),
+                protein: Number(protein),
+                carbohydrates: Number(carbohydrates),
+                fats: Number(fats),
+                // Advanced Nutrients - Include them, even if empty/0
+                sugar: Number(sugar) || 0,
+                saturatedFat: Number(saturatedFat) || 0,
+                unsaturatedFat: Number(unsaturatedFat) || 0,
+                cholesterol: Number(cholesterol) || 0,
+                sodium: Number(sodium) || 0,
+                potassium: Number(potassium) || 0,
             },
-            // Only include imageFile if a new one was selected
-            imageFile: formData.imageFile,
-            // Pass original imageFileName for deletion if new image uploaded
-            originalImageFileName: mealPlan?.imageFileName || null,
-            // Pass current imageUrl if no new file is selected, to preserve it
-            imageUrl: formData.imageFile ? null : formData.image // If imageFile is null, use current image state
+            // The ViewModel's updateMealPlan method will handle the image file and status.
         };
 
-        console.log('Attempting to update meal plan with:', updatedMealPlanData);
+        // Call the ViewModel's update method
+        const success = await mealPlanViewModel.updateMealPlan(updatedMealPlanData, imageFile);
 
-        // Call the updateMealPlan action from the ViewModel
-        await mealPlanViewModel.updateMealPlan(updatedMealPlanData);
-
-        // Check ViewModel's success/error state after the operation
-        if (mealPlanViewModel.success) {
-            alert('Meal plan updated successfully!'); // Or use a nicer UI notification
-            onBack(); // Go back to the dashboard
-        } else if (mealPlanViewModel.error) {
-            alert(`Error updating meal plan: ${mealPlanViewModel.error}`); // Display error
-        }
-    };
-
-    const getCategoryButtonText = () => {
-        if (formData.selectedCategories.length === 0) {
-            return "Select Categories";
-        } else if (formData.selectedCategories.length === 1) {
-            return formData.selectedCategories[0];
+        if (success) {
+            // ViewModel already sets success message. Navigate back.
+            onBack(); // Go back to the meal plans list
         } else {
-            return `${formData.selectedCategories.length} Categories Selected`;
+            // Error message already set by ViewModel if update failed
+            // Stay on the form to allow user to correct issues
         }
     };
+
+    // Access ViewModel's state for loading/error/success messages
+    const { loading, error, success, allCategories } = mealPlanViewModel;
+
+
+    if (!mealPlan) {
+        return <p>Loading meal plan details for update...</p>;
+    }
 
     return (
         <div className="update-meal-plan-container">
-            <header className="update-meal-plan-header">
-                <h1 className="update-meal-plan-title">UPDATE MEAL PLAN</h1>
+            <header className="header">
+                <h1 className="page-title">UPDATE MEAL PLAN</h1>
             </header>
 
-            <div className="main-form-content">
-                <div className="left-column">
-                    <div className="form-section">
-                        <label htmlFor="mealName">Meal Name</label>
-                        <input
-                            type="text"
-                            id="mealName"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="meal-name-input"
-                        />
-                    </div>
+            {loading && <p className="form-message loading-message">Updating meal plan...</p>}
+            {error && <p className="form-message error-message">{error}</p>}
+            {success && <p className="form-message success-message">{success}</p>}
 
-                    <div className="form-row category-upload-row">
-                        <div className="form-section category-section">
-                            <label>Category</label>
-                            <div className="dropdown-checklist-container" ref={categoryDropdownRef}>
-                                <button
-                                    type="button"
-                                    className={`dropdown-toggle-button ${isCategoryDropdownOpen ? 'open' : ''}`}
-                                    onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
-                                >
-                                    {getCategoryButtonText()}
-                                    <span className="dropdown-arrow"></span>
-                                </button>
-                                {isCategoryDropdownOpen && (
-                                    <div className="category-checklist">
-                                        {categoryOptions.map((option, index) => (
-                                            <div key={index} className="checkbox-item">
-                                                <input
-                                                    type="checkbox"
-                                                    id={`category-${index}`}
-                                                    name="category"
-                                                    value={option}
-                                                    checked={formData.selectedCategories.includes(option)}
-                                                    onChange={handleCategoryChange}
-                                                />
-                                                <label htmlFor={`category-${index}`}>{option}</label>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+            <form onSubmit={handleSubmit} className="update-meal-plan-form">
+                <div className="form-sections-wrapper">
+                    {/* Left Section: Meal Name, Category, Photo */}
+                    <div className="form-section-left">
+                        <div className="form-group">
+                            <label htmlFor="mealName">Meal Name</label>
+                            <input
+                                type="text"
+                                id="mealName"
+                                value={mealName}
+                                onChange={(e) => setMealName(e.target.value)}
+                                className="form-input"
+                                required
+                            />
                         </div>
-                        <div className="form-section image-upload-section">
-                            <label htmlFor="mealImage">Meal Image</label>
+
+                        <div className="form-group">
+                            <label htmlFor="category">Category</label>
+                            <select
+                                id="category"
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="form-input"
+                                required
+                            >
+                                <option value="">Select a category</option>
+                                {allCategories.map((cat) => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group upload-photo-group"> {/* Added specific class for photo upload */}
+                            <label htmlFor="uploadPhoto">Upload Photo</label>
                             <input
                                 type="file"
-                                id="mealImage"
-                                name="imageFile"
+                                id="uploadPhoto"
                                 accept="image/*"
-                                onChange={handleFileChange}
-                                className="file-input"
+                                onChange={handleImageChange}
+                                className="form-input-file"
                             />
-                            {formData.image && (
-                                <div className="image-preview-container">
-                                    <img src={formData.image} alt="Meal Plan Preview" className="image-preview" />
+                            {imageUrl && (
+                                <div className="image-preview">
+                                    <img src={imageUrl} alt="Meal Plan Preview" />
+                                    <p className="image-filename">{imageFile ? imageFile.name : (mealPlan.imageFileName || 'Existing image')}</p>
                                 </div>
                             )}
                         </div>
+
+                         {/* Meal Details section - Ingredients, Preparation Steps, General Description & Notes */}
+                        <h3 className="section-title">Meal Details</h3>
+                        <div className="form-group">
+                            <label htmlFor="recipe">Ingredients</label>
+                            <textarea
+                                id="recipe"
+                                value={recipe}
+                                onChange={(e) => setRecipe(e.target.value)}
+                                className="form-textarea"
+                                rows="6"
+                                placeholder="List all ingredients, e.g., 2 large eggs, 1 cup spinach, 1 tbsp olive oil."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="preparationSteps">Preparation Steps</label>
+                            <textarea
+                                id="preparationSteps"
+                                value={preparationSteps}
+                                onChange={(e) => setPreparationSteps(e.target.value)}
+                                className="form-textarea"
+                                rows="6"
+                                placeholder="Provide step-by-step instructions, e.g., 1. Heat oil in pan. 2. Sauté spinach. 3. Add eggs."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="generalNotes">General Description & Notes</label>
+                            <textarea
+                                id="generalNotes"
+                                value={generalNotes}
+                                onChange={(e) => setGeneralNotes(e.target.value)}
+                                className="form-textarea"
+                                rows="4"
+                                placeholder="Add allergen warnings (e.g., contains dairy), portion size, storage notes, or a general overview of the meal."
+                                required
+                            ></textarea>
+                        </div>
                     </div>
 
-                    <div className="form-section">
-                        <label htmlFor="description">Description</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            className="description-textarea"
-                            rows="4"
-                        ></textarea>
-                    </div>
-
-                    <div className="form-section">
-                        <label htmlFor="recipe">Recipe (Each step on a new line)</label>
-                        <textarea
-                            id="recipe"
-                            name="recipe"
-                            value={formData.recipe}
-                            onChange={handleChange}
-                            className="recipe-textarea"
-                            rows="8"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <div className="right-column">
-                    <div className="nutrient-info-section">
-                        <h2>Nutrient Information</h2>
-                        <div className="nutrient-inputs">
-                            <div className="nutrient-input-group">
-                                <label htmlFor="calories">Calories (kcal)</label>
+                    {/* Right Section: Nutrients Information */}
+                    <div className="form-section-right">
+                        <h3 className="section-title">Nutrients Information</h3>
+                        <div className="nutrients-grid basic-nutrients">
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="calories">Calories</label>
                                 <input
                                     type="number"
                                     id="calories"
-                                    name="calories"
-                                    value={formData.calories}
-                                    onChange={handleChange}
-                                    min="0"
+                                    value={calories}
+                                    onChange={(e) => setCalories(e.target.value)}
+                                    className="form-input-short"
+                                    required
                                 />
+                                <span className="unit">kcal</span>
                             </div>
-                            <div className="nutrient-input-group">
-                                <label htmlFor="protein">Protein (g)</label>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="protein">Protein</label>
                                 <input
                                     type="number"
                                     id="protein"
-                                    name="protein"
-                                    value={formData.protein}
-                                    onChange={handleChange}
-                                    min="0"
+                                    value={protein}
+                                    onChange={(e) => setProtein(e.target.value)}
+                                    className="form-input-short"
+                                    required
                                 />
+                                <span className="unit">grams</span>
                             </div>
-                            <div className="nutrient-input-group">
-                                <label htmlFor="carbohydrates">Carbohydrates (g)</label>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="carbohydrates">Carbohydrates</label>
                                 <input
                                     type="number"
                                     id="carbohydrates"
-                                    name="carbohydrates"
-                                    value={formData.carbohydrates}
-                                    onChange={handleChange}
-                                    min="0"
+                                    value={carbohydrates}
+                                    onChange={(e) => setCarbohydrates(e.target.value)}
+                                    className="form-input-short"
+                                    required
                                 />
+                                <span className="unit">grams</span>
                             </div>
-                            <div className="nutrient-input-group">
-                                <label htmlFor="fats">Fats (g)</label>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="fats">Fats</label>
                                 <input
                                     type="number"
                                     id="fats"
-                                    name="fats"
-                                    value={formData.fats}
-                                    onChange={handleChange}
-                                    min="0"
+                                    value={fats}
+                                    onChange={(e) => setFats(e.target.value)}
+                                    className="form-input-short"
+                                    required
                                 />
+                                <span className="unit">grams</span>
+                            </div>
+                        </div>
+
+                        <h3 className="section-title advanced-nutrients-title">Advanced Nutrients (Optional)</h3>
+                        <div className="nutrients-grid advanced-nutrients">
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="sugar">Sugar</label>
+                                <input
+                                    type="number"
+                                    id="sugar"
+                                    value={sugar}
+                                    onChange={(e) => setSugar(e.target.value)}
+                                    className="form-input-short"
+                                />
+                                <span className="unit">grams</span>
+                            </div>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="saturatedFat">Saturated Fat</label>
+                                <input
+                                    type="number"
+                                    id="saturatedFat"
+                                    value={saturatedFat}
+                                    onChange={(e) => setSaturatedFat(e.target.value)}
+                                    className="form-input-short"
+                                />
+                                <span className="unit">grams</span>
+                            </div>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="unsaturatedFat">Unsaturated Fat</label>
+                                <input
+                                    type="number"
+                                    id="unsaturatedFat"
+                                    value={unsaturatedFat}
+                                    onChange={(e) => setUnsaturatedFat(e.target.value)}
+                                    className="form-input-short"
+                                />
+                                <span className="unit">grams</span>
+                            </div>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="cholesterol">Cholesterol</label>
+                                <input
+                                    type="number"
+                                    id="cholesterol"
+                                    value={cholesterol}
+                                    onChange={(e) => setCholesterol(e.target.value)}
+                                    className="form-input-short"
+                                />
+                                <span className="unit">mg</span>
+                            </div>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="sodium">Sodium</label>
+                                <input
+                                    type="number"
+                                    id="sodium"
+                                    value={sodium}
+                                    onChange={(e) => setSodium(e.target.value)}
+                                    className="form-input-short"
+                                />
+                                <span className="unit">mg</span>
+                            </div>
+                            <div className="form-group nutrient-group">
+                                <label htmlFor="potassium">Potassium</label>
+                                <input
+                                    type="number"
+                                    id="potassium"
+                                    value={potassium}
+                                    onChange={(e) => setPotassium(e.target.value)}
+                                    className="form-input-short"
+                                />
+                                <span className="unit">mg</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <footer className="update-meal-plan-footer">
-                <button type="button" className="back-button" onClick={onBack}>
-                    BACK
-                </button>
-                <button type="button" className="save-button" onClick={handleSave} disabled={mealPlanViewModel.loading}>
-                    {mealPlanViewModel.loading ? 'SAVING...' : 'SAVE CHANGES'}
-                </button>
-            </footer>
+                <div className="form-actions">
+                    <button type="submit" className="button-base save-button">SAVE</button>
+                    <button type="button" className="button-base cancel-button" onClick={onBack}>CANCEL</button>
+                </div>
+            </form>
         </div>
     );
 });
