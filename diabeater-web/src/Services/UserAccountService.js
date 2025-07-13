@@ -9,6 +9,7 @@ const UserAccountService = {
     const snapshot = await getDoc(docRef);
 
     if (snapshot.exists()) {
+      console.log('snapshot exists');
       const data = snapshot.data();
       return data.role === 'admin' ? data : null;
     }

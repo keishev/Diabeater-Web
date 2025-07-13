@@ -1,8 +1,7 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { getAuth } from 'firebase/auth';
 import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
-import UserRepository from '../Repositories/UserAccountRepository'; 
-import UserAccountsViewModel from './UserAccountsViewModel'; 
+import userAccountsViewModel from './UserAccountsViewModel'; 
 
 class AdminDashboardViewModel {
     // State for pending nutritionist applications
@@ -22,9 +21,7 @@ class AdminDashboardViewModel {
     isLoading = false; 
     error = '';
 
-    // Delegate for all user accounts management
-    // Instantiate UserAccountsViewModel here
-    userAccountsVM = new UserAccountsViewModel(); // Key fix: instantiate the view model
+    userAccountsVM = userAccountsViewModel;
 
     constructor() {
         makeAutoObservable(this);

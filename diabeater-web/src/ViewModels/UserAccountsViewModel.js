@@ -117,10 +117,13 @@ class UserAccountsViewModel {
         this.setError('');
         try {
             const profileData = await UserAccountRepository.getAdminProfile(userId);
+            console.log('profile data', profileData);
+            console.log('profile data fn', profileData.firstName);
             runInAction(() => {
-                this.profile = observable(profileData);
+                this.profile = profileData;
                 this.profileImage = profileData?.profileImageURL || null;
                 this.currentUserId = userId;
+                console.log('profile' + this.profile.firstName);
             });
         } catch (error) {
             console.error("Error fetching admin profile:", error);
@@ -231,4 +234,4 @@ class UserAccountsViewModel {
 }
 
 // Export the class itself
-export default UserAccountsViewModel;
+export default new UserAccountsViewModel();

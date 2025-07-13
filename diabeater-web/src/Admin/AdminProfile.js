@@ -10,9 +10,12 @@ const AdminProfile = observer(() => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('user' + user);
       if (user?.uid) {
         vm.fetchAdminProfile(user.uid);
+        console.log('user' + vm.profile.firstName);
         vm.currentUserId = user.uid;
+        console.log('uid' + user.uid);
       }
     });
     return () => unsubscribe();
