@@ -100,7 +100,7 @@
     font-weight: bold;
     cursor: pointer;
     margin-left: 700px;
-    margin-top: -120px; /* Space above the button */
+    margin-top: 0px; /* Space above the button */
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
