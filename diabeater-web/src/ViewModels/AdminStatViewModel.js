@@ -1,208 +1,177 @@
-// src/viewmodels/AdminStatViewModel.js
+// src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
-import AdminStatService from '../Services/AdminStatService'; // Import the new service
+import AdminStatService from '../Services/AdminStatService'; // Adjust path if needed
 
 class AdminStatViewModel {
+    loading = false;
+    error = null;
+    success = null;
+
     // Dashboard Stats
     totalUsers = 0;
     totalNutritionists = 0;
     totalApprovedMealPlans = 0;
     totalPendingMealPlans = 0;
     totalSubscriptions = 0;
-
-    // Chart Data
-    dailySignupsData = {}; // { 'YYYY-MM-DD': count }
-    weeklyTopMealPlans = []; // Array of meal plan objects
-
-    // User Management
-    userAccounts = [];
-    selectedUserForManagement = null; // For potential modal/detail view
-
-    // Subscription Management
-    allSubscriptions = []; // <--- NEW: To hold the array of all subscription documents
-
-    // General State
-    loading = false;
-    error = '';
-    success = '';
+    dailySignupsData = {};
+    weeklyTopMealPlans = [];
+    userAccounts = []; // For management table
+    allSubscriptions = []; // For subscriptions table
+    selectedUserForManagement = null; // For modal
 
     constructor() {
         makeAutoObservable(this);
-        this.loadDashboardData(); // Load data when ViewModel is instantiated
     }
 
-    // --- State Management Helpers ---
-    setLoading = (isLoading) => {
+    setLoading(status) {
         runInAction(() => {
-            this.loading = isLoading;
+            this.loading = status;
         });
-    };
+    }
 
-    setError = (message) => {
+    setError(message) {
         runInAction(() => {
             this.error = message;
-            if (message) {
-                setTimeout(() => runInAction(() => this.error = ''), 5000); // Clear error after 5 seconds
-            }
+            // Optionally clear error after some time
+            // setTimeout(() => this.error = null, 5000);
         });
-    };
+    }
 
-    setSuccess = (message) => {
+    setSuccess(message) {
         runInAction(() => {
             this.success = message;
-            if (message) {
-                setTimeout(() => runInAction(() => this.success = ''), 5000); // Clear success after 5 seconds
-            }
+            // Optionally clear success after some time
+            // setTimeout(() => this.success = null, 3000);
         });
-    };
+    }
 
-    // --- Data Loading Functions ---
-
-    /**
-     * Loads all dashboard statistics.
-     */
-    loadDashboardData = async () => {
+    async loadDashboardData() {
+        console.log("[ViewModel] Starting loadDashboardData..."); // <--- ADDED LOG
         this.setLoading(true);
-        this.setError('');
+        this.setError(null);
         try {
             const [
                 totalUsers,
                 totalNutritionists,
                 totalApprovedMealPlans,
                 totalPendingMealPlans,
-                totalSubscriptionsCount, // Renamed to avoid confusion with `allSubscriptions` array
-                dailySignupsData,
+                totalSubscriptions,
+                dailySignupsRawData, // Renamed to avoid confusion before processing
                 weeklyTopMealPlans,
-                userAccounts, // All users for the user management table
-                allSubscriptionDocs // <--- NEW: Fetch all subscription documents
+                allSubscriptions
             ] = await Promise.all([
                 AdminStatService.getDocumentCount('user_accounts'),
-                AdminStatService.getAllUserAccounts('nutritionist').then(users => users.length),
-                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'APPROVED'), // <--- Now using filter
-                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING_APPROVAL'), // <--- Now using filter
-                AdminStatService.getDocumentCount('subscriptions'), // Assuming subscriptions collection
-                AdminStatService.getDailySignups(7), // Last 7 days
-                AdminStatService.getWeeklyTopMealPlans(5), // Top 5 meal plans
-                AdminStatService.getAllUsersForManagement(), // For the user accounts table
-                AdminStatService.getAllSubscriptions() // <--- NEW: Call service to get all subscriptions
+                AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
+                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'APPROVED'),
+                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING'),
+                AdminStatService.getDocumentCount('subscriptions'),
+                AdminStatService.getDailySignups(7),
+                AdminStatService.getWeeklyTopMealPlans(5),
+                AdminStatService.getAllSubscriptions()
             ]);
+
+            // Process dailySignupsRawData into desired format (e.g., date: count)
+            // Assuming dailySignupsRawData is an array of user objects with 'createdAt'
+            const processedDailySignups = dailySignupsRawData.reduce((acc, user) => {
+                // Ensure createdAt is a Date object (if it's a Firestore Timestamp, convert it)
+                const createdAtDate = user.createdAt instanceof Date ? user.createdAt : user.createdAt?.toDate ? user.createdAt.toDate() : null;
+
+                if (createdAtDate) {
+                    const dateString = createdAtDate.toISOString().split('T')[0]; // YYYY-MM-DD
+                    acc[dateString] = (acc[dateString] || 0) + 1;
+                }
+                return acc;
+            }, {});
+
 
             runInAction(() => {
                 this.totalUsers = totalUsers;
                 this.totalNutritionists = totalNutritionists;
                 this.totalApprovedMealPlans = totalApprovedMealPlans;
                 this.totalPendingMealPlans = totalPendingMealPlans;
-                this.totalSubscriptions = totalSubscriptionsCount; // Use the count
-                this.dailySignupsData = dailySignupsData;
+                this.totalSubscriptions = totalSubscriptions;
+                this.dailySignupsData = processedDailySignups; // Set processed data
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
-                this.userAccounts = userAccounts;
-                this.allSubscriptions = allSubscriptionDocs; // <--- NEW: Store the fetched documents
+                this.allSubscriptions = allSubscriptions;
             });
-            this.setSuccess('Dashboard data loaded successfully!');
-        } catch (err) {
-            console.error('Error loading dashboard data:', err);
-            this.setError('Failed to load dashboard data: ' + err.message);
+            console.log("[ViewModel] Dashboard data loaded successfully."); // <--- ADDED LOG
+            console.log("[ViewModel] Fetched Stats:", {
+                totalUsers: this.totalUsers,
+                totalNutritionists: this.totalNutritionists,
+                totalApprovedMealPlans: this.totalApprovedMealPlans,
+                totalPendingMealPlans: this.totalPendingMealPlans,
+                totalSubscriptions: this.totalSubscriptions,
+            }); // <--- ADDED LOG
+            console.log("[ViewModel] Processed Daily Signups:", this.dailySignupsData); // <--- ADDED LOG
+            console.log("[ViewModel] Weekly Top Meal Plans:", this.weeklyTopMealPlans); // <--- ADDED LOG
+            console.log("[ViewModel] All Subscriptions:", this.allSubscriptions); // <--- ADDED LOG
+
+            this.setSuccess('Dashboard data refreshed.');
+
+        } catch (error) {
+            console.error("[ViewModel] Error in loadDashboardData:", error); // <--- ADDED LOG
+            this.setError(error.message);
         } finally {
             this.setLoading(false);
         }
-    };
+    }
 
-    /**
-     * Refreshes the user accounts list.
-     */
-    refreshUserAccounts = async () => {
+    async updateUserRole(userId, newRole) {
         this.setLoading(true);
-        this.setError('');
-        try {
-            const users = await AdminStatService.getAllUsersForManagement();
-            runInAction(() => {
-                this.userAccounts = users;
-            });
-            this.setSuccess('User accounts refreshed.');
-        } catch (err) {
-            console.error('Error refreshing user accounts:', err);
-            this.setError('Failed to refresh user accounts: ' + err.message);
-        } finally {
-            this.setLoading(false);
-        }
-    };
-
-    // --- User Management Actions ---
-
-    /**
-     * Updates a user's role.
-     * @param {string} userId
-     * @param {string} newRole
-     */
-    updateUserRole = async (userId, newRole) => {
-        this.setLoading(true);
-        this.setError('');
-        this.setSuccess('');
+        this.setError(null);
         try {
             await AdminStatService.updateUserRole(userId, newRole);
-            this.setSuccess(`User role updated to ${newRole} successfully.`);
-            await this.refreshUserAccounts(); // Refresh the list after update
-        } catch (err) {
-            console.error('Error updating user role:', err);
-            this.setError('Failed to update user role: ' + err.message);
+            this.setSuccess(`User role updated to ${newRole}.`);
+            await this.loadDashboardData(); // Refresh all data to reflect changes
+        } catch (error) {
+            this.setError(`Failed to update user role: ${error.message}`);
         } finally {
             this.setLoading(false);
         }
-    };
+    }
 
-    /**
-     * Deletes a user account.
-     * @param {string} userId
-     */
-    deleteUserAccount = async (userId) => {
+    async deleteUserAccount(userId) {
         this.setLoading(true);
-        this.setError('');
-        this.setSuccess('');
+        this.setError(null);
         try {
             await AdminStatService.deleteUserAccount(userId);
-            this.setSuccess('User account deleted successfully.');
-            await this.refreshUserAccounts(); // Refresh the list after deletion
-        } catch (err) {
-            console.error('Error deleting user account:', err);
-            this.setError('Failed to delete user account: ' + err.message);
+            this.setSuccess('User account deleted.');
+            await this.loadDashboardData(); // Refresh all data
+        } catch (error) {
+            this.setError(`Failed to delete user account: ${error.message}`);
         } finally {
             this.setLoading(false);
         }
-    };
+    }
 
-    /**
-     * Updates a nutritionist's status.
-     * @param {string} nutritionistId
-     * @param {string} newStatus
-     */
-    updateNutritionistStatus = async (nutritionistId, newStatus) => {
+    async updateNutritionistStatus(userId, newStatus) {
         this.setLoading(true);
-        this.setError('');
-        this.setSuccess('');
+        this.setError(null);
         try {
-            await AdminStatService.updateNutritionistStatus(nutritionistId, newStatus);
-            this.setSuccess(`Nutritionist status updated to ${newStatus} successfully.`);
-            await this.refreshUserAccounts(); // Refresh the list after update
-        } catch (err) {
-            console.error('Error updating nutritionist status:', err);
-            this.setError('Failed to update nutritionist status: ' + err.message);
+            await AdminStatService.updateNutritionistStatus(userId, newStatus);
+            this.setSuccess(`Nutritionist status updated to ${newStatus}.`);
+            await this.loadDashboardData(); // Refresh all data
+        } catch (error) {
+            this.setError(`Failed to update nutritionist status: ${error.message}`);
         } finally {
             this.setLoading(false);
         }
-    };
+    }
 
-    // --- Selection for detail/edit in UI (if needed) ---
-    setSelectedUserForManagement = (user) => {
+    setSelectedUserForManagement(user) {
         runInAction(() => {
             this.selectedUserForManagement = user;
         });
-    };
+    }
 
-    clearSelectedUserForManagement = () => {
+    clearSelectedUserForManagement() {
         runInAction(() => {
             this.selectedUserForManagement = null;
         });
-    };
+    }
+
+    // Add other methods for user management or subscription management here
+    // e.g., async fetchAllUsersForTable() { ... }
 }
 
 const adminStatViewModel = new AdminStatViewModel();

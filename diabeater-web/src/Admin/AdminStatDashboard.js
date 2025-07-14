@@ -26,7 +26,9 @@ const AdminStatDashboard = observer(() => {
         weeklyTopMealPlans,
         userAccounts, // This will be used for the main user accounts table
         allSubscriptions, // New observable from ViewModel for subscription table
-        loadDashboardData,
+        // We do NOT destructure loadDashboardData here if we're calling it via the instance below.
+        // If you were to destructure it, you'd need to ensure its 'this' context is bound,
+        // but calling directly on the singleton instance is simpler for this use case.
         updateUserRole,
         deleteUserAccount,
         updateNutritionistStatus,
@@ -34,7 +36,7 @@ const AdminStatDashboard = observer(() => {
         selectedUserForManagement,
         clearSelectedUserForManagement,
         // Add other ViewModel properties/methods as needed
-    } = adminStatViewModel;
+    } = adminStatViewModel; // <--- We get the ViewModel instance here
 
     // Local component state for search, modals, and current subscription price (if not in ViewModel)
     const [searchTerm, setSearchTerm] = useState('');
@@ -46,8 +48,12 @@ const AdminStatDashboard = observer(() => {
 
     // Fetch data from ViewModel on component mount
     useEffect(() => {
-        loadDashboardData();
-    }, [loadDashboardData]); // Ensure loadDashboardData is in dependency array
+        // --- FIX APPLIED HERE ---
+        // Call the method directly on the singleton instance to preserve 'this' context.
+        adminStatViewModel.loadDashboardData();
+        // The dependency array is now empty because adminStatViewModel is a singleton
+        // and its methods' references do not change across renders.
+    }, []); // <--- IMPORTANT CHANGE: Dependency array is now empty
 
     // Handler for opening user detail modal
     const handleOpenUserModal = (user) => {
@@ -190,7 +196,8 @@ const AdminStatDashboard = observer(() => {
         return (
             <div className="admin-dashboard-main-content-area error-state">
                 <p>Error: {error}</p>
-                <button onClick={loadDashboardData}>Retry Load Data</button>
+                {/* When retrying, also call the method on the instance */}
+                <button onClick={() => adminStatViewModel.loadDashboardData()}>Retry Load Data</button>
             </div>
         );
     }
@@ -233,7 +240,7 @@ const AdminStatDashboard = observer(() => {
                         <i className="fas fa-info-circle"></i> No change data
                     </div>
                 </div>
-                 <div className="stat-card">
+                   <div className="stat-card">
                     <div className="stat-value">{totalPendingMealPlans}</div>
                     <div className="stat-label">Pending Meal Plans</div>
                     <div className="stat-change neutral">
