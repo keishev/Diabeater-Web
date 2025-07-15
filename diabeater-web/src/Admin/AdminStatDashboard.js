@@ -1,5 +1,5 @@
 // src/Admin/AdminStatDashboard.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './AdminStatDashboard.css';
 import UserDetailModal from './UserDetailModal';
 import EditSubscriptionModal from './EditSubscriptionModal';
@@ -7,12 +7,12 @@ import './UserDetailModal.css';
 import './EditSubscriptionModal.css';
 import AdminInsights from './AdminInsights';
 import Tooltip from './Tooltip';
-import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // Correct path to ViewModel
+import adminStatViewModel from '../ViewModels/AdminStatViewModel';
+import SubscriptionService from '../Services/SubscriptionService'; // <--- Import SubscriptionService
 import { observer } from 'mobx-react-lite';
-import moment from 'moment'; // For formatting dates and 'data as at' time
+import moment from 'moment';
 
 const AdminStatDashboard = observer(() => {
-    // Destructure state and actions from the MobX ViewModel
     const {
         loading,
         error,
@@ -24,51 +24,55 @@ const AdminStatDashboard = observer(() => {
         totalSubscriptions,
         dailySignupsData,
         weeklyTopMealPlans,
-        userAccounts, // This will be used for the main user accounts table
-        allSubscriptions, // New observable from ViewModel for subscription table
-        // We do NOT destructure loadDashboardData here if we're calling it via the instance below.
-        // If you were to destructure it, you'd need to ensure its 'this' context is bound,
-        // but calling directly on the singleton instance is simpler for this use case.
+        userAccounts,
+        allSubscriptions,
         updateUserRole,
         deleteUserAccount,
         updateNutritionistStatus,
         setSelectedUserForManagement,
         selectedUserForManagement,
         clearSelectedUserForManagement,
-        // Add other ViewModel properties/methods as needed
-    } = adminStatViewModel; // <--- We get the ViewModel instance here
+    } = adminStatViewModel;
 
-    // Local component state for search, modals, and current subscription price (if not in ViewModel)
     const [searchTerm, setSearchTerm] = useState('');
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
-    // Assuming currentSubscriptionPrice is managed locally or fetched from a separate 'settings' collection
-    const [currentSubscriptionPrice, setCurrentSubscriptionPrice] = useState(10.00);
+    // currentSubscriptionPrice should ideally be fetched from Firebase for the 'premium' plan
+    // Let's initialize it to what's currently in your ViewModel or a default.
+    const [currentSubscriptionPrice, setCurrentSubscriptionPrice] = useState(10.00); // This will be updated by Firebase fetch
 
+    const handleLoadDashboardData = useCallback(async () => { // Make this async to await price fetch
+        await adminStatViewModel.loadDashboardData();
+        // Fetch the actual premium plan price when the dashboard loads
+        try {
+            const price = await SubscriptionService.getSubscriptionPrice('premium'); // Assuming 'premium' is your planId
+            if (price !== null) {
+                setCurrentSubscriptionPrice(price);
+                console.log(`[AdminStatDashboard] Initial premium price fetched: ${price}`);
+            } else {
+                console.warn("[AdminStatDashboard] 'premium' plan price not found in Firebase.");
+                // Optionally set a default or error if the plan is expected to exist
+            }
+        } catch (err) {
+            console.error("[AdminStatDashboard] Error fetching initial subscription price:", err);
+            adminStatViewModel.setError("Failed to load current subscription price.");
+        }
+    }, []);
 
-    // Fetch data from ViewModel on component mount
     useEffect(() => {
-        // --- FIX APPLIED HERE ---
-        // Call the method directly on the singleton instance to preserve 'this' context.
-        adminStatViewModel.loadDashboardData();
-        // The dependency array is now empty because adminStatViewModel is a singleton
-        // and its methods' references do not change across renders.
-    }, []); // <--- IMPORTANT CHANGE: Dependency array is now empty
+        handleLoadDashboardData();
+    }, [handleLoadDashboardData]);
 
-    // Handler for opening user detail modal
     const handleOpenUserModal = (user) => {
-        // Set the user in the ViewModel, which will also be used by the modal
         setSelectedUserForManagement(user);
         setIsUserModalOpen(true);
     };
 
-    // Handler for closing user detail modal
     const handleCloseUserModal = () => {
         setIsUserModalOpen(false);
-        clearSelectedUserForManagement(); // Clear selected user in ViewModel
+        clearSelectedUserForManagement();
     };
 
-    // Handlers for subscription price modal
     const handleOpenEditPriceModal = () => {
         setIsEditPriceModalOpen(true);
     };
@@ -77,55 +81,86 @@ const AdminStatDashboard = observer(() => {
         setIsEditPriceModalOpen(false);
     };
 
-    const handleSaveSubscriptionPrice = (newPrice) => {
-        // In a real application, you'd call a service method to update this in Firebase
-        setCurrentSubscriptionPrice(newPrice);
-        console.log(`New subscription price saved: $${newPrice}`);
-        // Potentially set success message in ViewModel: adminStatViewModel.setSuccess('Subscription price updated!');
+    const handleSaveSubscriptionPrice = async (newPrice) => { // Make this function async
+        adminStatViewModel.setSuccess('');
+        adminStatViewModel.setError('');
+
+        try {
+            console.log(`[AdminStatDashboard] Attempting to save new subscription price in Firebase: $${newPrice}`);
+            // Call the Firebase service to update the price
+            const response = await SubscriptionService.updateSubscriptionPrice('premium', newPrice); // Pass 'premium' as planId
+
+            if (response.success) {
+                setCurrentSubscriptionPrice(newPrice); // Update local state only if Firebase update is successful
+                adminStatViewModel.setSuccess(response.message);
+                setIsEditPriceModalOpen(false);
+                handleLoadDashboardData(); // Re-fetch all dashboard data including subscriptions if needed
+            } else {
+                // This branch might not be hit if SubscriptionService always throws on error
+                adminStatViewModel.setError(response.message || 'Failed to update subscription price.');
+            }
+        } catch (e) {
+            console.error("[AdminStatDashboard] Error saving subscription price to Firebase:", e);
+            adminStatViewModel.setError(`Failed to update subscription price: ${e.message}`);
+        }
     };
 
-    // Filter subscriptions directly from the ViewModel's allSubscriptions array
+    const handleEditSubscription = (subscription) => {
+        console.log('Edit subscription:', subscription);
+        adminStatViewModel.setSuccess(`Editing subscription for ${subscription.name}`);
+    };
+
+    const handleDeleteSubscription = async (subscriptionId, subscriptionName) => {
+        if (window.confirm(`Are you sure you want to delete the subscription for ${subscriptionName}?`)) {
+            try {
+                await adminStatViewModel.deleteSubscription(subscriptionId); // Assuming this calls a service
+                adminStatViewModel.setSuccess(`Subscription for ${subscriptionName} deleted successfully!`);
+                handleLoadDashboardData();
+            } catch (err) {
+                console.error('Error deleting subscription:', err);
+                adminStatViewModel.setError(`Failed to delete subscription for ${subscriptionName}.`);
+            }
+        }
+    };
+
     const filteredSubscriptions = allSubscriptions.filter(sub =>
         (sub.name && sub.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (sub.email && sub.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (sub.status && sub.status.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    // --- Chart calculations using real data ---
-    const chartDataArray = Object.entries(dailySignupsData).map(([date, count]) => ({
+    const chartDataArray = dailySignupsData ? Object.entries(dailySignupsData).map(([date, count]) => ({
         date,
         value: count,
-        month: moment(date).format('MMM') // Use moment to get month abbreviation
-    })).sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date for chart
+        month: moment(date).format('MMM')
+    })).sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
 
     const chartPadding = { top: 20, right: 30, bottom: 30, left: 35 };
     const chartWidth = 240 - chartPadding.left - chartPadding.right;
     const chartHeight = 150 - chartPadding.top - chartPadding.bottom;
 
-    const maxValue = chartDataArray.length > 0 ? Math.max(...chartDataArray.map(d => d.value)) : 100; // Default to 100 if no data
+    const maxValue = chartDataArray.length > 0 ? Math.max(...chartDataArray.map(d => d.value)) : 10;
+    const yScaleFactor = chartHeight / maxValue;
     const xScale = chartDataArray.length > 1 ? chartWidth / (chartDataArray.length - 1) : 0;
-    const yScale = chartHeight / maxValue;
 
     const linePoints = chartDataArray.map((d, i) =>
-        `${chartPadding.left + i * xScale},${chartPadding.top + (chartHeight - d.value * yScale)}`
+        `${chartPadding.left + i * xScale},${chartPadding.top + (chartHeight - d.value * yScaleFactor)}`
     ).join(' ');
 
     const areaPoints = [
         `${chartPadding.left},${chartPadding.top + chartHeight}`,
         ...chartDataArray.map((d, i) =>
-            `${chartPadding.left + i * xScale},${chartPadding.top + (chartHeight - d.value * yScale)}`
+            `${chartPadding.left + i * xScale},${chartPadding.top + (chartHeight - d.value * yScaleFactor)}`
         ),
         `${chartPadding.left + (chartDataArray.length > 0 ? (chartDataArray.length - 1) * xScale : 0)},${chartPadding.top + chartHeight}`,
         `${chartPadding.left},${chartPadding.top + chartHeight}`
     ].join(' ');
 
-    // --- Chart Tooltip Effect ---
     useEffect(() => {
         const tooltip = document.getElementById('chart-tooltip');
         const svgElement = document.querySelector('.daily-signups-chart-section svg');
 
         if (!svgElement || !tooltip) {
-            console.warn("SVG element or tooltip not found. Tooltip functionality might not work.");
             return;
         }
 
@@ -136,23 +171,24 @@ const AdminStatDashboard = observer(() => {
             const date = point.getAttribute('data-date');
             const value = point.getAttribute('data-value');
 
-            tooltip.innerHTML = `Date: ${date}<br/>Signups: ${value}`;
+            tooltip.innerHTML = `Date: ${moment(date).format('MMM Do, YYYY')}<br/>Signups: ${value}`;
             tooltip.style.opacity = '1';
 
             const pointRect = point.getBoundingClientRect();
-            const tooltipRect = tooltip.getBoundingClientRect();
             const sectionRect = document.querySelector('.daily-signups-chart-section').getBoundingClientRect();
 
-            let tooltipX = (pointRect.left - sectionRect.left) + (pointRect.width / 2) - (tooltipRect.width / 2);
-            let tooltipY = (pointRect.top - sectionRect.top) - tooltipRect.height - 8;
+            let tooltipX = (pointRect.left - sectionRect.left) + (pointRect.width / 2);
+            let tooltipY = (pointRect.top - sectionRect.top) - 10;
 
-            if (tooltipX < 0) { tooltipX = 5; }
-            if (tooltipX + tooltipRect.width > sectionRect.width) {
-                tooltipX = sectionRect.width - tooltipRect.width - 5;
+            tooltip.style.left = `${tooltipX - (tooltip.offsetWidth / 2)}px`;
+            tooltip.style.top = `${tooltipY - tooltip.offsetHeight}px`;
+
+            if (tooltipX - (tooltip.offsetWidth / 2) < 0) {
+                tooltip.style.left = '5px';
             }
-
-            tooltip.style.left = `${tooltipX}px`;
-            tooltip.style.top = `${tooltipY}px`;
+            if (tooltipX + (tooltip.offsetWidth / 2) > sectionRect.width) {
+                tooltip.style.left = `${sectionRect.width - tooltip.offsetWidth - 5}px`;
+            }
         };
 
         const handleMouseLeave = () => {
@@ -170,41 +206,51 @@ const AdminStatDashboard = observer(() => {
                 point.removeEventListener('mouseleave', handleMouseLeave);
             });
         };
-    }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScale]); // Re-run effect if data changes
+    }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScaleFactor]);
 
-    // Data for General Insights Section (can be fetched from ViewModel if you have an 'insights' collection)
-    // For now, these are still mock/derived from ViewModel stats
     const insightsData = [
-        { value: `${((totalSubscriptions / totalUsers) * 100 || 0).toFixed(0)}%`, label: 'Subscription Rate', change: 0, type: 'neutral', period: 'overall' }, // Derived
-        { value: '$4.5K', label: 'Monthly Revenue', change: 12, type: 'increase', period: 'last month' }, // Placeholder, integrate real revenue if tracked
-        { value: dailySignupsData ? Object.values(dailySignupsData).reduce((sum, val) => sum + val, 0) : '0', label: 'New Signups (7 Days)', change: 0, type: 'neutral', period: 'last week' }, // Derived
-        { value: '15', label: 'Cancelled Subscriptions', change: 2, type: 'decrease', period: 'last month' }, // Placeholder
-        { value: `${((totalApprovedMealPlans / (totalApprovedMealPlans + totalPendingMealPlans)) * 100 || 0).toFixed(0)}%`, label: 'Meal Plan Approval Rate', change: 0, type: 'neutral', period: 'overall' }, // Derived
-        { value: totalApprovedMealPlans + totalPendingMealPlans, label: 'Total Meal Plans', change: 0, type: 'neutral', period: 'all time' }, // Derived
+        { value: `${((totalSubscriptions / (totalUsers || 1)) * 100 || 0).toFixed(0)}%`, label: 'Subscription Rate', change: 0, type: 'neutral', period: 'overall' },
+        { value: '$4.5K', label: 'Monthly Revenue', change: 12, type: 'increase', period: 'last month' },
+        {
+            value: dailySignupsData ? Object.values(dailySignupsData).reduce((sum, val) => sum + val, 0) : '0',
+            label: 'New Signups (7 Days)',
+            change: 0, type: 'neutral', period: 'last week'
+        },
+        { value: '15', label: 'Cancelled Subscriptions', change: 2, type: 'decrease', period: 'last month' },
+        { value: `${((totalApprovedMealPlans / ((totalApprovedMealPlans + totalPendingMealPlans) || 1)) * 100 || 0).toFixed(0)}%`, label: 'Meal Plan Approval Rate', change: 0, type: 'neutral', period: 'overall' },
+        { value: totalApprovedMealPlans + totalPendingMealPlans, label: 'Total Meal Plans', change: 0, type: 'neutral', period: 'all time' },
     ];
 
     if (loading) {
         return (
             <div className="admin-dashboard-main-content-area loading-state">
                 <p>Loading dashboard data...</p>
-                <div className="spinner"></div> {/* Add a CSS spinner */}
+                <div className="spinner"></div>
             </div>
         );
     }
 
-    if (error) {
-        return (
-            <div className="admin-dashboard-main-content-area error-state">
-                <p>Error: {error}</p>
-                {/* When retrying, also call the method on the instance */}
-                <button onClick={() => adminStatViewModel.loadDashboardData()}>Retry Load Data</button>
-            </div>
-        );
-    }
+    const renderMessages = () => (
+        <>
+            {error && (
+                <div className="admin-dashboard-message error-message">
+                    <i className="fas fa-exclamation-circle"></i> {error}
+                    <button onClick={() => adminStatViewModel.setError('')} className="close-message-button">&times;</button>
+                </div>
+            )}
+            {success && (
+                <div className="admin-dashboard-message success-message">
+                    <i className="fas fa-check-circle"></i> {success}
+                    <button onClick={() => adminStatViewModel.setSuccess('')} className="close-message-button">&times;</button>
+                </div>
+            )}
+        </>
+    );
 
     return (
         <div className="admin-dashboard-main-content-area">
-            {success && <div className="admin-dashboard-success-message">{success}</div>}
+            {renderMessages()}
+
             <div className="admin-header">
                 <h1 className="admin-page-title">STATISTICS</h1>
                 <span className="data-as-at">Data as at {moment().format('Do MMM YYYY HH:mm')}</span>
@@ -214,7 +260,6 @@ const AdminStatDashboard = observer(() => {
                 <div className="stat-card">
                     <div className="stat-value">{totalUsers}</div>
                     <div className="stat-label">Total Users</div>
-                    {/* Placeholder for change, actual change requires historical data */}
                     <div className="stat-change neutral">
                         <i className="fas fa-info-circle"></i> No change data
                     </div>
@@ -240,7 +285,7 @@ const AdminStatDashboard = observer(() => {
                         <i className="fas fa-info-circle"></i> No change data
                     </div>
                 </div>
-                   <div className="stat-card">
+                <div className="stat-card">
                     <div className="stat-value">{totalPendingMealPlans}</div>
                     <div className="stat-label">Pending Meal Plans</div>
                     <div className="stat-change neutral">
@@ -255,57 +300,64 @@ const AdminStatDashboard = observer(() => {
                     <div className="meal-plans-list">
                         {weeklyTopMealPlans.length > 0 ? (
                             weeklyTopMealPlans.map((plan, index) => (
-                                <div key={plan._id} className="meal-plan-item">
+                                <div key={plan._id || `meal-plan-${index}`} className="meal-plan-item">
                                     <span className="meal-plan-rank">#{index + 1}</span>
-                                    {/* Assuming imageFileName is directly on the plan object and accessible */}
                                     <img
-                                        src={plan.imageUrl || `/assetscopy/${plan.imageFileName || 'default-meal-plan.jpg'}`} // Fallback
-                                        alt={plan.name}
+                                        src={plan.imageUrl || `/assetscopy/${plan.imageFileName || 'default-meal-plan.jpg'}`}
+                                        alt={plan.name || 'Meal Plan'}
                                         className="admin-meal-plan-image"
                                     />
                                     <div className="meal-plan-info">
-                                        <div className="meal-plan-name">{plan.name}</div>
+                                        <div className="meal-plan-name">{plan.name || 'Untitled Meal Plan'}</div>
                                         <div className="meal-plan-author">by {plan.authorName || 'N/A'}</div>
                                     </div>
                                     <div className="meal-plan-views">{plan.viewsCount || 0} Viewed</div>
                                 </div>
                             ))
                         ) : (
-                            <p className="no-data-message">No top meal plans found.</p>
+                            <p className="no-data-message">No top meal plans found for the week.</p>
                         )}
                     </div>
                 </section>
 
-                {/* Daily Signups Chart Section */}
                 <section className="daily-signups-chart-section">
                     <h2 className="section-title">Daily Signups</h2>
                     <div className="chart-placeholder">
                         <svg width="100%" height="150" viewBox="0 0 240 150">
                             <defs>
                                 <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-                                    <stop offset="0%" stopColor="#ff9800" stopOpacity="0.4"/>
-                                    <stop offset="100%" stopColor="#ff9800" stopOpacity="0.05"/>
+                                    <stop offset="0%" stopColor="#ff9800" stopOpacity="0.4" />
+                                    <stop offset="100%" stopColor="#ff9800" stopOpacity="0.05" />
                                 </linearGradient>
                             </defs>
 
-                            {/* Horizontal Grid Lines */}
                             {Array.from({ length: 5 }).map((_, i) => {
-                                const value = i * (maxValue / 4);
-                                const y = chartPadding.top + (chartHeight - value * yScale);
+                                const value = Math.round(i * (maxValue / 4));
+                                const y = chartPadding.top + (chartHeight - value * yScaleFactor);
                                 return (
-                                    <line
-                                        key={`y-line-${i}`}
-                                        x1={chartPadding.left} y1={y}
-                                        x2={chartPadding.left + chartWidth} y2={y}
-                                        stroke="#eee"
-                                        strokeDasharray="2 2"
-                                    />
+                                    <g key={`y-axis-group-${i}`}>
+                                        <line
+                                            x1={chartPadding.left} y1={y}
+                                            x2={chartPadding.left + chartWidth} y2={y}
+                                            stroke="#eee"
+                                            strokeDasharray="2 2"
+                                        />
+                                        {value > 0 && (
+                                            <text
+                                                x={chartPadding.left - 5}
+                                                y={y + 4}
+                                                className="chart-y-axis-label"
+                                                textAnchor="end"
+                                            >
+                                                {value}
+                                            </text>
+                                        )}
+                                    </g>
                                 );
                             })}
-                            {/* Vertical Grid Lines */}
                             {chartDataArray.map((d, i) => (
                                 <line
-                                    key={`x-line-${i}`}
+                                    key={`x-line-${d.date}`}
                                     x1={chartPadding.left + i * xScale} y1={chartPadding.top}
                                     x2={chartPadding.left + i * xScale} y2={chartPadding.top + chartHeight}
                                     stroke="#eee"
@@ -313,12 +365,10 @@ const AdminStatDashboard = observer(() => {
                                 />
                             ))}
 
-                            {/* Area under the line */}
                             {chartDataArray.length > 0 && (
                                 <path d={`M ${areaPoints}`} className="chart-area" />
                             )}
 
-                            {/* Line path */}
                             {chartDataArray.length > 0 && (
                                 <polyline
                                     fill="none"
@@ -329,50 +379,32 @@ const AdminStatDashboard = observer(() => {
                                 />
                             )}
 
-                            {/* Data points (circles) - with data attributes for tooltip */}
                             {chartDataArray.map((d, i) => (
                                 <circle
-                                    key={`point-${d.date}`} // Use date as key for uniqueness
+                                    key={`point-${d.date}`}
                                     cx={chartPadding.left + i * xScale}
-                                    cy={chartPadding.top + (chartHeight - d.value * yScale)}
+                                    cy={chartPadding.top + (chartHeight - d.value * yScaleFactor)}
                                     r="4"
                                     className="chart-point"
-                                    data-date={d.date} // Use full date for tooltip
+                                    data-date={d.date}
                                     data-value={d.value}
                                 />
                             ))}
 
-                            {/* X-axis labels (months/dates) */}
                             {chartDataArray.map((d, i) => (
                                 <text
                                     key={`x-label-${d.date}`}
                                     x={chartPadding.left + i * xScale}
                                     y={chartPadding.top + chartHeight + 15}
                                     className="chart-x-axis-label"
+                                    textAnchor="middle"
                                 >
                                     {d.month}
                                 </text>
                             ))}
-                            {/* Y-axis labels */}
-                            {Array.from({ length: 5 }).map((_, i) => {
-                                const value = i * (maxValue / 4);
-                                const y = chartPadding.top + (chartHeight - value * yScale);
-                                return (
-                                    <text
-                                        key={`y-label-${i}`}
-                                        x={chartPadding.left - 5}
-                                        y={y + 4}
-                                        className="chart-y-axis-label"
-                                    >
-                                        {value === 0 ? '' : Math.round(value)}
-                                    </text>
-                                );
-                            })}
                         </svg>
-                        {/* THE TOOLTIP DIV - Placed directly after the SVG */}
                         <div id="chart-tooltip"></div>
                     </div>
-                    {/* Small Insights at the bottom of the chart */}
                     <div className="chart-insights">
                         <div className="chart-insight-item">
                             <span className="chart-insight-label">Avg. Daily Signups:</span>
@@ -394,9 +426,9 @@ const AdminStatDashboard = observer(() => {
                         </div>
                         <div className="chart-insight-item">
                             <span className="chart-insight-label">Growth (Last Day):</span>
-                            <span className={`chart-insight-value ${chartDataArray.length > 1 && chartDataArray[chartDataArray.length-1].value > chartDataArray[chartDataArray.length-2].value ? 'increase' : 'decrease'}`}>
+                            <span className={`chart-insight-value ${chartDataArray.length > 1 && chartDataArray[chartDataArray.length - 1].value > chartDataArray[chartDataArray.length - 2].value ? 'increase' : 'decrease'}`}>
                                 {chartDataArray.length > 1
-                                    ? `${(chartDataArray[chartDataArray.length-1].value - chartDataArray[chartDataArray.length-2].value)}`
+                                    ? `${(chartDataArray[chartDataArray.length - 1].value - chartDataArray[chartDataArray.length - 2].value)}`
                                     : 'N/A'
                                 }
                             </span>
@@ -405,10 +437,8 @@ const AdminStatDashboard = observer(() => {
                 </section>
             </div>
 
-            {/* General Admin Insights section */}
             <AdminInsights data={insightsData} />
 
-            {/* Premium Plan Container - positioned above subscriptions table */}
             <section className="premium-plan-section">
                 <h2 className="section-title">SUBSCRIPTIONS</h2>
                 <div className="premium-plan-card">
@@ -419,7 +449,6 @@ const AdminStatDashboard = observer(() => {
                     </button>
                 </div>
             </section>
-            {/* END NEW Premium Plan Container */}
 
             <section className="subscriptions-section">
                 <div className="subscriptions-header">
@@ -448,22 +477,22 @@ const AdminStatDashboard = observer(() => {
                         <tbody>
                             {filteredSubscriptions.length > 0 ? (
                                 filteredSubscriptions.map(sub => (
-                                    <tr key={sub._id}> {/* Use Firebase _id for unique key */}
+                                    <tr key={sub._id || sub.email}>
                                         <td>
                                             <div className="tooltip-container">
                                                 <Tooltip content={
                                                     <>
-                                                        <p><strong>Name:</strong> {sub.name}</p>
-                                                        <p><strong>Email:</strong> {sub.email}</p>
+                                                        <p><strong>Name:</strong> {sub.name || 'N/A'}</p>
+                                                        <p><strong>Email:</strong> {sub.email || 'N/A'}</p>
                                                         <p><strong>Phone:</strong> {sub.phone || 'N/A'}</p>
                                                         <p><strong>Address:</strong> {sub.address || 'N/A'}</p>
                                                     </>
                                                 }>
-                                                    <i className="fas fa-user-circle table-user-icon"></i> {sub.name}
+                                                    <i className="fas fa-user-circle table-user-icon"></i> {sub.name || 'N/A'}
                                                 </Tooltip>
                                             </div>
                                         </td>
-                                        <td>{sub.email}</td>
+                                        <td>{sub.email || 'N/A'}</td>
                                         <td>
                                             <span className={`status-dot status-${sub.status ? sub.status.toLowerCase() : 'unknown'}`}></span>
                                             {sub.status || 'N/A'}
@@ -472,21 +501,20 @@ const AdminStatDashboard = observer(() => {
                                         <td>
                                             <button
                                                 className="deets-action-button view-button"
-                                                onClick={() => handleOpenUserModal(sub)} // Pass the full subscription object
+                                                onClick={() => handleOpenUserModal(sub)}
                                             >
                                                 VIEW
                                             </button>
                                         </td>
                                         <td>
-                                            {/* Example action buttons */}
-                                            <button className="action-button edit-button" onClick={() => console.log('Edit subscription', sub._id)}>EDIT</button>
-                                            <button className="action-button delete-button" onClick={() => console.log('Delete subscription', sub._id)}>DELETE</button>
+                                            <button className="action-button edit-button" onClick={() => handleEditSubscription(sub)}>EDIT</button>
+                                            <button className="action-button delete-button" onClick={() => handleDeleteSubscription(sub._id, sub.name)}>DELETE</button>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="6" className="no-data-message">No subscriptions found.</td>
+                                    <td colSpan="6" className="no-data-message">No subscriptions found matching your search.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -496,12 +524,16 @@ const AdminStatDashboard = observer(() => {
 
             {isUserModalOpen && (
                 <UserDetailModal
-                    user={selectedUserForManagement} // Use the user selected via ViewModel
+                    user={selectedUserForManagement}
                     onClose={handleCloseUserModal}
-                    // Pass ViewModel actions for user updates/deletions if the modal handles them
                     updateUserRole={updateUserRole}
                     updateNutritionistStatus={updateNutritionistStatus}
                     deleteUserAccount={deleteUserAccount}
+                    onUserActionSuccess={(msg) => {
+                        adminStatViewModel.setSuccess(msg);
+                        handleLoadDashboardData();
+                    }}
+                    onUserActionError={(msg) => adminStatViewModel.setError(`User action failed: ${msg}`)}
                 />
             )}
 

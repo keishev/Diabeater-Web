@@ -1,6 +1,7 @@
 // src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService'; // Adjust path if needed
+import SubscriptionService from '../Services/SubscriptionService'; // <--- NEW IMPORT
 
 class AdminStatViewModel {
     loading = false;
@@ -19,8 +20,14 @@ class AdminStatViewModel {
     allSubscriptions = []; // For subscriptions table
     selectedUserForManagement = null; // For modal
 
+    // <--- NEW: Observable for Premium Subscription Price --- >
+    premiumSubscriptionPrice = 0; // Initialize with a default value
+
     constructor() {
         makeAutoObservable(this);
+        // Load initial data on construction if this ViewModel
+        // is instantiated when the app loads and needs initial data.
+        this.loadDashboardData();
     }
 
     setLoading(status) {
@@ -46,7 +53,7 @@ class AdminStatViewModel {
     }
 
     async loadDashboardData() {
-        console.log("[ViewModel] Starting loadDashboardData..."); // <--- ADDED LOG
+        console.log("[ViewModel] Starting loadDashboardData...");
         this.setLoading(true);
         this.setError(null);
         try {
@@ -56,7 +63,7 @@ class AdminStatViewModel {
                 totalApprovedMealPlans,
                 totalPendingMealPlans,
                 totalSubscriptions,
-                dailySignupsRawData, // Renamed to avoid confusion before processing
+                dailySignupsRawData,
                 weeklyTopMealPlans,
                 allSubscriptions
             ] = await Promise.all([
@@ -70,10 +77,12 @@ class AdminStatViewModel {
                 AdminStatService.getAllSubscriptions()
             ]);
 
+            // <--- NEW: Fetch Premium Subscription Price --- >
+            // Assuming your premium plan has a document ID 'premium' in the 'plans' collection
+            const fetchedPremiumPrice = await SubscriptionService.getSubscriptionPrice('premium');
+
             // Process dailySignupsRawData into desired format (e.g., date: count)
-            // Assuming dailySignupsRawData is an array of user objects with 'createdAt'
             const processedDailySignups = dailySignupsRawData.reduce((acc, user) => {
-                // Ensure createdAt is a Date object (if it's a Firestore Timestamp, convert it)
                 const createdAtDate = user.createdAt instanceof Date ? user.createdAt : user.createdAt?.toDate ? user.createdAt.toDate() : null;
 
                 if (createdAtDate) {
@@ -83,38 +92,65 @@ class AdminStatViewModel {
                 return acc;
             }, {});
 
-
             runInAction(() => {
                 this.totalUsers = totalUsers;
                 this.totalNutritionists = totalNutritionists;
                 this.totalApprovedMealPlans = totalApprovedMealPlans;
                 this.totalPendingMealPlans = totalPendingMealPlans;
                 this.totalSubscriptions = totalSubscriptions;
-                this.dailySignupsData = processedDailySignups; // Set processed data
+                this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
                 this.allSubscriptions = allSubscriptions;
+                this.premiumSubscriptionPrice = fetchedPremiumPrice !== null ? fetchedPremiumPrice : 0; // Update observable
             });
-            console.log("[ViewModel] Dashboard data loaded successfully."); // <--- ADDED LOG
+            console.log("[ViewModel] Dashboard data loaded successfully.");
             console.log("[ViewModel] Fetched Stats:", {
                 totalUsers: this.totalUsers,
                 totalNutritionists: this.totalNutritionists,
                 totalApprovedMealPlans: this.totalApprovedMealPlans,
                 totalPendingMealPlans: this.totalPendingMealPlans,
                 totalSubscriptions: this.totalSubscriptions,
-            }); // <--- ADDED LOG
-            console.log("[ViewModel] Processed Daily Signups:", this.dailySignupsData); // <--- ADDED LOG
-            console.log("[ViewModel] Weekly Top Meal Plans:", this.weeklyTopMealPlans); // <--- ADDED LOG
-            console.log("[ViewModel] All Subscriptions:", this.allSubscriptions); // <--- ADDED LOG
+            });
+            console.log("[ViewModel] Processed Daily Signups:", this.dailySignupsData);
+            console.log("[ViewModel] Weekly Top Meal Plans:", this.weeklyTopMealPlans);
+            console.log("[ViewModel] All Subscriptions:", this.allSubscriptions);
+            console.log("[ViewModel] Premium Subscription Price:", this.premiumSubscriptionPrice); // <--- NEW LOG
 
             this.setSuccess('Dashboard data refreshed.');
 
         } catch (error) {
-            console.error("[ViewModel] Error in loadDashboardData:", error); // <--- ADDED LOG
+            console.error("[ViewModel] Error in loadDashboardData:", error);
             this.setError(error.message);
         } finally {
             this.setLoading(false);
         }
     }
+
+    // <--- NEW METHOD: Update Subscription Price --- >
+    async updatePremiumSubscriptionPrice(newPrice) {
+        console.log(`[ViewModel] Attempting to update premium subscription price to: ${newPrice}`);
+        this.setLoading(true);
+        this.setError(null);
+        try {
+            // Call the SubscriptionService to update the price in Firebase
+            // The document ID for the premium plan is 'premium' in the 'plans' collection
+            await SubscriptionService.updateSubscriptionPrice('premium', newPrice);
+
+            runInAction(() => {
+                this.premiumSubscriptionPrice = newPrice; // Update the observable with the new price
+                this.setSuccess(`Premium subscription price updated to $${newPrice.toFixed(2)}.`);
+            });
+            console.log(`[ViewModel] Premium subscription price successfully updated to: ${newPrice}`);
+            return { success: true };
+        } catch (error) {
+            console.error("[ViewModel] Error updating premium subscription price:", error);
+            this.setError(`Failed to update premium subscription price: ${error.message}`);
+            return { success: false, message: error.message };
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
 
     async updateUserRole(userId, newRole) {
         this.setLoading(true);
@@ -171,7 +207,6 @@ class AdminStatViewModel {
     }
 
     // Add other methods for user management or subscription management here
-    // e.g., async fetchAllUsersForTable() { ... }
 }
 
 const adminStatViewModel = new AdminStatViewModel();
