@@ -9,12 +9,12 @@ import {
     query,
     where,
     getDocs,
-    deleteDoc, // Import deleteDoc
-    orderBy // Import orderBy for notifications
+    deleteDoc,
+    orderBy
 } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'; // Import deleteObject
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
-import { onSnapshot } from 'firebase/firestore'; // Import onSnapshot for real-time listeners
+import { onSnapshot } from 'firebase/firestore';
 import app from '../firebase'; // Assuming 'app' is your Firebase app instance
 import AuthService from './AuthService'; // Assuming AuthService provides getCurrentUser
 
@@ -86,10 +86,10 @@ class MealPlanService {
      * Fetches meal plans with 'APPROVED' status.
      * Renamed from getUploadedMealPlans for consistency with ViewModel's expectation.
      */
-    async getApprovedMealPlans() { // Changed method name
+    async getApprovedMealPlans() {
         const q = query(
             collection(this.db, 'meal_plans'),
-            where('status', '==', 'APPROVED') // Explicitly query for 'APPROVED'
+            where('status', '==', 'APPROVED')
         );
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => ({
@@ -148,7 +148,7 @@ class MealPlanService {
             type,
             message,
             mealPlanId,
-            isRead: false, // Use 'isRead' in Firestore
+            isRead: false,
             timestamp: serverTimestamp()
         };
         if (rejectionReason) {
@@ -161,20 +161,20 @@ class MealPlanService {
     onNotificationsSnapshot(userId, callback) {
         if (!userId) {
             console.warn("Attempted to set up notification listener without a user ID.");
-            return () => {}; // Return a no-op unsubscribe function
+            return () => {};
         }
 
         const q = query(
             collection(this.db, 'notifications'),
             where('recipientId', '==', userId),
-            orderBy('timestamp', 'desc') // Added orderBy for consistent order
+            orderBy('timestamp', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const notifications = snapshot.docs.map(doc => ({
                 _id: doc.id,
                 ...doc.data(),
-                read: doc.data().isRead // Map 'isRead' from Firestore to 'read' for ViewModel consistency
+                read: doc.data().isRead
             }));
             callback(notifications);
         }, (error) => {
@@ -192,19 +192,19 @@ class MealPlanService {
         const q = query(
             collection(this.db, 'notifications'),
             where('recipientId', '==', userId),
-            orderBy('timestamp', 'desc') // Added orderBy for consistent order
+            orderBy('timestamp', 'desc')
         );
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => ({
             _id: doc.id,
             ...doc.data(),
-            read: doc.data().isRead // Map 'isRead' from Firestore to 'read'
+            read: doc.data().isRead
         }));
     }
 
     async markNotificationAsRead(notificationId) {
         const notificationRef = doc(this.db, 'notifications', notificationId);
-        await updateDoc(notificationRef, { isRead: true }); // Update 'isRead' in Firestore
+        await updateDoc(notificationRef, { isRead: true });
         return true;
     }
 
@@ -220,8 +220,6 @@ class MealPlanService {
                 await deleteObject(imageRef);
                 console.log(`Image ${imageFileName} deleted from storage.`);
             } catch (error) {
-                // If the file doesn't exist (e.g., already deleted or wrong path),
-                // deleteObject will throw an error. We log it but proceed.
                 if (error.code === 'storage/object-not-found') {
                     console.warn(`Image ${imageFileName} not found in storage. Skipping deletion.`);
                 } else {
@@ -232,7 +230,6 @@ class MealPlanService {
         return true;
     }
 
-    // ⭐ ADDED: updateMealPlan method ⭐
     async updateMealPlan(mealPlanId, mealPlanData, newImageFile = null, originalImageFileName = null) {
         const user = this.auth.currentUser;
         const nutritionistInfo = AuthService.getCurrentUser();
@@ -282,17 +279,12 @@ class MealPlanService {
                     console.error(`Error deleting image ${originalImageFileName} from storage:`, error);
                 }
             }
-            updatePayload.imageUrl = ''; // Clear the URL in Firestore
-            updatePayload.imageFileName = ''; // Clear the filename in Firestore
+            updatePayload.imageUrl = '';
+            updatePayload.imageFileName = '';
         }
-        // If newImageFile is null and mealPlanData.imageUrl is present, it means no change to image.
-        // We don't need to do anything with the image in this case.
 
-        // Ensure status is updated if it's set in the payload, otherwise keep existing.
-        // For simplicity, we'll assume status is not directly changed via this update method
-        // but rather via approveOrRejectMealPlan. If it can be changed, add logic here.
-        delete updatePayload.imageFile; // Remove the file object as it's not for Firestore
-        delete updatePayload.originalImageFileName; // Remove this helper prop
+        delete updatePayload.imageFile;
+        delete updatePayload.originalImageFileName;
 
         await updateDoc(mealPlanRef, updatePayload);
         return { _id: mealPlanId, ...updatePayload };

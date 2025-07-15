@@ -1,7 +1,6 @@
-// src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService'; // Adjust path if needed
-import SubscriptionService from '../Services/SubscriptionService'; // <--- NEW IMPORT
+import SubscriptionService from '../Services/SubscriptionService'; // Assuming this exists as discussed earlier
 
 class AdminStatViewModel {
     loading = false;
@@ -12,6 +11,7 @@ class AdminStatViewModel {
     totalUsers = 0;
     totalNutritionists = 0;
     totalApprovedMealPlans = 0;
+    // ⭐ ADJUSTED: Change 'PENDING' to 'PENDING_APPROVAL' for consistency with MealPlanService
     totalPendingMealPlans = 0;
     totalSubscriptions = 0;
     dailySignupsData = {};
@@ -20,13 +20,11 @@ class AdminStatViewModel {
     allSubscriptions = []; // For subscriptions table
     selectedUserForManagement = null; // For modal
 
-    // <--- NEW: Observable for Premium Subscription Price --- >
+    // Observable for Premium Subscription Price
     premiumSubscriptionPrice = 0; // Initialize with a default value
 
     constructor() {
         makeAutoObservable(this);
-        // Load initial data on construction if this ViewModel
-        // is instantiated when the app loads and needs initial data.
         this.loadDashboardData();
     }
 
@@ -39,16 +37,12 @@ class AdminStatViewModel {
     setError(message) {
         runInAction(() => {
             this.error = message;
-            // Optionally clear error after some time
-            // setTimeout(() => this.error = null, 5000);
         });
     }
 
     setSuccess(message) {
         runInAction(() => {
             this.success = message;
-            // Optionally clear success after some time
-            // setTimeout(() => this.success = null, 3000);
         });
     }
 
@@ -61,7 +55,7 @@ class AdminStatViewModel {
                 totalUsers,
                 totalNutritionists,
                 totalApprovedMealPlans,
-                totalPendingMealPlans,
+                totalPendingMealPlans, // This value is now correct
                 totalSubscriptions,
                 dailySignupsRawData,
                 weeklyTopMealPlans,
@@ -70,15 +64,15 @@ class AdminStatViewModel {
                 AdminStatService.getDocumentCount('user_accounts'),
                 AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
                 AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'APPROVED'),
-                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING'),
+                // ⭐ ADJUSTED: Align status value with MealPlanService for pending plans
+                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING_APPROVAL'),
                 AdminStatService.getDocumentCount('subscriptions'),
                 AdminStatService.getDailySignups(7),
                 AdminStatService.getWeeklyTopMealPlans(5),
                 AdminStatService.getAllSubscriptions()
             ]);
 
-            // <--- NEW: Fetch Premium Subscription Price --- >
-            // Assuming your premium plan has a document ID 'premium' in the 'plans' collection
+            // Fetch Premium Subscription Price
             const fetchedPremiumPrice = await SubscriptionService.getSubscriptionPrice('premium');
 
             // Process dailySignupsRawData into desired format (e.g., date: count)
@@ -101,7 +95,7 @@ class AdminStatViewModel {
                 this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
                 this.allSubscriptions = allSubscriptions;
-                this.premiumSubscriptionPrice = fetchedPremiumPrice !== null ? fetchedPremiumPrice : 0; // Update observable
+                this.premiumSubscriptionPrice = fetchedPremiumPrice !== null ? fetchedPremiumPrice : 0;
             });
             console.log("[ViewModel] Dashboard data loaded successfully.");
             console.log("[ViewModel] Fetched Stats:", {
@@ -114,7 +108,7 @@ class AdminStatViewModel {
             console.log("[ViewModel] Processed Daily Signups:", this.dailySignupsData);
             console.log("[ViewModel] Weekly Top Meal Plans:", this.weeklyTopMealPlans);
             console.log("[ViewModel] All Subscriptions:", this.allSubscriptions);
-            console.log("[ViewModel] Premium Subscription Price:", this.premiumSubscriptionPrice); // <--- NEW LOG
+            console.log("[ViewModel] Premium Subscription Price:", this.premiumSubscriptionPrice);
 
             this.setSuccess('Dashboard data refreshed.');
 
@@ -126,18 +120,15 @@ class AdminStatViewModel {
         }
     }
 
-    // <--- NEW METHOD: Update Subscription Price --- >
     async updatePremiumSubscriptionPrice(newPrice) {
         console.log(`[ViewModel] Attempting to update premium subscription price to: ${newPrice}`);
         this.setLoading(true);
         this.setError(null);
         try {
-            // Call the SubscriptionService to update the price in Firebase
-            // The document ID for the premium plan is 'premium' in the 'plans' collection
             await SubscriptionService.updateSubscriptionPrice('premium', newPrice);
 
             runInAction(() => {
-                this.premiumSubscriptionPrice = newPrice; // Update the observable with the new price
+                this.premiumSubscriptionPrice = newPrice;
                 this.setSuccess(`Premium subscription price updated to $${newPrice.toFixed(2)}.`);
             });
             console.log(`[ViewModel] Premium subscription price successfully updated to: ${newPrice}`);
@@ -158,7 +149,7 @@ class AdminStatViewModel {
         try {
             await AdminStatService.updateUserRole(userId, newRole);
             this.setSuccess(`User role updated to ${newRole}.`);
-            await this.loadDashboardData(); // Refresh all data to reflect changes
+            await this.loadDashboardData();
         } catch (error) {
             this.setError(`Failed to update user role: ${error.message}`);
         } finally {
@@ -172,7 +163,7 @@ class AdminStatViewModel {
         try {
             await AdminStatService.deleteUserAccount(userId);
             this.setSuccess('User account deleted.');
-            await this.loadDashboardData(); // Refresh all data
+            await this.loadDashboardData();
         } catch (error) {
             this.setError(`Failed to delete user account: ${error.message}`);
         } finally {
@@ -186,7 +177,7 @@ class AdminStatViewModel {
         try {
             await AdminStatService.updateNutritionistStatus(userId, newStatus);
             this.setSuccess(`Nutritionist status updated to ${newStatus}.`);
-            await this.loadDashboardData(); // Refresh all data
+            await this.loadDashboardData();
         } catch (error) {
             this.setError(`Failed to update nutritionist status: ${error.message}`);
         } finally {
@@ -205,8 +196,6 @@ class AdminStatViewModel {
             this.selectedUserForManagement = null;
         });
     }
-
-    // Add other methods for user management or subscription management here
 }
 
 const adminStatViewModel = new AdminStatViewModel();
