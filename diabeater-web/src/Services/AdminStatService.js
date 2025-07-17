@@ -1,3 +1,4 @@
+// AdminStatService.js
 import app from '../firebase'; // Assuming your firebase config is here
 import {
     getFirestore,
@@ -13,6 +14,7 @@ import {
     updateDoc,
     deleteDoc
 } from 'firebase/firestore';
+// import UserAccountRepository from '../Repositories/UserAccountRepository'; // Only needed if you explicitly use it here directly
 
 const db = getFirestore(app);
 
@@ -42,7 +44,7 @@ const AdminStatService = {
             }
             const querySnapshot = await getDocs(q);
             const data = querySnapshot.docs.map(doc => ({
-                _id: doc.id,
+                _id: doc.id, // Ensure this maps to the document ID in Firestore
                 ...doc.data()
             }));
             console.log(`[Service] getAllUserAccounts (role: ${role || 'all'}): Found ${data.length} users. Sample:`, data.slice(0,2));
@@ -94,15 +96,11 @@ const AdminStatService = {
         }
     },
 
-    // ⭐ NEW IMPLEMENTATION FOR GETTING TOP MEAL PLANS BY SAVES
     async getWeeklyTopMealPlans(count = 5) {
         try {
-            // Step 1: Fetch all 'saved_meal_plans' to count occurrences
-            // WARNING: This can be very inefficient for large 'saved_meal_plans' collections.
             const savedMealPlansSnapshot = await getDocs(collection(db, 'saved_meal_plans'));
             const mealPlanSaves = {};
 
-            // Count saves for each mealPlanId
             savedMealPlansSnapshot.docs.forEach(doc => {
                 const data = doc.data();
                 if (data.mealPlanId) {
@@ -110,10 +108,9 @@ const AdminStatService = {
                 }
             });
 
-            // Convert to array and sort by save count
             const sortedMealPlans = Object.entries(mealPlanSaves)
                 .sort(([, countA], [, countB]) => countB - countA)
-                .slice(0, count); // Get top 'count' mealPlanIds
+                .slice(0, count);
 
             const topMealPlanIds = sortedMealPlans.map(([mealPlanId]) => mealPlanId);
 
@@ -124,13 +121,10 @@ const AdminStatService = {
                 return [];
             }
 
-            // Step 2: Fetch details of these top meal plans from the 'meal_plans' collection
-            // ⭐ IMPORTANT: This assumes your actual meal plan details are in a collection named 'meal_plans'
-            // and that these documents have a 'status' field.
             const q = query(
-                collection(db, 'meal_plans'), // Querying the collection with actual meal plan details
-                where('__name__', 'in', topMealPlanIds), // Query by document ID
-                where('status', '==', 'APPROVED') // Filter for approved status
+                collection(db, 'meal_plans'),
+                where('__name__', 'in', topMealPlanIds), // '__name__' refers to the document ID
+                where('status', '==', 'APPROVED')
             );
 
             const querySnapshot = await getDocs(q);
@@ -139,16 +133,12 @@ const AdminStatService = {
                 ...doc.data()
             }));
 
-            // Re-sort the fetched data based on the original sorted order of topMealPlanIds
-            // This ensures the order reflects the 'most saved' count correctly
             const orderedData = topMealPlanIds.map(id => data.find(plan => plan._id === id)).filter(Boolean);
 
             console.log(`[Service] getWeeklyTopMealPlans (top ${count}): Found ${orderedData.length} plans. Sample:`, orderedData.slice(0,2));
             return orderedData;
         } catch (error) {
             console.error('[Service] ERROR fetching weekly top meal plans:', error);
-            // It's crucial to return an empty array or handle gracefully here
-            // so Promise.all in ViewModel doesn't fail and block other dashboard stats.
             return [];
         }
     },
@@ -158,10 +148,10 @@ const AdminStatService = {
             const userRef = doc(db, 'user_accounts', userId);
             await updateDoc(userRef, { role: newRole });
             console.log(`[Service] User ${userId} role updated to ${newRole}`);
-            return { success: true };
+            return { success: true, message: `User role updated to ${newRole}.` };
         } catch (error) {
             console.error(`[Service] ERROR updating user role for ${userId}:`, error);
-            throw new Error(`Failed to update user role.`);
+            throw new Error(`Failed to update user role: ${error.message}`);
         }
     },
 
@@ -169,10 +159,10 @@ const AdminStatService = {
         try {
             await deleteDoc(doc(db, 'user_accounts', userId));
             console.log(`[Service] User account ${userId} deleted.`);
-            return { success: true };
+            return { success: true, message: `User account ${userId} deleted.` };
         } catch (error) {
             console.error(`[Service] ERROR deleting user account ${userId}:`, error);
-            throw new Error(`Failed to delete user account.`);
+            throw new Error(`Failed to delete user account: ${error.message}`);
         }
     },
 
@@ -181,12 +171,56 @@ const AdminStatService = {
             const nutritionistRef = doc(db, 'user_accounts', userId);
             await updateDoc(nutritionistRef, { nutritionistStatus: newStatus });
             console.log(`[Service] Nutritionist ${userId} status updated to ${newStatus}`);
-            return { success: true };
+            return { success: true, message: `Nutritionist status updated to ${newStatus}.` };
         } catch (error) {
             console.error(`[Service] ERROR updating nutritionist status for ${userId}:`, error);
-            throw new Error(`Failed to update nutritionist status.`);
+            throw new Error(`Failed to update nutritionist status: ${error.message}`);
         }
     },
+
+    // ⭐ NEW/MODIFIED: Direct method to update user 'status' field in Firestore
+    async updateUserStatus(userId, newStatus) {
+        try {
+            const userRef = doc(db, 'user_accounts', userId);
+            await updateDoc(userRef, { status: newStatus }); // Update the 'status' field
+            console.log(`[Service] User ${userId} status updated to ${newStatus}`);
+            return { success: true, message: `User status updated to ${newStatus}.` };
+        } catch (error) {
+            console.error("[AdminStatService] Error updating user status:", error);
+            throw new Error(`Failed to update user status in Firebase: ${error.message}`);
+        }
+    },
+
+    // You had these from your previous snippet, but if updateUserStatus covers it,
+    // you might not need to call a separate 'UserAccountRepository' here.
+    // If UserAccountRepository does more (e.g., Firebase Auth user disabling),
+    // then keep these and ensure ViewModel calls them.
+    // For now, I'm commenting them out to avoid confusion if updateUserStatus is sufficient.
+    /*
+    async suspendUser(userId) {
+        try {
+            // Assuming UserAccountRepository.suspendUser does more than just update a Firestore field
+            const result = await UserAccountRepository.suspendUser(userId);
+            console.log(`[Service] User ${userId} suspended via backend (UserAccountRepository).`);
+            return result;
+        } catch (error) {
+            console.error(`[Service] ERROR suspending user ${userId} via backend:`, error);
+            throw error;
+        }
+    },
+
+    async unsuspendUser(userId) {
+        try {
+            // Assuming UserAccountRepository.unsuspendUser does more than just update a Firestore field
+            const result = await UserAccountRepository.unsuspendUser(userId);
+            console.log(`[Service] User ${userId} unsuspended via backend (UserAccountRepository).`);
+            return result;
+        } catch (error) {
+            console.error(`[Service] ERROR unsuspending user ${userId} via backend:`, error);
+            throw error;
+        }
+    },
+    */
 };
 
 export default AdminStatService;

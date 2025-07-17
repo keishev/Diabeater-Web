@@ -1,13 +1,13 @@
-// src/Repositories/UserRepository.js
-import { auth, db } from '../firebase'; 
-import { collection, getDocs } from 'firebase/firestore'; 
-import UserAccountService from '../Services/UserAccountService';
+// src/Repositories/UserAccountRepository.js
+import { auth, db } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import UserAccountService from '../Services/UserAccountService'; // Assuming this service exists for profile handling
 
 class UserAccountRepository {
-    backendBaseUrl = 'http://localhost:5000'; 
-    
+    backendBaseUrl = 'http://localhost:5000';
+
     async getAdminIdToken() {
-        const currentUser = auth.currentUser; 
+        const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error("No authenticated user. Administrator must be logged in.");
         }
@@ -16,7 +16,6 @@ class UserAccountRepository {
 
     async getAllUsers() {
         try {
-            // Use the 'db' object directly, which is imported from firebase.js
             const usersSnapshot = await getDocs(collection(db, 'user_accounts'));
             const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             return users;
@@ -26,6 +25,7 @@ class UserAccountRepository {
         }
     }
 
+    // ⭐ Moved: Suspend User method
     async suspendUser(userId) {
         try {
             const idToken = await this.getAdminIdToken();
@@ -42,17 +42,18 @@ class UserAccountRepository {
             const data = await response.json();
 
             if (!response.ok) {
-                // Backend sent an error response 
+                // Backend sent an error response
                 throw new Error(data.message || `Backend error: HTTP status ${response.status}`);
             }
 
             return data;
         } catch (error) {
-            console.error(`Error in UserRepository.suspendUser for ID ${userId}:`, error);
+            console.error(`Error in UserAccountRepository.suspendUser for ID ${userId}:`, error);
             throw new Error(`Failed to suspend user: ${error.message}`);
         }
     }
-    
+
+    // ⭐ Moved: Unsuspend User method
     async unsuspendUser(userId) {
         try {
             const idToken = await this.getAdminIdToken();
@@ -74,7 +75,7 @@ class UserAccountRepository {
 
             return data;
         } catch (error) {
-            console.error(`Error in UserRepository.unsuspendUser for ID ${userId}:`, error);
+            console.error(`Error in UserAccountRepository.unsuspendUser for ID ${userId}:`, error);
             throw new Error(`Failed to unsuspend user: ${error.message}`);
         }
     }
