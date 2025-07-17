@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+// src/AdminRewards.js
+import React, { useState, useEffect, useCallback } from 'react';
 import RewardModal from './RewardModal';
 import './AdminRewards.css';
 import './RewardModal.css';
 
+// Import the ViewModel instance
+import adminRewardsViewModel from '../ViewModels/AdminRewardsViewModel';
+
 const AdminRewards = () => {
+    // UI state (collapsed/expanded sections, modal visibility)
     const [basicUserExpanded, setBasicUserExpanded] = useState(true);
     const [premiumUserExpanded, setPremiumUserExpanded] = useState(true);
 
@@ -12,108 +17,148 @@ const AdminRewards = () => {
     const [modalUserType, setModalUserType] = useState(null);
     const [isModalEditing, setIsModalEditing] = useState(false);
 
-    // Dummy data for available basic user rewards (items that can be added)
-    const availableBasicRewards = [
-        { id: 'b1', name: 'Glucose Prediction' },
-        { id: 'b2', name: 'View Graph Correlation' },
-        { id: 'b3', name: 'Meal Logging with Photo' },
-        { id: 'b4', name: 'Meal Logging with Barcode Scanning' },
-        { id: 'b5', name: 'Glucose Logging with Device Photo' },
-        { id: 'b6', name: 'Log Meal Plan into Diary' },
-    ];
+    // Data states (will be populated from ViewModel)
+    const [availableBasicRewards, setAvailableBasicRewards] = useState([]);
+    const [availablePremiumRewards, setAvailablePremiumRewards] = useState([]);
+    const [configuredBasicRewards, setConfiguredBasicRewards] = useState([]);
+    const [configuredPremiumRewards, setConfiguredPremiumRewards] = useState([]);
 
-    // Dummy data for available premium user rewards (items that can be added)
-    const availablePremiumRewards = [
-        { id: 'p1', reward: 'Subscription Discount' },
-        { id: 'p2', reward: 'Premium Content Access' },
-        { id: 'p3', reward: 'Exclusive Recipe Pack' },
-    ];
+    // Loading and error states
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    // State to hold the rewards that have been "uploaded" or configured
-    const [configuredBasicRewards, setConfiguredBasicRewards] = useState([
-        { id: 'configured-b1', name: 'Glucose Prediction', quantity: 1, pointsNeeded: 0 },
-        { id: 'configured-b2', name: 'View Graph Correlation', quantity: 3, pointsNeeded: 3 }, // Added for testing based on your screenshot
-    ]);
-    const [configuredPremiumRewards, setConfiguredPremiumRewards] = useState([
-        { id: 'configured-p1', reward: 'Subscription Discount', discount: 10, pointsNeeded: 199 }, // Updated dummy data
-    ]);
+    // Function to fetch all rewards from the ViewModel
+    const fetchAllRewards = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Fetch all data using the ViewModel's methods
+            const availableBasic = await adminRewardsViewModel.getAvailableBasicRewards();
+            const availablePremium = await adminRewardsViewModel.getAvailablePremiumRewards();
+            const configuredBasic = await adminRewardsViewModel.getConfiguredBasicRewards();
+            const configuredPremium = await adminRewardsViewModel.getConfiguredPremiumRewards();
+
+            // Update local component state
+            setAvailableBasicRewards(availableBasic);
+            setAvailablePremiumRewards(availablePremium);
+            setConfiguredBasicRewards(configuredBasic);
+            setConfiguredPremiumRewards(configuredPremium);
+
+        } catch (err) {
+            console.error("Error fetching rewards:", err);
+            setError(err.message || "Failed to load rewards. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // useEffect to run fetchAllRewards on component mount
+    useEffect(() => {
+        fetchAllRewards();
+    }, [fetchAllRewards]);
 
     const handleOpenModalToAdd = (reward, type) => {
+        // --- ADDED CONSOLE LOGS HERE ---
+        console.log("handleOpenModalToAdd called for:", reward.name, "Type:", type);
+        console.log("Setting showRewardModal to true.");
+        // --- END CONSOLE LOGS ---
+
         setModalUserType(type);
-        // For adding, initialize quantity and pointsNeeded to empty for new input
-        setCurrentRewardForModal({ ...reward, quantity: '', pointsNeeded: '' });
+        // For adding, initialize quantity/discount and pointsNeeded to empty for new input
+        // Reward here is an AvailableReward object from reward_templates
+        setCurrentRewardForModal({
+            id: reward.id, // Keep the original ID from reward_templates if needed for reference
+            name: reward.name, // The title from reward_templates
+            reward: reward.name, // For premium, this will be the 'reward' field in PremiumReward
+            quantity: '',
+            discount: '',
+            pointsNeeded: ''
+        });
         setIsModalEditing(false);
         setShowRewardModal(true);
     };
 
     const handleOpenModalToEdit = (reward, type) => {
         setModalUserType(type);
-        // For editing, ensure 'quantity' in modal refers to 'discount' for premium, otherwise 'quantity'
+        // Reward here is a BasicReward or PremiumReward object from configured rewards
         setCurrentRewardForModal({
             ...reward,
             // When editing, 'quantity' in the modal represents the discount for premium rewards
+            // The modal's quantity field should display the existing configured quantity/discount
             quantity: type === 'premium' ? reward.discount : reward.quantity,
-            // 'pointsNeeded' is directly applicable to both
+            // Ensure the 'reward' property is also set for premium rewards,
+            // as it's used in the modal to display the name
+            reward: type === 'premium' ? reward.reward : reward.name,
         });
         setIsModalEditing(true);
         setShowRewardModal(true);
     };
 
 
-    const handleDeleteReward = (id, type) => {
+    const handleDeleteReward = async (id, type) => {
         if (window.confirm('Are you sure you want to delete this reward?')) {
-            if (type === 'basic') {
-                setConfiguredBasicRewards(prev => prev.filter(r => r.id !== id));
-            } else if (type === 'premium') {
-                setConfiguredPremiumRewards(prev => prev.filter(r => r.id !== id));
+            setLoading(true);
+            setError(null);
+            try {
+                // Call ViewModel to delete
+                await adminRewardsViewModel.deleteReward(id, type);
+                alert('Reward deleted successfully!');
+                await fetchAllRewards(); // Re-fetch all data to update UI
+            } catch (err) {
+                console.error("Error deleting reward:", err);
+                setError(err.message || "Failed to delete reward.");
+                alert(err.message || "Failed to delete reward.");
+            } finally {
+                setLoading(false);
             }
-            alert('Reward deleted successfully!');
         }
     };
 
-    const handleConfirmReward = (updatedReward) => {
+    const handleConfirmReward = async (updatedReward) => {
         const { type, ...rewardData } = updatedReward;
-
-        if (type === 'basic') {
+        setLoading(true);
+        setError(null);
+        try {
             if (isModalEditing) {
-                setConfiguredBasicRewards(prev =>
-                    prev.map(r => r.id === rewardData.id ? { ...r, quantity: rewardData.quantity, pointsNeeded: rewardData.pointsNeeded } : r)
-                );
-                alert(`Basic Reward "${rewardData.name}" updated!`);
-            } else {
-                // Ensure a new unique ID and correct property ('name') for basic
-                const newId = `configured-b-${Date.now()}`;
-                const rewardToAdd = { id: newId, name: rewardData.name, quantity: rewardData.quantity, pointsNeeded: rewardData.pointsNeeded };
-                // Prevent adding duplicate rewards based on name
-                const isAlreadyAdded = configuredBasicRewards.some(r => r.name === rewardToAdd.name);
-                if (!isAlreadyAdded) {
-                    setConfiguredBasicRewards(prev => [...prev, rewardToAdd]);
-                    alert(`Basic Reward "${rewardData.name}" added!`);
-                } else {
-                    alert(`Basic Reward "${rewardData.name}" is already configured.`);
+                // Call ViewModel to update
+                if (type === 'basic') {
+                    await adminRewardsViewModel.updateReward(rewardData.id, 'basic', {
+                        quantity: rewardData.quantity,
+                        pointsNeeded: rewardData.pointsNeeded
+                    });
+                } else if (type === 'premium') {
+                    await adminRewardsViewModel.updateReward(rewardData.id, 'premium', {
+                        discount: rewardData.quantity, // quantity from modal is discount for premium
+                        pointsNeeded: rewardData.pointsNeeded
+                    });
                 }
-            }
-        } else if (type === 'premium') {
-            if (isModalEditing) {
-                setConfiguredPremiumRewards(prev =>
-                    prev.map(r => r.id === rewardData.id ? { ...r, discount: rewardData.quantity, pointsNeeded: rewardData.pointsNeeded } : r)
-                );
-                alert('Premium Reward updated successfully!');
+                alert(`Reward updated successfully!`);
             } else {
-                // Ensure a new unique ID and correct property ('reward') for premium
-                const newId = `configured-p-${Date.now()}`;
-                const rewardToAdd = { id: newId, reward: rewardData.reward, discount: rewardData.quantity, pointsNeeded: rewardData.pointsNeeded };
-                // Prevent adding duplicate rewards based on reward name
-                const isAlreadyAdded = configuredPremiumRewards.some(r => r.reward === rewardToAdd.reward);
-                if (!isAlreadyAdded) {
-                    setConfiguredPremiumRewards(prev => [...prev, rewardToAdd]);
-                    alert(`Premium Reward "${rewardData.reward}" added!`);
-                } else {
-                    alert(`Premium Reward "${rewardData.reward}" is already configured.`);
+                // For adding a new reward from available list
+                if (type === 'basic') {
+                    await adminRewardsViewModel.addReward({
+                        name: rewardData.name,
+                        quantity: rewardData.quantity,
+                        pointsNeeded: rewardData.pointsNeeded
+                    }, 'basic');
+                } else if (type === 'premium') {
+                    await adminRewardsViewModel.addReward({
+                        reward: rewardData.reward, // Use 'reward' for premium type
+                        discount: rewardData.quantity, // quantity from modal is discount for premium
+                        pointsNeeded: rewardData.pointsNeeded
+                    }, 'premium');
                 }
+                alert(`${rewardData.name || rewardData.reward} added successfully!`);
             }
+            handleCloseModal();
+            await fetchAllRewards(); // Re-fetch all data to update UI
+        } catch (err) {
+            console.error("Error confirming reward:", err);
+            setError(err.message || "Failed to confirm reward.");
+            alert(err.message || "Failed to confirm reward.");
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
 
     const handleCloseModal = () => {
@@ -123,16 +168,9 @@ const AdminRewards = () => {
         setIsModalEditing(false);
     };
 
-    // Helper to filter out already configured rewards from available lists
-    const getFilteredAvailableRewards = (availableList, configuredList, keyName) => {
-        return availableList.filter(
-            availableItem => !configuredList.some(configuredItem => configuredItem[keyName] === availableItem[keyName])
-        );
-    };
-
-    const filteredAvailableBasicRewards = getFilteredAvailableRewards(availableBasicRewards, configuredBasicRewards, 'name');
-    const filteredAvailablePremiumRewards = getFilteredAvailableRewards(availablePremiumRewards, configuredPremiumRewards, 'reward');
-
+    // --- REMOVED filterBasicAvailableRewards AND filterPremiumAvailableRewards FUNCTIONS ---
+    // Instead of filtering, we now directly use availableBasicRewards and availablePremiumRewards
+    // as all choices should always be present.
 
     return (
         <div className="admin-rewards-container">
@@ -143,35 +181,42 @@ const AdminRewards = () => {
             <div className="rewards-content">
                 <h2 className="rewards-section-title">IN-APP REWARDS</h2>
 
+                {loading && <p className="loading-message">Loading rewards...</p>}
+                {error && <p className="error-message">{error}</p>}
+
                 {/* Basic User Section */}
                 <div className="reward-category-card">
                     <div className="reward-category-header" onClick={() => setBasicUserExpanded(!basicUserExpanded)}>
                         <h3>Basic User</h3>
                         <span className="add-rewards-text">Add rewards into the app</span>
-                        <i className={`fa-solid ${basicUserExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i> {/* FA6 class */}
+                        <i className={`fa-solid ${basicUserExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
                     </div>
                     {basicUserExpanded && (
                         <div className="reward-category-body">
                             <h4 className="rewards-subheader">Available Rewards:</h4>
-                            {filteredAvailableBasicRewards.length > 0 ? (
-                                filteredAvailableBasicRewards.map((reward) => (
+                            {loading ? (
+                                <p>Loading available basic rewards...</p>
+                            ) : availableBasicRewards.length > 0 ? ( // --- CHANGED: Removed filterBasicAvailableRewards() ---
+                                availableBasicRewards.map((reward) => (
                                     <div key={reward.id} className="reward-item clickable-reward-item">
                                         <span>{reward.name}</span>
                                         <button className="add-reward-button" onClick={() => handleOpenModalToAdd(reward, 'basic')}>
-                                            <i className="fa-solid fa-plus"></i> {/* FA6 class */}
+                                            <i className="fa-solid fa-plus"></i>
                                         </button>
                                     </div>
                                 ))
                             ) : (
-                                <p className="no-data-message">All available basic rewards have been configured.</p>
+                                <p className="no-data-message">No basic reward templates available.</p>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* Basic User Configured Rewards (Always visible, outside of the dropdown logic) */}
+                {/* Basic User Configured Rewards */}
                 <h4 className="rewards-subheader configured-rewards-header">Configured Rewards (Basic User):</h4>
-                {configuredBasicRewards.length > 0 ? (
+                {loading ? (
+                    <p>Loading configured basic rewards...</p>
+                ) : configuredBasicRewards.length > 0 ? (
                     <table className="rewards-table">
                         <thead>
                             <tr>
@@ -188,13 +233,12 @@ const AdminRewards = () => {
                                     <td>{reward.quantity}</td>
                                     <td>{reward.pointsNeeded}</td>
                                     <td>
-                                        {/* Basic User: ADDING Edit action here */}
                                         <i
-                                            className="fa-solid fa-pen-to-square edit-icon" // FA6 class
+                                            className="fa-solid fa-pen-to-square edit-icon"
                                             onClick={() => handleOpenModalToEdit(reward, 'basic')}
                                         ></i>
                                         <i
-                                            className="fa-solid fa-trash-can delete-icon" // FA6 class
+                                            className="fa-solid fa-trash-can delete-icon"
                                             onClick={() => handleDeleteReward(reward.id, 'basic')}
                                         ></i>
                                     </td>
@@ -212,65 +256,68 @@ const AdminRewards = () => {
                     <div className="reward-category-header" onClick={() => setPremiumUserExpanded(!premiumUserExpanded)}>
                         <h3>Premium User</h3>
                         <span className="add-rewards-text">Add rewards into the app</span>
-                        <i className={`fa-solid ${premiumUserExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i> {/* FA6 class */}
+                        <i className={`fa-solid ${premiumUserExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
                     </div>
                     {premiumUserExpanded && (
                         <div className="reward-category-body">
                             <h4 className="rewards-subheader">Available Rewards:</h4>
-                            {filteredAvailablePremiumRewards.length > 0 ? (
-                                filteredAvailablePremiumRewards.map((reward) => (
+                            {loading ? (
+                                <p>Loading available premium rewards...</p>
+                            ) : availablePremiumRewards.length > 0 ? ( // --- CHANGED: Removed filterPremiumAvailableRewards() ---
+                                availablePremiumRewards.map((reward) => (
                                     <div key={reward.id} className="reward-item clickable-reward-item">
-                                        <span>{reward.reward}</span>
+                                        <span>{reward.name}</span> {/* Use reward.name (from AvailableReward) */}
                                         <button className="add-reward-button" onClick={() => handleOpenModalToAdd(reward, 'premium')}>
-                                            <i className="fa-solid fa-plus"></i> {/* FA6 class */}
+                                            <i className="fa-solid fa-plus"></i>
                                         </button>
                                     </div>
                                 ))
                             ) : (
-                                <p className="no-data-message">All available premium rewards have been configured.</p>
+                                <p className="no-data-message">No premium reward templates available.</p>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* Premium User Configured Rewards (Always visible, outside of the dropdown logic) */}
+                {/* Premium User Configured Rewards */}
                 <h4 className="rewards-subheader configured-rewards-header">Configured Rewards (Premium User):</h4>
-                <table className="rewards-table">
-                    <thead>
-                        <tr>
-                            <th>Discount (%)</th>
-                            <th>Reward</th>
-                            <th>Points Needed</th> {/* Changed from 'Number of Redemption' */}
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {configuredPremiumRewards.length > 0 ? (
-                            configuredPremiumRewards.map((reward) => (
+                {loading ? (
+                    <p>Loading configured premium rewards...</p>
+                ) : configuredPremiumRewards.length > 0 ? (
+                    <table className="rewards-table">
+                        <thead>
+                            <tr>
+                                <th>Discount (%)</th>
+                                <th>Reward</th>
+                                <th>Points Needed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {configuredPremiumRewards.map((reward) => (
                                 <tr key={reward.id}>
                                     <td>{reward.discount}</td>
-                                    <td>{reward.reward}</td>
+                                    <td>{reward.reward}</td> {/* Use reward.reward (from PremiumReward) */}
                                     <td>{reward.pointsNeeded}</td>
                                     <td>
-                                        {/* Premium User: Edit and Delete actions */}
                                         <i
-                                            className="fa-solid fa-pen-to-square edit-icon" // FA6 class
+                                            className="fa-solid fa-pen-to-square edit-icon"
                                             onClick={() => handleOpenModalToEdit(reward, 'premium')}
                                         ></i>
                                         <i
-                                            className="fa-solid fa-trash-can delete-icon" // FA6 class
+                                            className="fa-solid fa-trash-can delete-icon"
                                             onClick={() => handleDeleteReward(reward.id, 'premium')}
                                         ></i>
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="4" className="no-data-message">No premium rewards configured yet.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <tr>
+                        <td colSpan="4" className="no-data-message">No premium rewards configured yet.</td>
+                    </tr>
+                )}
             </div>
 
             <RewardModal
