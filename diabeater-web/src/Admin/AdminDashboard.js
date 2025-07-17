@@ -12,9 +12,12 @@ import AdminMealPlans from './AdminMealPlans';
 import AdminExportReport from './AdminExportReport';
 import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
+import AdminRewards from './AdminRewards'; // Import the new AdminRewards component
 
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
+// You might also want to import AdminRewards.css here if it's a global style,
+// or ensure it's imported in AdminRewards.js itself.
 
 // Admin Sidebar Component
 const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
@@ -50,7 +53,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                 >
                     <i className="fas fa-users"></i>
                     <span>User Accounts</span>
-                {/* pieza line was likely a placeholder/typo and has been removed */}
+                    {/* pieza line was likely a placeholder/typo and has been removed */}
                 </div>
                 <div
                     className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`}
@@ -66,6 +69,15 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                     <i className="fas fa-file-export"></i>
                     <span>Export Report</span>
                 </div>
+                {/* NEW REWARDS TAB */}
+                <div
+                    className={`nav-item ${currentView === 'rewards' ? 'active' : ''}`}
+                    onClick={() => onNavigate('rewards')}
+                >
+                    <i className="fas fa-trophy"></i> {/* Using a trophy icon for rewards */}
+                    <span>Rewards</span>
+                </div>
+                {/* END NEW REWARDS TAB */}
                 <div
                     className={`nav-item ${currentView === 'editWebsite' ? 'active' : ''}`}
                     onClick={() => onNavigate('editWebsite')}
@@ -135,8 +147,8 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                     )}
                 </td>
             )}
-             {/* Action buttons for PENDING_APPROVAL tab */}
-             {type === 'pending' && (
+            {/* Action buttons for PENDING_APPROVAL tab */}
+            {type === 'pending' && (
                 <td>
                     <button
                         className="action-button approve-button"
@@ -168,12 +180,12 @@ const UserAccountsContent = observer(() => {
     // Access properties directly from the AdminDashboardViewModel singleton instance
     const {
         activeTab,
-        filteredPendingAccounts, 
+        filteredPendingAccounts,
         showUserDetailModal,
         selectedUser,
-        isLoading, 
-        error, 
-        showRejectionReasonModal, 
+        isLoading,
+        error,
+        showRejectionReasonModal,
         rejectionReason,
         // Methods called directly on the singleton
         approveNutritionist,
@@ -188,7 +200,7 @@ const UserAccountsContent = observer(() => {
         searchTerm, // Use searchTerm directly
         filteredAllAccounts, // Use filteredAllAccounts directly
         isLoading: userAccountsLoading, // Specific loading for user accounts tab
-        error: userAccountsError,       // Specific error for user accounts tab
+        error: userAccountsError,       // Specific error for user accounts tab
     } = userAccountsVM; // Destructure from the userAccountsVM instance
 
     // Fetch accounts on component mount or when the tab changes to ensure fresh data
@@ -294,7 +306,7 @@ const UserAccountsContent = observer(() => {
                                 <UserAccountRow
                                     key={user.id}
                                     user={user}
-                                    onAction={() => {}} // Action is handled within UserAccountRow for pending
+                                    onAction={() => { }} // Action is handled within UserAccountRow for pending
                                     onNameClick={handleOpenModal}
                                     type="pending"
                                 />
@@ -372,6 +384,7 @@ const AdminDashboard = observer(({ onLogout }) => {
                 {currentView === 'userAccounts' && <UserAccountsContent />}
                 {currentView === 'mealPlans' && <AdminMealPlans />}
                 {currentView === 'exportReport' && <AdminExportReport />}
+                {currentView === 'rewards' && <AdminRewards />} {/* Render AdminRewards component */}
                 {currentView === 'editWebsite' && <MarketingWebsiteEditorPage />}
                 {currentView === 'userFeedbacks' && <UserFeedbacksPage />}
             </div>
