@@ -58,49 +58,43 @@ const AdminRewards = () => {
     }, [fetchAllRewards]);
 
     const handleOpenModalToAdd = (reward, type) => {
-        // --- ADDED CONSOLE LOGS HERE ---
-        console.log("handleOpenModalToAdd called for:", reward.name, "Type:", type);
-        console.log("Setting showRewardModal to true.");
-        // --- END CONSOLE LOGS ---
-
-        setModalUserType(type);
-        // For adding, initialize quantity/discount and pointsNeeded to empty for new input
-        // Reward here is an AvailableReward object from reward_templates
+        // For adding, initialize quantity/discount and pointsNeeded to empty for new input.
+        // Reward here is an AvailableReward object from reward_templates.
+        // We pass 'name' for basic, and 'reward' (which is also the name) for premium
+        // to the modal's rewardData property, so it can display the correct label.
         setCurrentRewardForModal({
-            id: reward.id, // Keep the original ID from reward_templates if needed for reference
-            name: reward.name, // The title from reward_templates
-            reward: reward.name, // For premium, this will be the 'reward' field in PremiumReward
-            quantity: '',
-            discount: '',
-            pointsNeeded: ''
+            id: reward.id, // ID from reward_templates (template ID)
+            name: reward.name, // The title from reward_templates, used for basic reward
+            reward: reward.name, // The title from reward_templates, used for premium reward display
+            quantity: '', // For new input
+            discount: '', // For new input (modal uses 'quantity' field for both)
+            pointsNeeded: '' // For new input
         });
+        setModalUserType(type);
         setIsModalEditing(false);
         setShowRewardModal(true);
     };
 
     const handleOpenModalToEdit = (reward, type) => {
         setModalUserType(type);
-        // Reward here is a BasicReward or PremiumReward object from configured rewards
+        // Reward here is a BasicReward or PremiumReward object from configured rewards.
+        // The 'quantity' field in the modal needs to display the correct value
+        // (either 'quantity' for basic or 'discount' for premium).
+        // The 'reward' property is used by the modal for displaying the name of premium rewards.
         setCurrentRewardForModal({
             ...reward,
-            // When editing, 'quantity' in the modal represents the discount for premium rewards
-            // The modal's quantity field should display the existing configured quantity/discount
             quantity: type === 'premium' ? reward.discount : reward.quantity,
-            // Ensure the 'reward' property is also set for premium rewards,
-            // as it's used in the modal to display the name
             reward: type === 'premium' ? reward.reward : reward.name,
         });
         setIsModalEditing(true);
         setShowRewardModal(true);
     };
 
-
     const handleDeleteReward = async (id, type) => {
         if (window.confirm('Are you sure you want to delete this reward?')) {
             setLoading(true);
             setError(null);
             try {
-                // Call ViewModel to delete
                 await adminRewardsViewModel.deleteReward(id, type);
                 alert('Reward deleted successfully!');
                 await fetchAllRewards(); // Re-fetch all data to update UI
@@ -120,7 +114,6 @@ const AdminRewards = () => {
         setError(null);
         try {
             if (isModalEditing) {
-                // Call ViewModel to update
                 if (type === 'basic') {
                     await adminRewardsViewModel.updateReward(rewardData.id, 'basic', {
                         quantity: rewardData.quantity,
@@ -135,15 +128,16 @@ const AdminRewards = () => {
                 alert(`Reward updated successfully!`);
             } else {
                 // For adding a new reward from available list
+                // We pass the name/reward and the quantity/discount and points needed from the modal.
                 if (type === 'basic') {
                     await adminRewardsViewModel.addReward({
-                        name: rewardData.name,
+                        name: rewardData.name, // Original name from AvailableReward
                         quantity: rewardData.quantity,
                         pointsNeeded: rewardData.pointsNeeded
                     }, 'basic');
                 } else if (type === 'premium') {
                     await adminRewardsViewModel.addReward({
-                        reward: rewardData.reward, // Use 'reward' for premium type
+                        reward: rewardData.reward, // Original reward name from AvailableReward (used for premium type)
                         discount: rewardData.quantity, // quantity from modal is discount for premium
                         pointsNeeded: rewardData.pointsNeeded
                     }, 'premium');
@@ -167,10 +161,6 @@ const AdminRewards = () => {
         setModalUserType(null);
         setIsModalEditing(false);
     };
-
-    // --- REMOVED filterBasicAvailableRewards AND filterPremiumAvailableRewards FUNCTIONS ---
-    // Instead of filtering, we now directly use availableBasicRewards and availablePremiumRewards
-    // as all choices should always be present.
 
     return (
         <div className="admin-rewards-container">
@@ -196,7 +186,7 @@ const AdminRewards = () => {
                             <h4 className="rewards-subheader">Available Rewards:</h4>
                             {loading ? (
                                 <p>Loading available basic rewards...</p>
-                            ) : availableBasicRewards.length > 0 ? ( // --- CHANGED: Removed filterBasicAvailableRewards() ---
+                            ) : availableBasicRewards.length > 0 ? (
                                 availableBasicRewards.map((reward) => (
                                     <div key={reward.id} className="reward-item clickable-reward-item">
                                         <span>{reward.name}</span>
@@ -263,7 +253,7 @@ const AdminRewards = () => {
                             <h4 className="rewards-subheader">Available Rewards:</h4>
                             {loading ? (
                                 <p>Loading available premium rewards...</p>
-                            ) : availablePremiumRewards.length > 0 ? ( // --- CHANGED: Removed filterPremiumAvailableRewards() ---
+                            ) : availablePremiumRewards.length > 0 ? (
                                 availablePremiumRewards.map((reward) => (
                                     <div key={reward.id} className="reward-item clickable-reward-item">
                                         <span>{reward.name}</span> {/* Use reward.name (from AvailableReward) */}
@@ -314,9 +304,7 @@ const AdminRewards = () => {
                         </tbody>
                     </table>
                 ) : (
-                    <tr>
-                        <td colSpan="4" className="no-data-message">No premium rewards configured yet.</td>
-                    </tr>
+                    <p className="no-data-message">No premium rewards configured yet.</p>
                 )}
             </div>
 

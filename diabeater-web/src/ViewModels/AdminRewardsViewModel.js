@@ -25,23 +25,14 @@ class AdminRewardsViewModel {
 
     async addReward(rewardData, type) {
         try {
-            // Fetch current configured rewards to check for duplicates (business logic)
-            const configuredList = type === 'basic'
-                ? await this.getConfiguredBasicRewards()
-                : await this.getConfiguredPremiumRewards();
-
+            // --- REMOVED DUPLICATE CHECK LOGIC HERE ---
+            // This now allows for duplicate reward names (e.g., "Export PDF")
+            // to be added multiple times with different quantities/points.
+            
             if (type === 'basic') {
-                const isAlreadyAdded = configuredList.some(r => r.name === rewardData.name);
-                if (isAlreadyAdded) {
-                    throw new Error(`Basic Reward "${rewardData.name}" is already configured.`);
-                }
                 // Call repository with the data structure expected by BasicReward model (name, quantity, pointsNeeded)
                 await rewardRepository.addBasicReward(rewardData);
             } else if (type === 'premium') {
-                const isAlreadyAdded = configuredList.some(r => r.reward === rewardData.reward);
-                if (isAlreadyAdded) {
-                    throw new Error(`Premium Reward "${rewardData.reward}" is already configured.`);
-                }
                 // Call repository with the data structure expected by PremiumReward model (reward, discount, pointsNeeded)
                 await rewardRepository.addPremiumReward(rewardData);
             }
