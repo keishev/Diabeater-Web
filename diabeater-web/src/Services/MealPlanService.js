@@ -42,7 +42,7 @@ class MealPlanService {
 
         if (uploadPhoto) {
             imageFileName = `${Date.now()}_${uploadPhoto.name}`;
-            const storageRef = ref(this.storage, `meal_plan_images/${imageFileName}`);
+            const storageRef = ref(this.storage, `meal_plan_images/${user.uid}/${imageFileName}`);
             const snapshot = await uploadBytes(storageRef, uploadPhoto);
             imageUrl = await getDownloadURL(snapshot.ref);
         } else {
@@ -209,13 +209,15 @@ class MealPlanService {
     }
 
     async deleteMealPlan(mealPlanId, imageFileName) {
+        const user = this.auth.currentUser;
+
         // 1. Delete the Firestore document
         const mealPlanDocRef = doc(this.db, 'meal_plans', mealPlanId);
         await deleteDoc(mealPlanDocRef);
 
         // 2. Delete the image from Firebase Storage (if imageFileName is provided)
         if (imageFileName) {
-            const imageRef = ref(this.storage, `meal_plan_images/${imageFileName}`);
+            const imageRef = ref(this.storage, `meal_plan_images/${user.uid}/${imageFileName}`);
             try {
                 await deleteObject(imageRef);
                 console.log(`Image ${imageFileName} deleted from storage.`);
@@ -233,7 +235,6 @@ class MealPlanService {
     async updateMealPlan(mealPlanId, mealPlanData, newImageFile = null, originalImageFileName = null) {
         const user = this.auth.currentUser;
         const nutritionistInfo = AuthService.getCurrentUser();
-
         if (!user || !nutritionistInfo || nutritionistInfo.role !== 'nutritionist') {
             throw new Error('You must be logged in as an an approved nutritionist to update a meal plan.');
         }
@@ -244,7 +245,7 @@ class MealPlanService {
         if (newImageFile) {
             // Delete old image if it exists and a new one is being uploaded
             if (originalImageFileName) {
-                const oldImageRef = ref(this.storage, `meal_plan_images/${originalImageFileName}`);
+                const oldImageRef = ref(this.storage, `meal_plan_images/${user.uid}/${originalImageFileName}`);
                 try {
                     await deleteObject(oldImageRef);
                     console.log(`Old image ${originalImageFileName} deleted from storage.`);
@@ -259,7 +260,7 @@ class MealPlanService {
 
             // Upload new image
             const newImageFileName = `${Date.now()}_${newImageFile.name}`;
-            const storageRef = ref(this.storage, `meal_plan_images/${newImageFileName}`);
+            const storageRef = ref(this.storage, `meal_plan_images/${user.uid}/${newImageFileName}`);
             const snapshot = await uploadBytes(storageRef, newImageFile);
             const newImageUrl = await getDownloadURL(snapshot.ref);
 
@@ -268,7 +269,7 @@ class MealPlanService {
         } else if (originalImageFileName && !mealPlanData.imageUrl) {
             // If originalImageFileName exists but no new image and no imageUrl in updatePayload,
             // it means the user removed the image. Delete from storage.
-            const oldImageRef = ref(this.storage, `meal_plan_images/${originalImageFileName}`);
+            const oldImageRef = ref(this.storage,  `meal_plan_images/${user.uid}/${originalImageFileName}`);
             try {
                 await deleteObject(oldImageRef);
                 console.log(`Image ${originalImageFileName} deleted from storage (user removed).`);
