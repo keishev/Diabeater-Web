@@ -4,7 +4,7 @@ const mealPlanSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
     image: { type: String }, // URL or path to image
-    likes: { type: String, default: '0' }, // Stored as string to allow '1.3k' etc.
+    saveCount: { type: String, default: '0' }, // Stored as string to allow '1.3k' etc.
     authorId: { // Link to the user (nutritionist) who created it
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User', // Assuming your User model is named 'User'

@@ -109,7 +109,11 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
         };
 
         // Call the ViewModel's update method
-        const success = await mealPlanViewModel.updateMealPlan(updatedMealPlanData, imageFile);
+        const success = await mealPlanViewModel.updateMealPlan({
+            ...updatedMealPlanData,
+            imageFile: imageFile,
+            originalImageFileName: mealPlan.imageFileName || ''
+        });
 
         if (success) {
             // ViewModel already sets success message. Navigate back.
