@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel';
+import AdminMealPlanDetail from './AdminMealPlanDetail'; // Import the detail component
 import './AdminMealPlans.css';
 
-const AdminMealPlans = observer(({ onViewDetails }) => {
+const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's self-contained now
     // Local state for UI interactions and temporary data
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedPlanToReject, setSelectedPlanToReject] = useState(null);
@@ -20,6 +21,10 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
     // Local state for Category Dropdown visibility
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
     const categoryDropdownRef = useRef(null); // Ref for click-outside functionality
+
+    // Local state to manage showing the detail view
+    const [showDetailView, setShowDetailView] = useState(false);
+    // MealPlanViewModel.selectedMealPlanForDetail will hold the actual data
 
     // ViewModel's state properties are accessed directly or via getters
     const { searchTerm, selectedCategory, allCategories, error } = MealPlanViewModel;
@@ -59,19 +64,23 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
     const handleApproveConfirm = useCallback(async () => {
         setLocalLoading(true);
         try {
-            // Retrieve the full meal plan object to get authorId, adminName, adminId for the notification
             const planToApprove = MealPlanViewModel.mealPlans.find(p => p._id === selectedPlanToApprove);
             if (!planToApprove) {
                 throw new Error("Meal plan not found for approval.");
             }
 
             const authorId = planToApprove.authorId;
-            const adminName = MealPlanViewModel.currentUserRole === 'admin' ? MealPlanViewModel.currentUserName : 'Admin'; // Assuming currentUserName exists or can be fetched
+            const adminName = MealPlanViewModel.currentUserRole === 'admin' ? MealPlanViewModel.currentUserName : 'Admin';
             const adminId = MealPlanViewModel.currentUserId;
 
             await MealPlanViewModel.approveOrRejectMealPlan(selectedPlanToApprove, 'APPROVED', authorId, adminName, adminId);
             setShowApproveConfirmModal(false);
             setSelectedPlanToApprove(null);
+            // After successful action, ensure detail view is closed if it was open for this plan
+            if (MealPlanViewModel.selectedMealPlanForDetail?._id === selectedPlanToApprove) {
+                MealPlanViewModel.clearSelectedMealPlans();
+                setShowDetailView(false);
+            }
         } catch (err) {
             alert(MealPlanViewModel.error || 'Failed to approve meal plan. Please try again.');
         } finally {
@@ -118,14 +127,13 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
 
         setLocalLoading(true);
         try {
-            // Retrieve the full meal plan object to get authorId, adminName, adminId for the notification
             const planToReject = MealPlanViewModel.mealPlans.find(p => p._id === selectedPlanToReject);
             if (!planToReject) {
                 throw new Error("Meal plan not found for rejection.");
             }
 
             const authorId = planToReject.authorId;
-            const adminName = MealPlanViewModel.currentUserRole === 'admin' ? MealPlanViewModel.currentUserName : 'Admin'; // Assuming currentUserName exists or can be fetched
+            const adminName = MealPlanViewModel.currentUserRole === 'admin' ? MealPlanViewModel.currentUserName : 'Admin';
             const adminId = MealPlanViewModel.currentUserId;
 
             await MealPlanViewModel.approveOrRejectMealPlan(selectedPlanToReject, 'REJECTED', authorId, adminName, adminId, finalReason);
@@ -133,6 +141,11 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
             setSelectedPlanToReject(null);
             setSelectedRejectReason('');
             setOtherReasonText('');
+            // After successful action, ensure detail view is closed if it was open for this plan
+            if (MealPlanViewModel.selectedMealPlanForDetail?._id === selectedPlanToReject) {
+                MealPlanViewModel.clearSelectedMealPlans();
+                setShowDetailView(false);
+            }
         } catch (err) {
             alert(MealPlanViewModel.error || 'Failed to reject meal plan. Please try again.');
         } finally {
@@ -147,13 +160,31 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
         setOtherReasonText('');
     }, []);
 
-    const handleImageClick = useCallback((id) => {
-        const plan = MealPlanViewModel.mealPlans.find(p => p._id === id);
-        if (onViewDetails && plan) {
-            onViewDetails(plan);
+    // --- Detail View Logic ---
+    const handleViewDetailsClick = useCallback(async (id) => {
+        await MealPlanViewModel.loadMealPlanDetails(id); // Fetch details into the ViewModel
+        if (MealPlanViewModel.selectedMealPlanForDetail) {
+            setShowDetailView(true); // Show the detail component if data is loaded
         }
-    }, [onViewDetails]);
+    }, []);
 
+    const handleCloseDetailView = useCallback(() => {
+        MealPlanViewModel.clearSelectedMealPlans(); // Clear the selected plan in ViewModel
+        setShowDetailView(false); // Hide the detail component
+    }, []);
+
+    // --- Render Logic ---
+    if (showDetailView && MealPlanViewModel.selectedMealPlanForDetail) {
+        // If showDetailView is true and we have a selected plan, render the detail component
+        return (
+            <AdminMealPlanDetail
+                mealPlan={MealPlanViewModel.selectedMealPlanForDetail}
+                onClose={handleCloseDetailView}
+            />
+        );
+    }
+
+    // Otherwise, render the main AdminMealPlans list
     return (
         <div className="admin-meal-plans-container">
             <div className="admin-meal-plans-header">
@@ -187,7 +218,7 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
                         value={searchTerm}
                         onChange={(e) => MealPlanViewModel.setSearchTerm(e.target.value)}
                     />
-                    <div className="category-dropdown-container" ref={categoryDropdownRef}> {/* Attach ref here */}
+                    <div className="category-dropdown-container" ref={categoryDropdownRef}>
                         <button
                             className="category-button"
                             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
@@ -217,7 +248,7 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
                 </div>
             </div>
 
-            {localLoading || MealPlanViewModel.loading ? ( // Use VM's loading for initial fetch, local for actions
+            {localLoading || MealPlanViewModel.loading ? (
                 <p>Loading meal plans...</p>
             ) : error ? (
                 <p className="error-message">{error}</p>
@@ -230,15 +261,15 @@ const AdminMealPlans = observer(({ onViewDetails }) => {
                                     src={plan.imageUrl || `/assetscopy/${plan.imageFileName}`}
                                     alt={plan.name}
                                     className="meal-plan-card-image"
-                                    onClick={() => handleImageClick(plan._id)}
+                                    onClick={() => handleViewDetailsClick(plan._id)}
                                 />
                                 <div className="meal-plan-card-info">
                                     <h3 className="meal-plan-card-name">{plan.name}</h3>
                                     <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
-                                    <p className="meal-plan-card-status">Status: {plan.status}</p> {/* Display status */}
+                                    <p className="meal-plan-card-status">Status: {plan.status}</p>
                                 </div>
                                 <div className="meal-plan-card-actions">
-                                    {plan.status === 'PENDING_APPROVAL' && ( // Only show buttons for pending
+                                    {plan.status === 'PENDING_APPROVAL' && (
                                         <>
                                             <button
                                                 className="approve-button"
