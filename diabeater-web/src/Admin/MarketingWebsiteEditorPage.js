@@ -1,232 +1,166 @@
-// src/Admin/MarketingWebsiteEditorPage.js
 import React, { useState } from 'react';
 import MarketingEditorSection from './components/MarketingEditorSection';
 import MarketingWebsiteSimulator from './components/MarketingWebsiteSimulator';
-import ConfirmationModal from './components/ConfirmationModal'; // <--- NEW: Import the modal
-import './MarketingWebsiteEditorPage.css';
+import ConfirmationModal from './components/ConfirmationModal';
+import './MarketingWebsiteEditorPage.css'; // Editor-specific CSS
+import './components/MarketingWebsiteSimulator.css'; // Simulator wrapper CSS
+import './components/simulator/index.css'; // Simulator content general CSS
+
+// Correctly import the named exports from the ViewModel file
+import { useWebsiteContent, saveContentField, stopHostingWebsite } from '../ViewModels/MarketingWebsiteEditorViewModel';
 
 function MarketingWebsiteEditorPage() {
-    // State for the modal visibility
-    const [showStopHostingModal, setShowStopHostingModal] = useState(false); // <--- NEW STATE
+    // Use the custom hook directly. No need to instantiate a class.
+    const { websiteContent, loading, error, setWebsiteContent } = useWebsiteContent();
+    const [showStopHostingModal, setShowStopHostingModal] = useState(false);
 
-    // Existing website content state
-    const [websiteContent, setWebsiteContent] = useState({
-        // Header Content
-        headerLogoText: "DiaBeater",
-        headerNavHome: "Home",
-        headerNavFeatures: "Features",
-        headerNavAbout: "About Us",
-        headerNavContact: "Contact",
-        headerCtaButton: "Sign Up",
-
-        // Hero Section Content
-        heroTitle: "Welcome to DiaBeater - Manage Your Diabetes Easily!",
-        heroSubtitle: "Empowering you with tools for better health management.",
-        heroCtaText: "Start Your Journey",
-
-        // Features Section Content
-        featuresSectionTitle: "Key Features",
-        feature1Title: "Personalized Meal Plans",
-        feature1Description: "Get meal plans tailored to your dietary needs and health goals, updated regularly.",
-        feature2Title: "Glucose Tracking & Analytics",
-        feature2Description: "Monitor your glucose levels with intuitive graphs and detailed reports for better insights.",
-        feature3Title: "Secure Data Storage",
-        feature3Description: "Your health data is securely stored and accessible anytime, anywhere, ensuring privacy.",
-        feature4Title: "Direct Nutritionist Support",
-        feature4Description: "Connect directly with certified nutritionists for expert advice and personalized guidance.",
-
-        // Testimonials Section Content
-        testimonialsSectionTitle: "What Our Users Say",
-        testimonial1Text: "DiaBeater changed my life! Managing my diabetes has never been easier and more effective.",
-        testimonial1Author: "Sarah M., Happy User",
-        testimonial2Text: "The personalized meal plans are a game-changer. I've seen significant improvements in my health.",
-        testimonial2Author: "David P., Premium Member",
-        testimonial3Text: "Excellent support from nutritionists and a very user-friendly interface. Highly recommend this app!",
-        testimonial3Author: "Emily R., New Client",
-
-        // Nutritionists Section Content
-        nutritionistsSectionTitle: "Meet Our Expert Nutritionists",
-        nutritionist1Name: "Dr. Emily White",
-        nutritionist1Bio: "Specializing in diabetic nutrition with over 10 years of experience helping patients.",
-        nutritionist2Name: "Mark Johnson, RD",
-        nutritionist2Bio: "A registered dietitian passionate about holistic health and personalized care plans.",
-        nutritionist3Name: "Sophia Chen, MPH",
-        nutritionist3Bio: "Focuses on preventative care and lifestyle modifications for long-term wellness.",
-
-        // Gamification Section Content
-        gamificationSectionTitle: "Stay Motivated with Gamification",
-        gamificationDescription: "Earn points, unlock badges, and compete with friends to make managing diabetes fun, engaging, and rewarding!",
-        gamificationFeature1: "Daily Challenges",
-        gamificationFeature2: "Achievement Badges",
-        gamificationFeature3: "Leaderboards",
-
-        // Features Comparison Section Content
-        featuresComparisonTitle: "Basic vs. Premium Features",
-        basicHeader: "Basic Plan",
-        premiumHeader: "Premium Plan",
-        basicFeatureList: [
-            "Basic Glucose Tracking",
-            "Standard Meal Ideas",
-            "Community Forum Access"
-        ],
-        premiumFeatureList: [
-            "Advanced Glucose Analytics",
-            "Personalized Meal Plans",
-            "Direct Nutritionist Chat",
-            "Premium Content Library",
-            "Exclusive Webinars"
-        ],
-        comparisonCtaText: "Upgrade Now",
-
-        // Download CTA Section Content
-        downloadCTATitle: "Download DiaBeater Today!",
-        downloadCTASubtitle: "Available on iOS and Android. Start your journey to better health now.",
-        appStoreLink: "#", // Placeholder for actual link
-        googlePlayLink: "#", // Placeholder for actual link
-
-        // Footer Content
-        footerAboutText: "DiaBeater is committed to providing innovative tools for diabetes management.",
-        footerContactEmail: "info@diabeater.com",
-        footerContactPhone: "(123) 456-7890",
-        footerAddress: "123 Health Ave, Wellness City, DI 54321",
-        footerCopyright: `© ${new Date().getFullYear()} DiaBeater. All rights reserved.`,
-        footerPrivacyPolicy: "Privacy Policy",
-        footerTermsOfService: "Terms of Service",
-    });
-
-    const handleSaveContent = (key, value) => {
+    // This handler now receives the Firestore key directly
+    const handleSaveContent = async (key, value) => {
+        // Optimistic UI update: Update React state immediately
         setWebsiteContent(prevContent => ({
             ...prevContent,
             [key]: value,
         }));
+        try {
+            // Call the exported function directly
+            await saveContentField(key, value);
+            return true; // Indicate success to MarketingEditorSection
+        } catch (err) {
+            console.error("MarketingWebsiteEditorPage: Failed to save content:", err);
+            // Revert local state if save fails (optional)
+            setWebsiteContent(prevContent => ({
+                ...prevContent,
+                [key]: websiteContent[key], // Revert to original value before optimistic update
+            }));
+            throw err; // Propagate error for UI feedback in MarketingEditorSection
+        }
     };
 
-    // --- NEW MODAL HANDLERS ---
     const handleStopHostingClick = () => {
-        setShowStopHostingModal(true); // Open the modal
+        setShowStopHostingModal(true);
     };
 
-    const confirmStopHosting = () => {
-        // In a real application, you would send an API request here
-        // to actually stop hosting the website.
-        console.log("STOP HOSTING WEBSITE confirmed!");
-        alert("Marketing website hosting stopped!");
-        setShowStopHostingModal(false); // Close the modal
-        // You might want to redirect the user or disable parts of the page here
+    const confirmStopHosting = async () => {
+        try {
+            // Call the exported function directly
+            await stopHostingWebsite();
+            alert("Marketing website hosting stopped! (Action triggered)");
+        } catch (error) {
+            alert(`Failed to stop hosting: ${error.message}`);
+        } finally {
+            setShowStopHostingModal(false);
+        }
     };
 
     const cancelStopHosting = () => {
-        setShowStopHostingModal(false); // Close the modal
+        setShowStopHostingModal(false);
     };
-    // --- END NEW MODAL HANDLERS ---
+
+    if (loading) {
+        return <div className="marketing-editor-page">Loading editor...</div>;
+    }
+
+    if (error) {
+        return <div className="marketing-editor-page">Error: {error}</div>;
+    }
 
     return (
         <div className="marketing-editor-page">
             <h1 className="editor-main-title">Edit Marketing Website Content</h1>
 
             <div className="editor-sections-container">
-                {/* ... (Your existing MarketingEditorSection components for Header, Hero, Features, etc.) ... */}
-                {/* Header */}
-                <MarketingEditorSection title="Header Logo Text" initialContent={websiteContent.headerLogoText} onSave={(val) => handleSaveContent('headerLogoText', val)} contentType="text" />
-                <MarketingEditorSection title="Header Nav Home" initialContent={websiteContent.headerNavHome} onSave={(val) => handleSaveContent('headerNavHome', val)} contentType="text" />
-                <MarketingEditorSection title="Header Nav Features" initialContent={websiteContent.headerNavFeatures} onSave={(val) => handleSaveContent('headerNavFeatures', val)} contentType="text" />
-                <MarketingEditorSection title="Header Nav About Us" initialContent={websiteContent.headerNavAbout} onSave={(val) => handleSaveContent('headerNavAbout', val)} contentType="text" />
-                <MarketingEditorSection title="Header Nav Contact" initialContent={websiteContent.headerNavContact} onSave={(val) => handleSaveContent('headerNavContact', val)} contentType="text" />
-                <MarketingEditorSection title="Header CTA Button Text" initialContent={websiteContent.headerCtaButton} onSave={(val) => handleSaveContent('headerCtaButton', val)} contentType="text" />
+                {/* Each MarketingEditorSection now explicitly gets a contentKey */}
+                <MarketingEditorSection title="Header Logo Text" initialContent={websiteContent?.headerLogoText} onSave={handleSaveContent} contentKey="headerLogoText" />
+                <MarketingEditorSection title="Header Nav Home" initialContent={websiteContent?.headerNavHome} onSave={handleSaveContent} contentKey="headerNavHome" />
+                <MarketingEditorSection title="Header Nav Features" initialContent={websiteContent?.headerNavFeatures} onSave={handleSaveContent} contentKey="headerNavFeatures" />
+                <MarketingEditorSection title="Header Nav About Us" initialContent={websiteContent?.headerNavAbout} onSave={handleSaveContent} contentKey="headerNavAbout" />
+                <MarketingEditorSection title="Header Nav Contact" initialContent={websiteContent?.headerNavContact} onSave={handleSaveContent} contentKey="headerNavContact" />
+                <MarketingEditorSection title="Header CTA Button Text" initialContent={websiteContent?.headerCtaButton} onSave={handleSaveContent} contentKey="headerCtaButton" />
 
-                {/* Hero Section */}
-                <MarketingEditorSection title="Hero Title" initialContent={websiteContent.heroTitle} onSave={(val) => handleSaveContent('heroTitle', val)} contentType="text" />
-                <MarketingEditorSection title="Hero Subtitle" initialContent={websiteContent.heroSubtitle} onSave={(val) => handleSaveContent('heroSubtitle', val)} contentType="textarea" />
-                <MarketingEditorSection title="Hero CTA Text" initialContent={websiteContent.heroCtaText} onSave={(val) => handleSaveContent('heroCtaText', val)} contentType="text" />
+                <MarketingEditorSection title="Hero Title" initialContent={websiteContent?.heroTitle} onSave={handleSaveContent} contentKey="heroTitle" />
+                <MarketingEditorSection title="Hero Subtitle" initialContent={websiteContent?.heroSubtitle} onSave={handleSaveContent} contentKey="heroSubtitle" contentType="textarea" />
+                <MarketingEditorSection title="Hero CTA Text" initialContent={websiteContent?.heroCtaText} onSave={handleSaveContent} contentKey="heroCtaText" />
 
-                {/* Features Section */}
-                <MarketingEditorSection title="Features Section Title" initialContent={websiteContent.featuresSectionTitle} onSave={(val) => handleSaveContent('featuresSectionTitle', val)} contentType="text" />
-                <MarketingEditorSection title="Feature 1 Title" initialContent={websiteContent.feature1Title} onSave={(val) => handleSaveContent('feature1Title', val)} contentType="text" />
-                <MarketingEditorSection title="Feature 1 Description" initialContent={websiteContent.feature1Description} onSave={(val) => handleSaveContent('feature1Description', val)} contentType="textarea" />
-                <MarketingEditorSection title="Feature 2 Title" initialContent={websiteContent.feature2Title} onSave={(val) => handleSaveContent('feature2Title', val)} contentType="text" />
-                <MarketingEditorSection title="Feature 2 Description" initialContent={websiteContent.feature2Description} onSave={(val) => handleSaveContent('feature2Description', val)} contentType="textarea" />
-                <MarketingEditorSection title="Feature 3 Title" initialContent={websiteContent.feature3Title} onSave={(val) => handleSaveContent('feature3Title', val)} contentType="text" />
-                <MarketingEditorSection title="Feature 3 Description" initialContent={websiteContent.feature3Description} onSave={(val) => handleSaveContent('feature3Description', val)} contentType="textarea" />
-                <MarketingEditorSection title="Feature 4 Title" initialContent={websiteContent.feature4Title} onSave={(val) => handleSaveContent('feature4Title', val)} contentType="text" />
-                <MarketingEditorSection title="Feature 4 Description" initialContent={websiteContent.feature4Description} onSave={(val) => handleSaveContent('feature4Description', val)} contentType="textarea" />
+                <MarketingEditorSection title="Features Section Title" initialContent={websiteContent?.featuresSectionTitle} onSave={handleSaveContent} contentKey="featuresSectionTitle" />
+                <MarketingEditorSection title="Feature 1 Title" initialContent={websiteContent?.feature1Title} onSave={handleSaveContent} contentKey="feature1Title" />
+                <MarketingEditorSection title="Feature 1 Description" initialContent={websiteContent?.feature1Description} onSave={handleSaveContent} contentKey="feature1Description" contentType="textarea" />
+                <MarketingEditorSection title="Feature 2 Title" initialContent={websiteContent?.feature2Title} onSave={handleSaveContent} contentKey="feature2Title" />
+                <MarketingEditorSection title="Feature 2 Description" initialContent={websiteContent?.feature2Description} onSave={handleSaveContent} contentKey="feature2Description" contentType="textarea" />
+                <MarketingEditorSection title="Feature 3 Title" initialContent={websiteContent?.feature3Title} onSave={handleSaveContent} contentKey="feature3Title" />
+                <MarketingEditorSection title="Feature 3 Description" initialContent={websiteContent?.feature3Description} onSave={handleSaveContent} contentKey="feature3Description" contentType="textarea" />
+                <MarketingEditorSection title="Feature 4 Title" initialContent={websiteContent?.feature4Title} onSave={handleSaveContent} contentKey="feature4Title" />
+                <MarketingEditorSection title="Feature 4 Description" initialContent={websiteContent?.feature4Description} onSave={handleSaveContent} contentKey="feature4Description" contentType="textarea" />
 
-                {/* Testimonials */}
-                <MarketingEditorSection title="Testimonials Section Title" initialContent={websiteContent.testimonialsSectionTitle} onSave={(val) => handleSaveContent('testimonialsSectionTitle', val)} contentType="text" />
-                <MarketingEditorSection title="Testimonial 1 Text" initialContent={websiteContent.testimonial1Text} onSave={(val) => handleSaveContent('testimonial1Text', val)} contentType="textarea" />
-                <MarketingEditorSection title="Testimonial 1 Author" initialContent={websiteContent.testimonial1Author} onSave={(val) => handleSaveContent('testimonial1Author', val)} contentType="text" />
-                <MarketingEditorSection title="Testimonial 2 Text" initialContent={websiteContent.testimonial2Text} onSave={(val) => handleSaveContent('testimonial2Text', val)} contentType="textarea" />
-                <MarketingEditorSection title="Testimonial 2 Author" initialContent={websiteContent.testimonial2Author} onSave={(val) => handleSaveContent('testimonial2Author', val)} contentType="text" />
-                <MarketingEditorSection title="Testimonial 3 Text" initialContent={websiteContent.testimonial3Text} onSave={(val) => handleSaveContent('testimonial3Text', val)} contentType="textarea" />
-                <MarketingEditorSection title="Testimonial 3 Author" initialContent={websiteContent.testimonial3Author} onSave={(val) => handleSaveContent('testimonial3Author', val)} contentType="text" />
+                <MarketingEditorSection title="Testimonials Section Title" initialContent={websiteContent?.testimonialsSectionTitle} onSave={handleSaveContent} contentKey="testimonialsSectionTitle" />
+                <MarketingEditorSection title="Testimonial 1 Text" initialContent={websiteContent?.testimonial1Text} onSave={handleSaveContent} contentKey="testimonial1Text" contentType="textarea" />
+                <MarketingEditorSection title="Testimonial 1 Author" initialContent={websiteContent?.testimonial1Author} onSave={handleSaveContent} contentKey="testimonial1Author" />
+                <MarketingEditorSection title="Testimonial 2 Text" initialContent={websiteContent?.testimonial2Text} onSave={handleSaveContent} contentKey="testimonial2Text" contentType="textarea" />
+                <MarketingEditorSection title="Testimonial 2 Author" initialContent={websiteContent?.testimonial2Author} onSave={handleSaveContent} contentKey="testimonial2Author" />
+                <MarketingEditorSection title="Testimonial 3 Text" initialContent={websiteContent?.testimonial3Text} onSave={handleSaveContent} contentKey="testimonial3Text" contentType="textarea" />
+                <MarketingEditorSection title="Testimonial 3 Author" initialContent={websiteContent?.testimonial3Author} onSave={handleSaveContent} contentKey="testimonial3Author" />
 
+                <MarketingEditorSection title="Nutritionists Section Title" initialContent={websiteContent?.nutritionistsSectionTitle} onSave={handleSaveContent} contentKey="nutritionistsSectionTitle" />
+                <MarketingEditorSection title="Nutritionist 1 Name" initialContent={websiteContent?.nutritionist1Name} onSave={handleSaveContent} contentKey="nutritionist1Name" />
+                <MarketingEditorSection title="Nutritionist 1 Bio" initialContent={websiteContent?.nutritionist1Bio} onSave={handleSaveContent} contentKey="nutritionist1Bio" contentType="textarea" />
+                <MarketingEditorSection title="Nutritionist 2 Name" initialContent={websiteContent?.nutritionist2Name} onSave={handleSaveContent} contentKey="nutritionist2Name" />
+                <MarketingEditorSection title="Nutritionist 2 Bio" initialContent={websiteContent?.nutritionist2Bio} onSave={handleSaveContent} contentKey="nutritionist2Bio" contentType="textarea" />
+                <MarketingEditorSection title="Nutritionist 3 Name" initialContent={websiteContent?.nutritionist3Name} onSave={handleSaveContent} contentKey="nutritionist3Name" />
+                <MarketingEditorSection title="Nutritionist 3 Bio" initialContent={websiteContent?.nutritionist3Bio} onSave={handleSaveContent} contentKey="nutritionist3Bio" contentType="textarea" />
 
-                {/* Nutritionists */}
-                <MarketingEditorSection title="Nutritionists Section Title" initialContent={websiteContent.nutritionistsSectionTitle} onSave={(val) => handleSaveContent('nutritionistsSectionTitle', val)} contentType="text" />
-                <MarketingEditorSection title="Nutritionist 1 Name" initialContent={websiteContent.nutritionist1Name} onSave={(val) => handleSaveContent('nutritionist1Name', val)} contentType="text" />
-                <MarketingEditorSection title="Nutritionist 1 Bio" initialContent={websiteContent.nutritionist1Bio} onSave={(val) => handleSaveContent('nutritionist1Bio', val)} contentType="textarea" />
-                <MarketingEditorSection title="Nutritionist 2 Name" initialContent={websiteContent.nutritionist2Name} onSave={(val) => handleSaveContent('nutritionist2Name', val)} contentType="text" />
-                <MarketingEditorSection title="Nutritionist 2 Bio" initialContent={websiteContent.nutritionist2Bio} onSave={(val) => handleSaveContent('nutritionist2Bio', val)} contentType="textarea" />
-                <MarketingEditorSection title="Nutritionist 3 Name" initialContent={websiteContent.nutritionist3Name} onSave={(val) => handleSaveContent('nutritionist3Name', val)} contentType="text" />
-                <MarketingEditorSection title="Nutritionist 3 Bio" initialContent={websiteContent.nutritionist3Bio} onSave={(val) => handleSaveContent('nutritionist3Bio', val)} contentType="textarea" />
+                <MarketingEditorSection title="Gamification Section Title" initialContent={websiteContent?.gamificationSectionTitle} onSave={handleSaveContent} contentKey="gamificationSectionTitle" />
+                <MarketingEditorSection title="Gamification Description" initialContent={websiteContent?.gamificationDescription} onSave={handleSaveContent} contentKey="gamificationDescription" contentType="textarea" />
+                <MarketingEditorSection title="Gamification Feature 1" initialContent={websiteContent?.gamificationFeature1} onSave={handleSaveContent} contentKey="gamificationFeature1" />
+                <MarketingEditorSection title="Gamification Feature 2" initialContent={websiteContent?.gamificationFeature2} onSave={handleSaveContent} contentKey="gamificationFeature2" />
+                <MarketingEditorSection title="Gamification Feature 3" initialContent={websiteContent?.gamificationFeature3} onSave={handleSaveContent} contentKey="gamificationFeature3" />
 
+                <MarketingEditorSection title="Features Comparison Title" initialContent={websiteContent?.featuresComparisonTitle} onSave={handleSaveContent} contentKey="featuresComparisonTitle" />
+                <MarketingEditorSection title="Basic Plan Header" initialContent={websiteContent?.basicHeader} onSave={handleSaveContent} contentKey="basicHeader" />
+                <MarketingEditorSection title="Premium Plan Header" initialContent={websiteContent?.premiumHeader} onSave={handleSaveContent} contentKey="premiumHeader" />
+                {/* Handle array fields by joining/splitting strings */}
+                <MarketingEditorSection
+                    title="Basic Features (comma-separated)"
+                    initialContent={Array.isArray(websiteContent?.basicFeatureList) ? websiteContent.basicFeatureList.join(', ') : ''}
+                    onSave={(val) => handleSaveContent('basicFeatureList', val.split(',').map(item => item.trim()).filter(item => item !== ''))}
+                    contentType="textarea"
+                    contentKey="basicFeatureList"
+                />
+                <MarketingEditorSection
+                    title="Premium Features (comma-separated)"
+                    initialContent={Array.isArray(websiteContent?.premiumFeatureList) ? websiteContent.premiumFeatureList.join(', ') : ''}
+                    onSave={(val) => handleSaveContent('premiumFeatureList', val.split(',').map(item => item.trim()).filter(item => item !== ''))}
+                    contentType="textarea"
+                    contentKey="premiumFeatureList"
+                />
+                <MarketingEditorSection title="Comparison CTA Text" initialContent={websiteContent?.comparisonCtaText} onSave={handleSaveContent} contentKey="comparisonCtaText" />
 
-                {/* Gamification */}
-                <MarketingEditorSection title="Gamification Section Title" initialContent={websiteContent.gamificationSectionTitle} onSave={(val) => handleSaveContent('gamificationSectionTitle', val)} contentType="text" />
-                <MarketingEditorSection title="Gamification Description" initialContent={websiteContent.gamificationDescription} onSave={(val) => handleSaveContent('gamificationDescription', val)} contentType="textarea" />
-                <MarketingEditorSection title="Gamification Feature 1" initialContent={websiteContent.gamificationFeature1} onSave={(val) => handleSaveContent('gamificationFeature1', val)} contentType="text" />
-                <MarketingEditorSection title="Gamification Feature 2" initialContent={websiteContent.gamificationFeature2} onSave={(val) => handleSaveContent('gamificationFeature2', val)} contentType="text" />
-                <MarketingEditorSection title="Gamification Feature 3" initialContent={websiteContent.gamificationFeature3} onSave={(val) => handleSaveContent('gamificationFeature3', val)} contentType="text" />
+                <MarketingEditorSection title="Download CTA Title" initialContent={websiteContent?.downloadCTATitle} onSave={handleSaveContent} contentKey="downloadCTATitle" />
+                <MarketingEditorSection title="Download CTA Subtitle" initialContent={websiteContent?.downloadCTASubtitle} onSave={handleSaveContent} contentKey="downloadCTASubtitle" contentType="textarea" />
+                <MarketingEditorSection title="App Store Link" initialContent={websiteContent?.appStoreLink} onSave={handleSaveContent} contentKey="appStoreLink" />
+                <MarketingEditorSection title="Google Play Link" initialContent={websiteContent?.googlePlayLink} onSave={handleSaveContent} contentKey="googlePlayLink" />
 
-
-                {/* Features Comparison */}
-                <MarketingEditorSection title="Features Comparison Title" initialContent={websiteContent.featuresComparisonTitle} onSave={(val) => handleSaveContent('featuresComparisonTitle', val)} contentType="text" />
-                <MarketingEditorSection title="Basic Plan Header" initialContent={websiteContent.basicHeader} onSave={(val) => handleSaveContent('basicHeader', val)} contentType="text" />
-                <MarketingEditorSection title="Premium Plan Header" initialContent={websiteContent.premiumHeader} onSave={(val) => handleSaveContent('premiumHeader', val)} contentType="text" />
-                {/* For lists like these, you might need a more advanced editor section or handle as single string */}
-                <MarketingEditorSection title="Basic Features (comma-separated)" initialContent={websiteContent.basicFeatureList.join(', ')} onSave={(val) => handleSaveContent('basicFeatureList', val.split(',').map(item => item.trim()))} contentType="textarea" />
-                <MarketingEditorSection title="Premium Features (comma-separated)" initialContent={websiteContent.premiumFeatureList.join(', ')} onSave={(val) => handleSaveContent('premiumFeatureList', val.split(',').map(item => item.trim()))} contentType="textarea" />
-                <MarketingEditorSection title="Comparison CTA Text" initialContent={websiteContent.comparisonCtaText} onSave={(val) => handleSaveContent('comparisonCtaText', val)} contentType="text" />
-
-
-                {/* Download CTA */}
-                <MarketingEditorSection title="Download CTA Title" initialContent={websiteContent.downloadCTATitle} onSave={(val) => handleSaveContent('downloadCTATitle', val)} contentType="text" />
-                <MarketingEditorSection title="Download CTA Subtitle" initialContent={websiteContent.downloadCTASubtitle} onSave={(val) => handleSaveContent('downloadCTASubtitle', val)} contentType="textarea" />
-                <MarketingEditorSection title="App Store Link" initialContent={websiteContent.appStoreLink} onSave={(val) => handleSaveContent('appStoreLink', val)} contentType="text" />
-                <MarketingEditorSection title="Google Play Link" initialContent={websiteContent.googlePlayLink} onSave={(val) => handleSaveContent('googlePlayLink', val)} contentType="text" />
-
-
-                {/* Footer */}
-                <MarketingEditorSection title="Footer About Text" initialContent={websiteContent.footerAboutText} onSave={(val) => handleSaveContent('footerAboutText', val)} contentType="textarea" />
-                <MarketingEditorSection title="Footer Contact Email" initialContent={websiteContent.footerContactEmail} onSave={(val) => handleSaveContent('footerContactEmail', val)} contentType="text" />
-                <MarketingEditorSection title="Footer Contact Phone" initialContent={websiteContent.footerContactPhone} onSave={(val) => handleSaveContent('footerContactPhone', val)} contentType="text" />
-                <MarketingEditorSection title="Footer Address" initialContent={websiteContent.footerAddress} onSave={(val) => handleSaveContent('footerAddress', val)} contentType="textarea" />
-                <MarketingEditorSection title="Footer Copyright" initialContent={websiteContent.footerCopyright} onSave={(val) => handleSaveContent('footerCopyright', val)} contentType="text" />
-                <MarketingEditorSection title="Footer Privacy Policy Text" initialContent={websiteContent.footerPrivacyPolicy} onSave={(val) => handleSaveContent('footerPrivacyPolicy', val)} contentType="text" />
-                <MarketingEditorSection title="Footer Terms of Service Text" initialContent={websiteContent.footerTermsOfService} onSave={(val) => handleSaveContent('footerTermsOfService', val)} contentType="text" />
+                <MarketingEditorSection title="Footer About Text" initialContent={websiteContent?.footerAboutText} onSave={handleSaveContent} contentKey="footerAboutText" contentType="textarea" />
+                <MarketingEditorSection title="Footer Contact Email" initialContent={websiteContent?.footerContactEmail} onSave={handleSaveContent} contentKey="footerContactEmail" />
+                <MarketingEditorSection title="Footer Contact Phone" initialContent={websiteContent?.footerContactPhone} onSave={handleSaveContent} contentKey="footerContactPhone" />
+                <MarketingEditorSection title="Footer Address" initialContent={websiteContent?.footerAddress} onSave={handleSaveContent} contentKey="footerAddress" contentType="textarea" />
+                <MarketingEditorSection title="Footer Copyright" initialContent={websiteContent?.footerCopyright} onSave={handleSaveContent} contentKey="footerCopyright" />
+                <MarketingEditorSection title="Footer Privacy Policy Text" initialContent={websiteContent?.footerPrivacyPolicy} onSave={handleSaveContent} contentKey="footerPrivacyPolicy" />
+                <MarketingEditorSection title="Footer Terms of Service Text" initialContent={websiteContent?.footerTermsOfService} onSave={handleSaveContent} contentKey="footerTermsOfService" />
             </div>
 
-            {/* Marketing Website Simulator */}
             <MarketingWebsiteSimulator content={websiteContent} />
 
-            {/* --- NEW STOP HOSTING BUTTON --- */}
             <div className="stop-hosting-section">
-                <button
-                    className="stop-hosting-button"
-                    onClick={handleStopHostingClick}
-                >
+                <button className="stop-hosting-button" onClick={handleStopHostingClick}>
                     Stop Hosting Marketing Website
                 </button>
             </div>
-            {/* --- END NEW STOP HOSTING BUTTON --- */}
 
-            {/* --- NEW CONFIRMATION MODAL --- */}
             <ConfirmationModal
                 message="Are you sure you want to stop hosting the marketing website? This action cannot be undone."
                 onConfirm={confirmStopHosting}
                 onCancel={cancelStopHosting}
                 isVisible={showStopHostingModal}
             />
-            {/* --- END NEW CONFIRMATION MODAL --- */}
         </div>
     );
 }

@@ -108,7 +108,7 @@ function UserFeedbacksPage() {
 
     return (
         <div className="user-feedbacks-page">
-            <h1 className="feedbacks-main-title">USER FEEDBACKS</h1>
+            <h1 className="feedbacks-main-title">USER FEEDBACK</h1>
 
             <div className="feedbacks-table-container">
                 <table className="feedbacks-table">

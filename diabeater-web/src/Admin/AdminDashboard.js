@@ -90,7 +90,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                     onClick={() => onNavigate('userFeedbacks')}
                 >
                     <i className="fas fa-comments"></i>
-                    <span>User Feedbacks</span>
+                    <span>User Feedback</span>
                 </div>
             </nav>
             <button className="logout-button" onClick={handleLogout}>Log out</button>
