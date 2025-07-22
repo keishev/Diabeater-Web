@@ -4,7 +4,6 @@ import rewardRepository from '../Repositories/RewardRepository';
 class AdminRewardsViewModel {
 
     constructor() {
-        // No MobX auto-observable as the React component will manage its own state with useState
     }
 
     async getAvailableBasicRewards() {
@@ -25,20 +24,14 @@ class AdminRewardsViewModel {
 
     async addReward(rewardData, type) {
         try {
-            // --- REMOVED DUPLICATE CHECK LOGIC HERE ---
-            // This now allows for duplicate reward names (e.g., "Export PDF")
-            // to be added multiple times with different quantities/points.
-            
             if (type === 'basic') {
-                // Call repository with the data structure expected by BasicReward model (name, quantity, pointsNeeded)
                 await rewardRepository.addBasicReward(rewardData);
             } else if (type === 'premium') {
-                // Call repository with the data structure expected by PremiumReward model (reward, discount, pointsNeeded)
                 await rewardRepository.addPremiumReward(rewardData);
             }
         } catch (e) {
             console.error("Error in ViewModel adding reward:", e);
-            throw e; // Re-throw to be caught by the React component
+            throw e; 
         }
     }
 

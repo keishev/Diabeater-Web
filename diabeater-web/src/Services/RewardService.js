@@ -33,11 +33,12 @@ class RewardService {
     async addBasicReward(rewardData) {
         // rewardData is an instance of BasicReward
         const docRef = await addDoc(this.rewardsCollection, rewardData.toFirestore());
+        await updateDoc(docRef, { id: docRef.id }); 
         return { ...rewardData, id: docRef.id };
     }
 
     async updateBasicReward(rewardId, newData) {
-        const docRef = doc(this.rewardsCollection, rewardId); // Update in the consolidated collection
+        const docRef = doc(this.rewardsCollection, rewardId);
         await updateDoc(docRef, newData);
     }
 
@@ -54,8 +55,8 @@ class RewardService {
     }
 
     async addPremiumReward(rewardData) {
-        // rewardData is an instance of PremiumReward
         const docRef = await addDoc(this.rewardsCollection, rewardData.toFirestore());
+        await updateDoc(docRef, { id: docRef.id }); 
         return { ...rewardData, id: docRef.id };
     }
 

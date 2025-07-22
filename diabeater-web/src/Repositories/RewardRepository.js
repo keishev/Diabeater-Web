@@ -23,11 +23,10 @@ class RewardRepository {
     }
 
     async addBasicReward(rewardData) {
-        // rewardData comes as a plain object from ViewModel, convert to BasicReward model
-        const newReward = new BasicReward(null, rewardData.name, rewardData.quantity, rewardData.pointsNeeded);
+        const newReward = new BasicReward(null, rewardData.name, rewardData.quantity, rewardData.pointsNeeded, rewardData.featureKey);
         const addedReward = await this.rewardService.addBasicReward(newReward);
         // The service returns the data with an ID, convert back to a model instance
-        return new BasicReward(addedReward.id, addedReward.name, addedReward.quantity, addedReward.pointsNeeded);
+        return new BasicReward(addedReward.id, addedReward.name, addedReward.quantity, addedReward.pointsNeeded, addedReward.featureKey);
     }
 
     async updateBasicReward(rewardId, quantity, pointsNeeded) {
@@ -45,11 +44,9 @@ class RewardRepository {
     }
 
     async addPremiumReward(rewardData) {
-        // rewardData comes as a plain object from ViewModel, convert to PremiumReward model
-        const newReward = new PremiumReward(null, rewardData.reward, rewardData.discount, rewardData.pointsNeeded);
+        const newReward = new PremiumReward(null, rewardData.reward, rewardData.discount, rewardData.pointsNeeded, rewardData.featureKey);
         const addedReward = await this.rewardService.addPremiumReward(newReward);
-        // The service returns the data with an ID, convert back to a model instance
-        return new PremiumReward(addedReward.id, addedReward.reward, addedReward.discount, addedReward.pointsNeeded);
+        return new PremiumReward(addedReward.id, addedReward.reward, addedReward.discount, addedReward.pointsNeeded, addedReward.featureKey);
     }
 
     /**
