@@ -134,7 +134,6 @@ const AdminRewards = () => {
                         description: currentRewardForModal.description,
                     }, 'basic');
                 } else if (type === 'premium') {
-                    console.log('currew' + currentRewardForModal.description)
                     await adminRewardsViewModel.addReward({
                         reward: rewardData.reward, // Original reward name from AvailableReward (used for premium type)
                         discount: rewardData.quantity, // quantity from modal is discount for premium
