@@ -1,17 +1,18 @@
 // src/models/Reward.js
 class BasicReward {
-    constructor(id, name, quantity, pointsNeeded, featureKey) {
+    constructor(id, name, quantity, pointsNeeded, featureKey, description) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
         this.pointsNeeded = pointsNeeded;
         this.featureKey = featureKey;
         this.type = 'basic'; 
+        this.description = description;
     }
 
     static fromFirestore(doc) {
         const data = doc.data();
-        return new BasicReward(doc.id, data.name, data.quantity, data.pointsNeeded, data.featureKey);
+        return new BasicReward(doc.id, data.name, data.quantity, data.pointsNeeded, data.featureKey, data.description);
     }
 
     toFirestore() {
@@ -21,23 +22,25 @@ class BasicReward {
             pointsNeeded: this.pointsNeeded,
             featureKey: this.featureKey, 
             type: this.type, 
+            description: this.description,
         };
     }
 }
 
 class PremiumReward {
-    constructor(id, reward, discount, pointsNeeded, featureKey) {
+    constructor(id, reward, discount, pointsNeeded, featureKey, description) {
         this.id = id;
         this.reward = reward; 
         this.discount = discount;
         this.pointsNeeded = pointsNeeded;
         this.featureKey = featureKey;
         this.type = 'premium';
+        this.description = description;
     }
 
     static fromFirestore(doc) {
         const data = doc.data();
-        return new PremiumReward(doc.id, data.reward, data.discount, data.pointsNeeded, data.featureKey);
+        return new PremiumReward(doc.id, data.reward, data.discount, data.pointsNeeded, data.featureKey, data.description);
     }
 
     toFirestore() {
@@ -47,6 +50,7 @@ class PremiumReward {
             pointsNeeded: this.pointsNeeded,
             featureKey: this.featureKey, 
             type: this.type,
+            description: this.description,
         };
     }
 }

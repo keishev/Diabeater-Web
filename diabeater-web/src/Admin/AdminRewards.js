@@ -65,7 +65,8 @@ const AdminRewards = () => {
             quantity: '', 
             discount: '', 
             pointsNeeded: '',
-            featureKey: reward.featureKey 
+            featureKey: reward.featureKey,
+            description: reward.description,
         });
 
         setModalUserType(type);
@@ -79,6 +80,7 @@ const AdminRewards = () => {
             ...reward,
             quantity: type === 'premium' ? reward.discount : reward.quantity,
             reward: type === 'premium' ? reward.reward : reward.name,
+            description: reward.description,
         });
         setIsModalEditing(true);
         setShowRewardModal(true);
@@ -129,13 +131,16 @@ const AdminRewards = () => {
                         quantity: rewardData.quantity,
                         pointsNeeded: rewardData.pointsNeeded,
                         featureKey: currentRewardForModal.featureKey,
+                        description: currentRewardForModal.description,
                     }, 'basic');
                 } else if (type === 'premium') {
+                    console.log('currew' + currentRewardForModal.description)
                     await adminRewardsViewModel.addReward({
                         reward: rewardData.reward, // Original reward name from AvailableReward (used for premium type)
                         discount: rewardData.quantity, // quantity from modal is discount for premium
                         pointsNeeded: rewardData.pointsNeeded,
                         featureKey: currentRewardForModal.featureKey,
+                        description: currentRewardForModal.description,
                     }, 'premium');
                 }
                 alert(`${rewardData.name || rewardData.reward} added successfully!`);
