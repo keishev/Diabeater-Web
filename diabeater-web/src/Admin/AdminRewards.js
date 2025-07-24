@@ -58,18 +58,17 @@ const AdminRewards = () => {
     }, [fetchAllRewards]);
 
     const handleOpenModalToAdd = (reward, type) => {
-        // For adding, initialize quantity/discount and pointsNeeded to empty for new input.
-        // Reward here is an AvailableReward object from reward_templates.
-        // We pass 'name' for basic, and 'reward' (which is also the name) for premium
-        // to the modal's rewardData property, so it can display the correct label.
         setCurrentRewardForModal({
-            id: reward.id, // ID from reward_templates (template ID)
-            name: reward.name, // The title from reward_templates, used for basic reward
-            reward: reward.name, // The title from reward_templates, used for premium reward display
-            quantity: '', // For new input
-            discount: '', // For new input (modal uses 'quantity' field for both)
-            pointsNeeded: '' // For new input
+            id: reward.id, 
+            name: reward.name,
+            reward: reward.name, 
+            quantity: '', 
+            discount: '', 
+            pointsNeeded: '',
+            featureKey: reward.featureKey,
+            description: reward.description,
         });
+
         setModalUserType(type);
         setIsModalEditing(false);
         setShowRewardModal(true);
@@ -77,14 +76,11 @@ const AdminRewards = () => {
 
     const handleOpenModalToEdit = (reward, type) => {
         setModalUserType(type);
-        // Reward here is a BasicReward or PremiumReward object from configured rewards.
-        // The 'quantity' field in the modal needs to display the correct value
-        // (either 'quantity' for basic or 'discount' for premium).
-        // The 'reward' property is used by the modal for displaying the name of premium rewards.
         setCurrentRewardForModal({
             ...reward,
             quantity: type === 'premium' ? reward.discount : reward.quantity,
             reward: type === 'premium' ? reward.reward : reward.name,
+            description: reward.description,
         });
         setIsModalEditing(true);
         setShowRewardModal(true);
@@ -97,7 +93,7 @@ const AdminRewards = () => {
             try {
                 await adminRewardsViewModel.deleteReward(id, type);
                 alert('Reward deleted successfully!');
-                await fetchAllRewards(); // Re-fetch all data to update UI
+                await fetchAllRewards(); // Re-fetch all data 
             } catch (err) {
                 console.error("Error deleting reward:", err);
                 setError(err.message || "Failed to delete reward.");
@@ -115,13 +111,13 @@ const AdminRewards = () => {
         try {
             if (isModalEditing) {
                 if (type === 'basic') {
-                    await adminRewardsViewModel.updateReward(rewardData.id, 'basic', {
+                     await adminRewardsViewModel.updateReward(rewardData.id, 'basic', {
                         quantity: rewardData.quantity,
                         pointsNeeded: rewardData.pointsNeeded
                     });
                 } else if (type === 'premium') {
-                    await adminRewardsViewModel.updateReward(rewardData.id, 'premium', {
-                        discount: rewardData.quantity, // quantity from modal is discount for premium
+                     await adminRewardsViewModel.updateReward(rewardData.id, 'premium', {
+                        discount: rewardData.quantity, 
                         pointsNeeded: rewardData.pointsNeeded
                     });
                 }
@@ -133,13 +129,17 @@ const AdminRewards = () => {
                     await adminRewardsViewModel.addReward({
                         name: rewardData.name, // Original name from AvailableReward
                         quantity: rewardData.quantity,
-                        pointsNeeded: rewardData.pointsNeeded
+                        pointsNeeded: rewardData.pointsNeeded,
+                        featureKey: currentRewardForModal.featureKey,
+                        description: currentRewardForModal.description,
                     }, 'basic');
                 } else if (type === 'premium') {
                     await adminRewardsViewModel.addReward({
                         reward: rewardData.reward, // Original reward name from AvailableReward (used for premium type)
                         discount: rewardData.quantity, // quantity from modal is discount for premium
-                        pointsNeeded: rewardData.pointsNeeded
+                        pointsNeeded: rewardData.pointsNeeded,
+                        featureKey: currentRewardForModal.featureKey,
+                        description: currentRewardForModal.description,
                     }, 'premium');
                 }
                 alert(`${rewardData.name || rewardData.reward} added successfully!`);

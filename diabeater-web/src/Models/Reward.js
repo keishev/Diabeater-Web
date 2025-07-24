@@ -1,16 +1,18 @@
 // src/models/Reward.js
 class BasicReward {
-    constructor(id, name, quantity, pointsNeeded) {
+    constructor(id, name, quantity, pointsNeeded, featureKey, description) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
         this.pointsNeeded = pointsNeeded;
-        this.type = 'basic'; // Explicitly set type for storage
+        this.featureKey = featureKey;
+        this.type = 'basic'; 
+        this.description = description;
     }
 
     static fromFirestore(doc) {
         const data = doc.data();
-        return new BasicReward(doc.id, data.name, data.quantity, data.pointsNeeded);
+        return new BasicReward(doc.id, data.name, data.quantity, data.pointsNeeded, data.featureKey, data.description);
     }
 
     toFirestore() {
@@ -18,23 +20,27 @@ class BasicReward {
             name: this.name,
             quantity: this.quantity,
             pointsNeeded: this.pointsNeeded,
-            type: this.type, // Include type in Firestore document
+            featureKey: this.featureKey, 
+            type: this.type, 
+            description: this.description,
         };
     }
 }
 
 class PremiumReward {
-    constructor(id, reward, discount, pointsNeeded) {
+    constructor(id, reward, discount, pointsNeeded, featureKey, description) {
         this.id = id;
-        this.reward = reward; // This is the reward name (e.g., "Subscription Discount")
+        this.reward = reward; 
         this.discount = discount;
         this.pointsNeeded = pointsNeeded;
-        this.type = 'premium'; // Explicitly set type for storage
+        this.featureKey = featureKey;
+        this.type = 'premium';
+        this.description = description;
     }
 
     static fromFirestore(doc) {
         const data = doc.data();
-        return new PremiumReward(doc.id, data.reward, data.discount, data.pointsNeeded);
+        return new PremiumReward(doc.id, data.reward, data.discount, data.pointsNeeded, data.featureKey, data.description);
     }
 
     toFirestore() {
@@ -42,7 +48,9 @@ class PremiumReward {
             reward: this.reward,
             discount: this.discount,
             pointsNeeded: this.pointsNeeded,
-            type: this.type, // Include type in Firestore document
+            featureKey: this.featureKey, 
+            type: this.type,
+            description: this.description,
         };
     }
 }
@@ -50,7 +58,7 @@ class PremiumReward {
 class AvailableReward {
     // This model represents rewards fetched from 'reward_templates'
     // It maps 'title' from Firestore to its 'name' property for consistency in UI.
-    constructor(id, name, type, description = null, featureKey = null) { // Added description and featureKey
+    constructor(id, name, type, description = null, featureKey = null) { 
         this.id = id;
         this.name = name; // Will hold the 'title' from Firebase reward_templates
         this.type = type; // 'basic' or 'premium'
