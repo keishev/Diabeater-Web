@@ -4,6 +4,8 @@
     padding: 30px;
     background-color: #fffaf3; /* Light background matching your admin panel */
     min-height: calc(100vh - 60px); /* Adjust based on your header/footer if any */
+    font-family: Arial, sans-serif; /* Keep consistent font */
+    color: #333; /* Default text color */
 }
 
 .feedbacks-main-title {
@@ -19,16 +21,18 @@
 }
 
 .feedbacks-table-container {
-    background-color: #fffaf3;
+    background-color: #fffaf3; /* Keep consistent with page background */
     border-radius: 8px;
     margin-left: 40px;
+    margin-right: 40px; /* Added right margin for symmetry */
     overflow-x: auto; /* For responsiveness on smaller screens */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Soft shadow for definition */
 }
 
 .feedbacks-table {
-    width: 100%;
+    width: 100%; /* Important: Set to 100% within its container */
     border-collapse: collapse;
-    width: 1200px;
+    min-width: 1200px; /* Ensures the table is at least this wide */
     table-layout: fixed; /* Ensures columns have fixed width based on content or defined width */
 }
 
@@ -38,51 +42,66 @@
     text-align: left;
     border-bottom: 1.5px solid #8f8f8f;
     font-size: 16px;
-    color: #1e525c;
+    color: #1e525c; /* Main text color for table content */
+    word-wrap: break-word; /* Prevents long words from breaking layout */
 }
 
 .feedbacks-table th {
-    background-color: #fffaf3;
+    background-color: #fffaf3; /* Consistent with table background */
     font-weight: bold;
     color: #1e525c;
     text-transform: uppercase;
     font-size: 18px;
 }
 
-/* Column widths - adjust as needed */
+/* Column widths - Adjusted for 5 columns: Name, Feedback, Rating, Status, Actions */
 .feedbacks-table th:nth-child(1),
 .feedbacks-table td:nth-child(1) {
-    width: 20%; /* Name */
+    width: 15%; /* Name */
 }
 .feedbacks-table th:nth-child(2),
 .feedbacks-table td:nth-child(2) {
-    width: 55%; /* Feedback */
+    width: 45%; /* Feedback */
 }
 .feedbacks-table th:nth-child(3),
 .feedbacks-table td:nth-child(3) {
-    width: 150px; /* Publish to Website */
+    width: 10%; /* Rating */
+    text-align: center;
+}
+.feedbacks-table th:nth-child(4),
+.feedbacks-table td:nth-child(4) {
+    width: 15%; /* Status */
+    text-align: center;
+}
+.feedbacks-table th:nth-child(5),
+.feedbacks-table td:nth-child(5) {
+    width: 15%; /* Actions */
     text-align: center; /* Center the button/status */
 }
 
-.publish-cell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%; /* Ensure content fills cell height */
+
+.feedbacks-table tbody tr:last-child td {
+    border-bottom: none; /* No border on the last row */
 }
 
+.feedbacks-table tbody tr:hover {
+    background-color: #fcf2e6; /* Light orange hover effect */
+}
+
+
+/* Approve Button */
 .approve-button {
     background-color: #ff9800; /* Orange from your palette */
     color: white;
     padding: 8px 18px;
     border: none;
-
     border-radius: 20px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
     min-width: 90px; /* Ensure consistent button size */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
 
 .approve-button:hover {
@@ -94,9 +113,14 @@
     transform: translateY(0);
 }
 
-.feedback-status.approved {
-    background-color: #d4edda; /* Light green background */
-    color: #155724; /* Dark green text */
+.approve-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Feedback Status Styling */
+.feedback-status {
     padding: 8px 18px;
     border-radius: 20px;
     font-size: 14px;
@@ -104,4 +128,71 @@
     min-width: 90px;
     display: inline-block; /* To allow padding/border-radius */
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* Subtle shadow for statuses */
+}
+
+.feedback-status.approved {
+    background-color: #d4edda; /* Light green background */
+    color: #155724; /* Dark green text */
+}
+
+.feedback-status.pending {
+    background-color: #fff3cd; /* Light yellow background */
+    color: #856404; /* Dark yellow text */
+}
+
+.feedback-status.rejected {
+    background-color: #f8d7da; /* Light red background */
+    color: #721c24; /* Dark red text */
+}
+
+/* Star Rating */
+.star-rating {
+  display: flex; /* Use flex to align stars horizontally */
+  justify-content: center; /* Center stars in the cell */
+  align-items: center;
+  color: #ffc107; /* Gold color for stars */
+  font-size: 1.2em; /* Adjust star size */
+  gap: 2px; /* Small gap between stars */
+}
+
+.star.filled {
+  color: #ffc107;
+}
+
+.star.empty {
+  color: #ccc;
+}
+
+.featured-badge {
+  margin-left: 8px;
+  font-size: 0.8em;
+  padding: 3px 6px;
+  background-color: #ffe08a; /* Light gold background */
+  border-radius: 3px;
+  color: #b38a00; /* Darker gold text */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow */
+}
+
+/* Empty state */
+.no-feedbacks {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+    font-style: italic;
+    font-size: 1.1em;
+}
+
+/* Loading and Error states */
+.user-feedbacks-page.loading,
+.user-feedbacks-page.error {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.4em; /* Slightly larger text */
+    color: #555;
+    font-weight: bold;
+}
+
+.user-feedbacks-page.error {
+    color: #dc3545; /* Red for error messages */
 }

@@ -1,114 +1,142 @@
 // src/Admin/UserFeedbacksPage.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConfirmationModal from './components/ConfirmationModal';
-import SuccessModal from './components/SuccessModal'; // Import the new success modal
-import './UserFeedbacksPage.css'; // Create this CSS file next
+import SuccessModal from './components/SuccessModal';
+import useUserFeedbackViewModel from '../ViewModels/UserFeedbackViewModel'; // Adjust path
+import './UserFeedbacksPage.css';
+
+// Helper function to render stars
+const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 0; i < 5; i++) {
+        if (i < rating) {
+            stars.push(<span key={i} className="star filled">&#9733;</span>); // Filled star
+        } else {
+            stars.push(<span key={i} className="star">&#9734;</span>); // Empty star
+        }
+    }
+    return <div className="stars-container">{stars}</div>;
+};
 
 function UserFeedbacksPage() {
-    // Hardcoded feedback data (in a real app, this would come from an API)
-    const [feedbacks, setFeedbacks] = useState([
-        {
-            id: 1,
-            name: "Beatrice Lim",
-            feedback: "Simple, clean, and effective. Thank you for creating something so helpful for diabetics",
-            status: "Approved" // 'Approved' or 'Pending'
-        },
-        {
-            id: 2,
-            name: "John Doe",
-            feedback: "Please add more local foods to the food database.",
-            status: "Pending"
-        },
-        {
-            id: 3,
-            name: "Rachel Allen",
-            feedback: "Helpful, but would like to see more graphs and trends over time",
-            status: "Pending"
-        },
-        {
-            id: 4,
-            name: "Beatrice Lim",
-            feedback: "Simple, clean, and effective. Thank you for creating something so helpful for diabetics",
-            status: "Approved"
-        },
-        // --- NEW FEEDBACK ENTRIES START HERE ---
-        {
-            id: 5,
-            name: "Michael Chen",
-            feedback: "The nutritionist support has been invaluable. Highly recommend the premium plan!",
-            status: "Pending"
-        },
-        {
-            id: 6,
-            name: "Sophie Davis",
-            feedback: "I love the gamification features! It makes managing my diabetes much more engaging.",
-            status: "Pending"
-        },
-        {
-            id: 7,
-            name: "Chris Evans",
-            feedback: "The meal plans are fantastic, very easy to follow and delicious recipes.",
-            status: "Approved"
-        },
-        {
-            id: 8,
-            name: "Linda Wong",
-            feedback: "User interface is intuitive, but sometimes data sync is a bit slow.",
-            status: "Pending"
-        },
-        {
-            id: 9,
-            name: "Omar Sharif",
-            feedback: "Great app for tracking glucose, detailed reports are very useful for my doctor.",
-            status: "Approved"
-        },
-        {
-            id: 10,
-            name: "Grace Lee",
-            feedback: "I wish there was a feature to connect with other users for peer support.",
-            status: "Pending"
-        },
-        // --- NEW FEEDBACK ENTRIES END HERE ---
-    ]);
+    const {
+        feedbacks,
+        marketingFeedbacks,
+        loading,
+        error,
+        approveFeedback,
+        toggleDisplayOnMarketing,
+        automateMarketingFeedbacks,
+        fetchFeedbacks // Added to allow manual refresh
+    } = useUserFeedbackViewModel();
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
+    const [modalMessage, setModalMessage] = useState("");
+    const [confirmAction, setConfirmAction] = useState(() => () => {}); // To store the function to execute on confirm
 
     const handleApproveClick = (id) => {
         setSelectedFeedbackId(id);
-        setShowConfirmModal(true); // Show confirmation modal
+        setModalMessage("Are you sure to publish this feedback to the website?");
+        setConfirmAction(() => async () => {
+            const success = await approveFeedback(id);
+            if (success) {
+                setShowSuccessModal(true);
+                setModalMessage("Feedback has been published.");
+            } else {
+                alert("Failed to publish feedback."); // Basic error handling
+            }
+        });
+        setShowConfirmModal(true);
     };
 
-    const confirmPublish = () => {
-        // Find the selected feedback and update its status
-        setFeedbacks(prevFeedbacks =>
-            prevFeedbacks.map(feedback =>
-                feedback.id === selectedFeedbackId
-                    ? { ...feedback, status: "Approved" }
-                    : feedback
-            )
+    const handleToggleMarketingClick = (id, currentDisplayStatus) => {
+        setSelectedFeedbackId(id);
+        setModalMessage(
+            currentDisplayStatus
+                ? "Are you sure you want to remove this feedback from the marketing website?"
+                : "Are you sure you want to feature this feedback on the marketing website?"
         );
-        setShowConfirmModal(false); // Close confirmation modal
-        setShowSuccessModal(true); // Show success modal
-        console.log(`Feedback ID ${selectedFeedbackId} has been published.`);
-        // In a real application, you would send an API request here
-        // to update the feedback status on the backend.
+        setConfirmAction(() => async () => {
+            const success = await toggleDisplayOnMarketing(id, currentDisplayStatus);
+            if (success) {
+                setShowSuccessModal(true);
+                setModalMessage(
+                    currentDisplayStatus
+                        ? "Feedback removed from marketing."
+                        : "Feedback featured on marketing."
+                );
+            } else {
+                alert("Failed to update marketing status."); // Basic error handling
+            }
+        });
+        setShowConfirmModal(true);
     };
 
-    const cancelPublish = () => {
-        setShowConfirmModal(false); // Close confirmation modal
+    const handleAutomateMarketingClick = () => {
+        setModalMessage("Are you sure you want to automatically select up to 3 five-star feedbacks for the marketing website?");
+        setConfirmAction(() => async () => {
+            const success = await automateMarketingFeedbacks();
+            if (success) {
+                setShowSuccessModal(true);
+                setModalMessage("Automated marketing feedbacks updated.");
+            } else {
+                alert("Failed to automate marketing feedbacks.");
+            }
+        });
+        setShowConfirmModal(true);
+    };
+
+    const confirmActionAndCloseModal = () => {
+        confirmAction();
+        setShowConfirmModal(false);
+    };
+
+    const cancelAction = () => {
+        setShowConfirmModal(false);
         setSelectedFeedbackId(null);
     };
 
     const handleSuccessOk = () => {
-        setShowSuccessModal(false); // Close success modal
+        setShowSuccessModal(false);
         setSelectedFeedbackId(null);
     };
+
+    if (loading) {
+        return <div className="user-feedbacks-page">Loading feedbacks...</div>;
+    }
+
+    if (error) {
+        return <div className="user-feedbacks-page error">Error: {error.message}</div>;
+    }
 
     return (
         <div className="user-feedbacks-page">
             <h1 className="feedbacks-main-title">USER FEEDBACK</h1>
+
+            <div className="marketing-section">
+                <h2>Featured Marketing Feedbacks</h2>
+                <button
+                    className="automate-marketing-button"
+                    onClick={handleAutomateMarketingClick}
+                >
+                    Automate Marketing Feedbacks (Max 3, 5-star only)
+                </button>
+                <div className="marketing-feedbacks-list">
+                    {marketingFeedbacks.length > 0 ? (
+                        marketingFeedbacks.map(feedback => (
+                            <div key={feedback.id} className="marketing-feedback-item">
+                                <p><strong>{feedback.userFirstName}</strong></p>
+                                {renderStars(feedback.rating)}
+                                <p>"{feedback.message}"</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No 5-star feedbacks currently featured for marketing.</p>
+                    )}
+                </div>
+            </div>
 
             <div className="feedbacks-table-container">
                 <table className="feedbacks-table">
@@ -116,17 +144,26 @@ function UserFeedbacksPage() {
                         <tr>
                             <th>Name</th>
                             <th>Feedback</th>
-                            <th>Publish to Website</th>
+                            <th>Rating</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                            <th>Display on Marketing</th>
                         </tr>
                     </thead>
                     <tbody>
                         {feedbacks.map((feedback) => (
                             <tr key={feedback.id}>
-                                <td>{feedback.name}</td>
-                                <td>{feedback.feedback}</td>
-                                <td className="publish-cell">
+                                <td>{feedback.userFirstName}</td>
+                                <td>{feedback.message}</td>
+                                <td>{renderStars(feedback.rating)}</td>
+                                <td>
+                                    <span className={`feedback-status ${feedback.status.toLowerCase()}`}>
+                                        {feedback.status}
+                                    </span>
+                                </td>
+                                <td className="action-cell">
                                     {feedback.status === "Approved" ? (
-                                        <span className="feedback-status approved">Approved</span>
+                                        <span className="feedback-action approved">Approved</span>
                                     ) : (
                                         <button
                                             className="approve-button"
@@ -136,6 +173,15 @@ function UserFeedbacksPage() {
                                         </button>
                                     )}
                                 </td>
+                                <td className="publish-cell">
+                                    <button
+                                        className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
+                                        onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
+                                        disabled={feedback.status !== "Approved" || feedback.rating !== 5} // Only allow 5-star approved feedbacks
+                                    >
+                                        {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -144,15 +190,15 @@ function UserFeedbacksPage() {
 
             {/* Confirmation Modal */}
             <ConfirmationModal
-                message="Are you sure to publish this feedback to the marketing website??"
-                onConfirm={confirmPublish}
-                onCancel={cancelPublish}
+                message={modalMessage}
+                onConfirm={confirmActionAndCloseModal}
+                onCancel={cancelAction}
                 isVisible={showConfirmModal}
             />
 
             {/* Success Modal */}
             <SuccessModal
-                message="Feedback has been published."
+                message={modalMessage}
                 onOk={handleSuccessOk}
                 isVisible={showSuccessModal}
             />
