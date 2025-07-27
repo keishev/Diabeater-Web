@@ -1,4 +1,3 @@
-// AdminStatService.js
 import app from '../firebase'; // Assuming your firebase config is here
 import {
     getFirestore,
@@ -96,7 +95,7 @@ const AdminStatService = {
         }
     },
 
-    async getWeeklyTopMealPlans(count = 5) {
+    async getWeeklyTopMealPlans(count = 3) { // ⭐ CHANGED: Default count to 3
         try {
             const savedMealPlansSnapshot = await getDocs(collection(db, 'saved_meal_plans'));
             const mealPlanSaves = {};
@@ -110,7 +109,7 @@ const AdminStatService = {
 
             const sortedMealPlans = Object.entries(mealPlanSaves)
                 .sort(([, countA], [, countB]) => countB - countA)
-                .slice(0, count);
+                .slice(0, count); // ⭐ THIS IS WHERE THE LIMIT IS APPLIED
 
             const topMealPlanIds = sortedMealPlans.map(([mealPlanId]) => mealPlanId);
 
@@ -133,6 +132,7 @@ const AdminStatService = {
                 ...doc.data()
             }));
 
+            // Ensure the data is returned in the order of most saves
             const orderedData = topMealPlanIds.map(id => data.find(plan => plan._id === id)).filter(Boolean);
 
             console.log(`[Service] getWeeklyTopMealPlans (top ${count}): Found ${orderedData.length} plans. Sample:`, orderedData.slice(0,2));

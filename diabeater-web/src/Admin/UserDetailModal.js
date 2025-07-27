@@ -1,17 +1,14 @@
 // src/Admin/UserDetailModal.js
 import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // ⭐ Corrected import to AdminStatViewModel
-import './UserDetailModal.css'; // Make sure you have this CSS file
+import adminStatViewModel from '../ViewModels/AdminStatViewModel';
+import './UserDetailModal.css';
 import moment from 'moment'; // For date formatting
 
 const UserDetailModal = observer(({ onClose }) => {
-    // We get the selected user directly from the ViewModel
-    // ⭐ Using selectedUserForManagement as per AdminStatViewModel
     const user = adminStatViewModel.selectedUserForManagement;
     const { loading, error, success, showRejectionReasonModal, rejectionReason } = adminStatViewModel;
 
-    // Log the user prop when it changes for debugging
     useEffect(() => {
         console.log("[UserDetailModal] Received user prop:", user);
         if (!user) {
@@ -19,58 +16,45 @@ const UserDetailModal = observer(({ onClose }) => {
         }
     }, [user]);
 
-    // Render nothing if no user is selected
     if (!user) return null;
 
-    // Determine if the user is a nutritionist candidate or approved
-    // Assuming 'role' field is what dictates a user's type.
     const isNutritionistCandidate = user.role === 'pending_nutritionist' || (user.role === 'user' && user.nutritionistApplicationStatus === 'pending');
     const isApprovedNutritionist = user.role === 'nutritionist';
 
-    // Handler for Approve action
     const handleApprove = async () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to APPROVE ${userName}'s nutritionist application?`)) {
             const response = await adminStatViewModel.approveNutritionist(user._id);
             if (response.success) {
-                // ViewModel will set success message and update local state
-                onClose(); // Close modal after successful action
+                onClose();
             }
-            // ViewModel will set error message if failed
         }
     };
 
-    // Handler to open rejection reason modal
     const handleOpenRejectReason = () => {
         adminStatViewModel.setShowRejectionReasonModal(true);
     };
 
-    // Handler for Confirm Reject action
     const handleConfirmReject = async () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to REJECT ${userName}'s nutritionist application? This action cannot be undone.`)) {
             const response = await adminStatViewModel.rejectNutritionist(user._id);
             if (response.success) {
-                // ViewModel will set success message and update local state
-                onClose(); // Close modal after successful action
+                onClose();
             }
-            // ViewModel will set error message if failed
         }
     };
 
-    // Handler for viewing certificate
     const handleViewDocument = async () => {
         await adminStatViewModel.viewCertificate(user._id);
     };
 
-    // Handlers for suspend/unsuspend (passed from AdminStatDashboard as props)
-    // These now call the unified suspendUserAccount in the ViewModel
     const handleSuspend = async () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to suspend ${userName}'s account?`)) {
             const response = await adminStatViewModel.suspendUserAccount(user._id, true);
             if (response.success) {
-                onClose(); // Close modal after action
+                onClose();
             }
         }
     };
@@ -80,31 +64,40 @@ const UserDetailModal = observer(({ onClose }) => {
         if (window.confirm(`Are you sure you want to unsuspend ${userName}'s account?`)) {
             const response = await adminStatViewModel.suspendUserAccount(user._id, false);
             if (response.success) {
-                onClose(); // Close modal after action
+                onClose();
             }
         }
     };
 
-    // Handler for changing role
     const handleChangeRole = async (newRole) => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to change ${userName}'s role to ${newRole}?`)) {
             const response = await adminStatViewModel.updateUserRole(user._id, newRole);
             if (response.success) {
-                onClose(); // Close modal after action
+                onClose();
             }
         }
     };
 
-    // Handler for deleting account
     const handleDeleteAccount = async () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to PERMANENTLY DELETE ${userName}'s account? This action cannot be undone.`)) {
             const response = await adminStatViewModel.deleteUserAccount(user._id);
             if (response.success) {
-                onClose(); // Close modal after action
+                onClose();
             }
         }
+    };
+
+    // Helper function to format date
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
+        // Check if it's a Firebase Timestamp object
+        if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+            return moment(timestamp.toDate()).format('DD/MM/YYYY HH:mm');
+        }
+        // If it's already a JS Date object or a string Moment can parse
+        return moment(timestamp).format('DD/MM/YYYY HH:mm');
     };
 
     return (
@@ -113,13 +106,11 @@ const UserDetailModal = observer(({ onClose }) => {
                 <button className="user-detail-modal-close-button" onClick={onClose}>&times;</button>
                 <h2>User Details</h2>
 
-                {/* Display loading/error/success messages from ViewModel */}
                 {loading && <p className="loading-message">Processing...</p>}
                 {error && <p className="error-message">{error}</p>}
                 {success && <p className="success-message">{success}</p>}
 
                 <div className="user-detail-modal-info">
-                    {/* Ensure these properties match what your user objects have */}
                     <p><strong>Name:</strong> {user.firstName ? `${user.firstName} ${user.lastName}` : (user.name || 'N/A')}</p>
                     <p><strong>Email:</strong> {user.email || 'N/A'}</p>
                     {user.accountType && <p><strong>Account Type:</strong> {user.accountType}</p>}
@@ -130,10 +121,9 @@ const UserDetailModal = observer(({ onClose }) => {
                         {user.status || 'N/A'}
                     </p>
                     {user.userSince && <p><strong>User Since:</strong> {user.userSince}</p>}
-                    {/* Assuming createdAt can be a Firebase Timestamp, convert it */}
-                    {user.createdAt && (user.createdAt.toDate ? <p><strong>Created At:</strong> {moment(user.createdAt.toDate()).format('DD/MM/YYYY HH:mm')}</p> : <p><strong>Created At:</strong> {user.createdAt}</p>)}
+                    {/* Use the new formatDate helper function */}
+                    <p><strong>Created At:</strong> {formatDate(user.createdAt)}</p>
 
-                    {/* Show certificate details for nutritionists */}
                     {(isNutritionistCandidate || isApprovedNutritionist) && user.certificateUrl && (
                         <div className="certificate-section">
                             <p><strong>Certificate:</strong>
@@ -145,7 +135,6 @@ const UserDetailModal = observer(({ onClose }) => {
                     )}
 
                     <div className="user-detail-modal-actions">
-                        {/* Suspend/Unsuspend button */}
                         {user.status && user.status.toLowerCase() === 'active' ? (
                             <button
                                 className="action-button suspend-button"
@@ -164,7 +153,6 @@ const UserDetailModal = observer(({ onClose }) => {
                             </button>
                         ) : null}
 
-                        {/* Role Change Dropdown/Buttons */}
                         <div className="role-change-section">
                             <label htmlFor="user-role-select">Change Role:</label>
                             <select
@@ -179,7 +167,6 @@ const UserDetailModal = observer(({ onClose }) => {
                             </select>
                         </div>
 
-                        {/* Action buttons for Pending Nutritionists (Approval/Rejection) */}
                         {isNutritionistCandidate && user.nutritionistApplicationStatus === 'pending' && (
                             <>
                                 <button
@@ -199,7 +186,6 @@ const UserDetailModal = observer(({ onClose }) => {
                             </>
                         )}
 
-                        {/* Delete Account Button */}
                         <button
                             className="delete-button"
                             onClick={handleDeleteAccount}
@@ -211,7 +197,6 @@ const UserDetailModal = observer(({ onClose }) => {
                 </div>
             </div>
 
-            {/* Rejection Reason Modal (controlled by ViewModel state) */}
             {showRejectionReasonModal && (
                 <div className="user-detail-modal-overlay rejection-modal-overlay">
                     <div className="user-detail-modal-content rejection-modal-content" onClick={(e) => e.stopPropagation()}>

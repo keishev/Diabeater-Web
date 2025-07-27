@@ -118,7 +118,7 @@ class AdminStatViewModel {
                 AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING_APPROVAL'),
                 AdminStatService.getDocumentCount('subscriptions'),
                 AdminStatService.getDailySignups(7),
-                AdminStatService.getWeeklyTopMealPlans(5),
+                AdminStatService.getWeeklyTopMealPlans(3),
                 AdminStatService.getAllSubscriptions(),
                 AdminStatService.getAllUserAccounts() // Fetch all user accounts
             ]);

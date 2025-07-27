@@ -35,6 +35,27 @@ const AdminStatDashboard = observer(() => {
     const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
     const [isEditFeaturesModalOpen, setIsEditFeaturesModalOpen] = useState(false); // ⭐ NEW: State for features modal
 
+    const formatDate = (dateValue) => {
+    if (!dateValue) return 'N/A';
+
+    // Check if it's a Firestore Timestamp (from older data or specific query)
+    if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+        try {
+            return moment(dateValue.toDate()).format('DD/MM/YYYY');
+        } catch (e) {
+            console.error("Error converting Firebase Timestamp to Date for display:", e);
+            return 'Invalid Date';
+        }
+    }
+    // Assume it's already a JS Date object or a valid date string
+    try {
+        return moment(dateValue).format('DD/MM/YYYY');
+    } catch (e) {
+        console.error("Error formatting date with moment:", e);
+        return 'Invalid Date';
+    }
+};
+
     /**
      * Handles loading initial dashboard data.
      * This callback is memoized to prevent unnecessary re-creations.
@@ -580,77 +601,80 @@ const AdminStatDashboard = observer(() => {
                         <tbody>
                             {filteredUserAccounts.length > 0 ? (
                                 filteredUserAccounts.map(user => (
-                                    <tr key={user._id}> {/* Assuming _id is the unique key from your backend */}
-                                        <td>
-                                            <div className="tooltip-container">
-                                                <Tooltip content={
-                                                    <>
-                                                        <p><strong>Name:</strong> {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : 'N/A'}</p>
-                                                        <p><strong>Email:</strong> {user.email || 'N/A'}</p>
-                                                        <p><strong>Phone:</strong> {user.phone || 'N/A'}</p>
-                                                        <p><strong>Address:</strong> {user.address || 'N/A'}</p>
-                                                        <p><strong>Role:</strong> {user.role || 'N/A'}</p>
-                                                        <p><strong>Status:</strong> {user.status || 'N/A'}</p>
-                                                    </>
-                                                }>
+                                    // *** CRITICAL FIX HERE FOR THE MAP LOOP'S TR ***
+                                    <tr key={user._id}><td> {/* THIS IS THE KEY CHANGE: <td> directly after <tr> */}
+                                        <div className="tooltip-container">
+                                            <Tooltip content={
+                                                <>
+                                                    <p><strong>Name:</strong> {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : 'N/A'}</p>
+                                                    <p><strong>Email:</strong> {user.email || 'N/A'}</p>
+                                                    <p><strong>Phone:</strong> {user.phone || 'N/A'}</p>
+                                                    <p><strong>Address:</strong> {user.address || 'N/A'}</p>
+                                                    <p><strong>Role:</strong> {user.role || 'N/A'}</p>
+                                                    <p><strong>Status:</strong> {user.status || 'N/A'}</p>
+                                                </>
+                                            }>
+                                                <div
+                                                    className="user-name-clickable"
+                                                    onClick={() => handleOpenUserModal(user)}
+                                                    role="button"
+                                                    tabIndex="0"
+                                                    aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
+                                                >
                                                     <i className="fas fa-user-circle table-user-icon" aria-hidden="true"></i>
                                                     {user.firstName && user.lastName
                                                         ? `${user.firstName} ${user.lastName}`.trim()
-                                                        : user.email || 'N/A' /* Fallback to email if name parts are missing */
+                                                        : user.email || 'N/A'
                                                     }
-                                                </Tooltip>
-                                            </div>
-                                        </td>
-                                        <td>{user.email || 'N/A'}</td>
-                                        <td>{user.role || 'N/A'}</td>
-                                        <td>
-                                            {/* Assuming 'status' field exists and is 'active' or 'suspended' */}
-                                            <span className={`status-dot status-${user.status ? user.status.toLowerCase() : 'unknown'}`}></span>
-                                            {user.status || 'N/A'}
-                                        </td>
-                                        <td>{user.createdAt && user.createdAt.toDate ? moment(user.createdAt.toDate()).format('DD/MM/YYYY') : 'N/A'}</td>
-                                        <td className="user-actions">
+                                                </div>
+                                            </Tooltip>
+                                        </div>
+                                    </td>
+                                    <td>{user.email || 'N/A'}</td>
+                                    <td>{user.role || 'N/A'}</td>
+                                    <td>
+                                        <span className={`status-dot status-${user.status ? user.status.toLowerCase() : 'unknown'}`}></span>
+                                        {user.status || 'N/A'}
+                                    </td>
+                                    <td>{formatDate(user.createdAt)}</td>
+                                    <td className="user-actions">
+                                        <button
+                                            className="deets-action-button view-button"
+                                            onClick={() => handleOpenUserModal(user)}
+                                            aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
+                                        >
+                                            VIEW
+                                        </button>
+                                        {user.status && user.status.toLowerCase() === 'active' ? (
                                             <button
-                                                className="deets-action-button view-button"
-                                                onClick={() => handleOpenUserModal(user)}
-                                                aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
+                                                className="action-button suspend-button"
+                                                onClick={() => handleSuspendUser(user)}
+                                                aria-label={`Suspend account for ${user.firstName || ''} ${user.lastName || ''}`}
                                             >
-                                                VIEW
+                                                SUSPEND
                                             </button>
-                                            {/* Logic for Suspend/Unsuspend button based on user.status */}
-                                            {user.status && user.status.toLowerCase() === 'active' ? (
-                                                <button
-                                                    className="action-button suspend-button"
-                                                    onClick={() => handleSuspendUser(user)}
-                                                    aria-label={`Suspend account for ${user.firstName || ''} ${user.lastName || ''}`}
-                                                >
-                                                    SUSPEND
-                                                </button>
-                                            ) : (user.status && user.status.toLowerCase() === 'suspended') ? (
-                                                <button
-                                                    className="action-button unsuspend-button"
-                                                    onClick={() => handleUnsuspendUser(user)}
-                                                    aria-label={`Unsuspend account for ${user.firstName || ''} ${user.lastName || ''}`}
-                                                >
-                                                    UNSUSPEND
-                                                </button>
-                                            ) : (
-                                                // Fallback for unknown/other statuses
-                                                <button
-                                                    className="action-button default-action-button"
-                                                    onClick={() => alert(`Cannot determine action for user status: ${user.status || 'N/A'}`)}
-                                                    aria-label={`Action for user ${user.firstName || ''} ${user.lastName || ''}`}
-                                                >
-                                                    MANAGE
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
+                                        ) : (user.status && user.status.toLowerCase() === 'suspended') ? (
+                                            <button
+                                                className="action-button unsuspend-button"
+                                                onClick={() => handleUnsuspendUser(user)}
+                                                aria-label={`Unsuspend account for ${user.firstName || ''} ${user.lastName || ''}`}
+                                            >
+                                                UNSUSPEND
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="action-button default-action-button"
+                                                onClick={() => alert(`Cannot determine action for user status: ${user.status || 'N/A'}`)}
+                                                aria-label={`Action for user ${user.firstName || ''} ${user.lastName || ''}`}
+                                            >
+                                                MANAGE
+                                            </button>
+                                        )}
+                                    </td></tr> // *** CRITICAL FIX: </tr> directly after last </td> ***
                                 ))
                             ) : (
-                                <tr>
-                                    <td colSpan="6" className="no-data-message">No user accounts found matching your search.</td>
-                                </tr>
+                                // *** CRITICAL FIX HERE FOR THE NO DATA TR ***
+                                <tr><td colSpan="6" className="no-data-message">No user accounts found matching your search.</td></tr> // Ensure no whitespace here
                             )}
                         </tbody>
                     </table>
@@ -661,20 +685,17 @@ const AdminStatDashboard = observer(() => {
                 <UserDetailModal
                     user={selectedUserForManagement}
                     onClose={handleCloseUserModal}
-                    // Pass ViewModel methods directly using arrow functions to bind context
                     updateUserRole={(uid, role) => adminStatViewModel.updateUserRole(uid, role)}
                     updateNutritionistStatus={(uid, status) => adminStatViewModel.updateNutritionistStatus(uid, status)}
                     deleteUserAccount={(uid) => adminStatViewModel.deleteUserAccount(uid)}
-                    // Use the unified suspendUserAccount action
                     suspendUserAccount={(uid, suspend) => adminStatViewModel.suspendUserAccount(uid, suspend)}
                     onUserActionSuccess={(msg) => {
-                        adminStatViewModel.setSuccess(msg); // Use ViewModel's setSuccess
-                        handleLoadDashboardData(); // Reload data after action
+                        adminStatViewModel.setSuccess(msg);
+                        handleLoadDashboardData();
                     }}
-                    onUserActionError={(msg) => adminStatViewModel.setError(`User action failed: ${msg}`)} // Use ViewModel's setError
+                    onUserActionError={(msg) => adminStatViewModel.setError(`User action failed: ${msg}`)}
                 />
             )}
-
             {isEditPriceModalOpen && (
                 <EditSubscriptionModal
                     isOpen={isEditPriceModalOpen}
