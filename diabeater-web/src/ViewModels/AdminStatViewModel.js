@@ -1,8 +1,8 @@
 // AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService';
-import SubscriptionService from '../Services/SubscriptionService';
-import moment from 'moment'; // Import moment for date handling
+import SubscriptionService from '../Services/SubscriptionService'; // Ensure this is imported
+import moment from 'moment';
 
 class AdminStatViewModel {
     loading = false;
@@ -19,10 +19,11 @@ class AdminStatViewModel {
     weeklyTopMealPlans = [];
     userAccounts = []; // For management table
     allSubscriptions = []; // For subscriptions table
-    selectedUserForManagement = null; // Renamed for clarity and to match AdminStatDashboard
+    selectedUserForManagement = null;
 
-    // Observable for Premium Subscription Price
+    // Observable for Premium Subscription Price and Features
     premiumSubscriptionPrice = 0; // Initialize with a default value
+    premiumFeatures = []; // ⭐ NEW: Initialize for premium features
 
     // For Nutritionist Application Modals
     showRejectionReasonModal = false;
@@ -68,7 +69,6 @@ class AdminStatViewModel {
         });
     }
 
-    // ⭐ Renamed to selectedUserForManagement for consistency with AdminStatDashboard
     setSelectedUserForManagement(user) {
         runInAction(() => {
             this.selectedUserForManagement = user;
@@ -129,6 +129,17 @@ class AdminStatViewModel {
                 fetchedPremiumPrice = price !== null ? price : 0;
             } catch (priceError) {
                 console.error("[ViewModel] Error fetching premium subscription price:", priceError);
+                // Don't throw, allow other data to load
+            }
+
+            // ⭐ NEW: Fetch premium features
+            let fetchedPremiumFeatures = [];
+            try {
+                const features = await SubscriptionService.getPremiumFeatures('premium');
+                fetchedPremiumFeatures = features !== null ? features : [];
+            } catch (featuresError) {
+                console.error("[ViewModel] Error fetching premium features:", featuresError);
+                // Don't throw, allow other data to load
             }
 
             const processedDailySignups = {};
@@ -157,6 +168,7 @@ class AdminStatViewModel {
                 this.allSubscriptions = allSubscriptions;
                 this.userAccounts = allUserAccounts;
                 this.premiumSubscriptionPrice = fetchedPremiumPrice;
+                this.premiumFeatures = fetchedPremiumFeatures; // ⭐ NEW: Set premium features
             });
 
             console.log("[ViewModel] Dashboard data loaded successfully.");
@@ -200,20 +212,49 @@ class AdminStatViewModel {
         }
     }
 
-    // ⭐ MODIFIED: Calls the new updateUserStatus in AdminStatService
+    // ⭐ NEW: Action to update premium features
+    async updatePremiumFeatures(newFeatures) {
+        console.log(`[ViewModel] Attempting to update premium features to:`, newFeatures);
+        this.setLoading(true);
+        this.setError(null);
+        this.setSuccess(null);
+        try {
+            const response = await SubscriptionService.updatePremiumFeatures('premium', newFeatures);
+
+            if (response.success) {
+                runInAction(() => {
+                    this.premiumFeatures = newFeatures; // Update local state
+                    this.setSuccess(`Premium features updated successfully.`);
+                });
+                console.log(`[ViewModel] Premium features successfully updated.`);
+                return { success: true };
+            } else {
+                this.setError(response.message || 'Failed to update premium features.');
+                return { success: false, message: response.message };
+            }
+        } catch (error) {
+            console.error("[ViewModel] Error updating premium features:", error);
+            this.setError(`Failed to update premium features: ${error.message}`);
+            return { success: false, message: error.message };
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+
     async suspendUserAccount(userId, suspend) {
         this.setLoading(true);
         this.setError(null);
         this.setSuccess(null);
         try {
             const newStatus = suspend ? 'suspended' : 'active';
-            const response = await AdminStatService.updateUserStatus(userId, newStatus); // Using the direct status update
+            const response = await AdminStatService.updateUserStatus(userId, newStatus);
 
             if (response.success) {
                 runInAction(() => {
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);
                     if (userIndex > -1) {
-                        this.userAccounts[userIndex].status = newStatus; // Update local state
+                        this.userAccounts[userIndex].status = newStatus;
                     }
                     this.setSuccess(response.message || `User ${userId} ${suspend ? 'suspended' : 'unsuspended'} successfully.`);
                 });
@@ -309,25 +350,21 @@ class AdminStatViewModel {
         }
     }
 
-    // --- Nutritionist Application Related Actions (moved from UserDetailModal's local VM) ---
     async approveNutritionist(userId) {
         this.setLoading(true);
         this.setError(null);
         this.setSuccess(null);
         try {
-            // Assuming this service method exists and changes status to 'Active' or 'Approved'
             const response = await AdminStatService.updateUserStatus(userId, 'Active');
             if (response.success) {
                 runInAction(() => {
-                    // Update the local user accounts array
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);
                     if (userIndex > -1) {
                         this.userAccounts[userIndex].status = 'Active';
-                        this.userAccounts[userIndex].role = 'nutritionist'; // Also set their role to nutritionist
+                        this.userAccounts[userIndex].role = 'nutritionist';
                     }
                     this.setSuccess(`Nutritionist ${userId} approved successfully.`);
                 });
-                // After approval, clear the selected user and close modal via handler in Dashboard
                 this.clearSelectedUserForManagement();
                 this.setShowRejectionReasonModal(false);
                 return { success: true };
@@ -348,7 +385,7 @@ class AdminStatViewModel {
         this.setError(null);
         this.setSuccess(null);
         try {
-            const response = await AdminStatService.updateUserStatus(userId, 'rejected', this.rejectionReason); // Pass reason if service supports it
+            const response = await AdminStatService.updateUserStatus(userId, 'rejected', this.rejectionReason);
             if (response.success) {
                 runInAction(() => {
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);
@@ -359,7 +396,7 @@ class AdminStatViewModel {
                 });
                 this.clearSelectedUserForManagement();
                 this.setShowRejectionReasonModal(false);
-                this.setRejectionReason(''); // Clear reason
+                this.setRejectionReason('');
                 return { success: true };
             } else {
                 throw new Error(response.message || 'Failed to reject nutritionist.');
@@ -393,6 +430,5 @@ class AdminStatViewModel {
     }
 }
 
-// Export a single, instantiated, observable instance
 const adminStatViewModel = new AdminStatViewModel();
 export default adminStatViewModel;

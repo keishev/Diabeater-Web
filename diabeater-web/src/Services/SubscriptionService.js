@@ -1,52 +1,93 @@
-// src/services/SubscriptionService.js
-import { db } from '../firebase'; // Assuming your firebase config exports 'db'
-import { doc, updateDoc, getDoc } from 'firebase/firestore'; // <--- Ensure getDoc is imported here
+// src/Services/SubscriptionService.js
+import app from '../firebase'; // Assuming your firebase config is here
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+
+const db = getFirestore(app);
 
 const SubscriptionService = {
     /**
-     * Updates the price for a specific subscription plan.
-     * @param {string} planId - The ID of the subscription plan (e.g., 'premium').
-     * @param {number} newPrice - The new price to set for the plan.
+     * Fetches the price for a given subscription plan.
+     * @param {string} planId - The ID of the subscription plan (e.g., 'premium', 'basic').
+     * @returns {Promise<number|null>} The price of the subscription, or null if not found.
      */
-    async updateSubscriptionPrice(planId, newPrice) {
+    async getSubscriptionPrice(planId) {
         try {
-            console.log(`[SubscriptionService] Attempting to update price for plan '${planId}' to ${newPrice}`);
-            // Construct the document reference: 'plans' collection -> specific planId document
-            const planRef = doc(db, 'plans', planId);
+            const docRef = doc(db, 'plans', planId);
+            const docSnap = await getDoc(docRef);
 
-            // Update the 'price' field
-            await updateDoc(planRef, { price: newPrice });
-
-            console.log(`[SubscriptionService] Successfully updated price for plan '${planId}' to ${newPrice}`);
-            return { success: true, message: 'Subscription price updated successfully!' };
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const price = data.price !== undefined ? parseFloat(data.price) : null;
+                console.log(`[SubscriptionService] Fetched price for ${planId}: $${price}`);
+                return price;
+            } else {
+                console.log(`[SubscriptionService] No such document for planId: ${planId}`);
+                return null;
+            }
         } catch (error) {
-            console.error(`[SubscriptionService] Error updating price for plan '${planId}':`, error);
-            throw new Error(`Failed to update subscription price: ${error.message}`);
+            console.error(`[SubscriptionService] Error getting subscription price for ${planId}:`, error);
+            throw new Error(`Failed to fetch subscription price: ${error.message}`);
         }
     },
 
     /**
-     * Fetches the current price for a specific subscription plan.
-     * @param {string} planId - The ID of the subscription plan (e.g., 'premium').
-     * @returns {Promise<number|null>} The price of the plan, or null if not found.
+     * Updates the price for a given subscription plan.
+     * @param {string} planId - The ID of the subscription plan.
+     * @param {number} newPrice - The new price to set.
+     * @returns {Promise<{success: boolean, message?: string}>}
      */
-    async getSubscriptionPrice(planId) {
+    async updateSubscriptionPrice(planId, newPrice) {
         try {
-            console.log(`[SubscriptionService] Attempting to fetch price for plan '${planId}'`);
-            const planRef = doc(db, 'plans', planId);
-            const docSnap = await getDoc(planRef); // getDoc is now correctly imported
+            const docRef = doc(db, 'plans', planId);
+            await updateDoc(docRef, { price: newPrice });
+            console.log(`[SubscriptionService] Updated price for ${planId} to $${newPrice}`);
+            return { success: true, message: `Price for ${planId} updated successfully.` };
+        } catch (error) {
+            console.error(`[SubscriptionService] Error updating subscription price for ${planId}:`, error);
+            return { success: false, message: `Failed to update price: ${error.message}` };
+        }
+    },
+
+    /**
+     * Fetches the features for a given subscription plan.
+     * @param {string} planId - The ID of the subscription plan (e.g., 'premium').
+     * @returns {Promise<string[]|null>} An array of feature strings, or null if not found.
+     */
+    async getPremiumFeatures(planId = 'premium') { // Default to 'premium' as per requirement
+        try {
+            const docRef = doc(db, 'plans', planId);
+            const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                console.log(`[SubscriptionService] Fetched price for '${planId}':`, data.price);
-                return data.price;
+                const features = data.features || []; // Assuming features is an array
+                console.log(`[SubscriptionService] Fetched features for ${planId}:`, features);
+                return features;
             } else {
-                console.warn(`[SubscriptionService] Plan '${planId}' not found.`);
-                return null; // Or throw an error if the plan must exist
+                console.log(`[SubscriptionService] No such document for planId: ${planId}`);
+                return null;
             }
         } catch (error) {
-            console.error(`[SubscriptionService] Error fetching price for plan '${planId}':`, error);
-            throw new Error(`Failed to fetch subscription price: ${error.message}`);
+            console.error(`[SubscriptionService] Error getting premium features for ${planId}:`, error);
+            throw new Error(`Failed to fetch premium features: ${error.message}`);
+        }
+    },
+
+    /**
+     * Updates the features array for a given subscription plan.
+     * @param {string} planId - The ID of the subscription plan.
+     * @param {string[]} newFeatures - The new array of feature strings to set.
+     * @returns {Promise<{success: boolean, message?: string}>}
+     */
+    async updatePremiumFeatures(planId, newFeatures) {
+        try {
+            const docRef = doc(db, 'plans', planId);
+            await updateDoc(docRef, { features: newFeatures });
+            console.log(`[SubscriptionService] Updated features for ${planId}:`, newFeatures);
+            return { success: true, message: `Features for ${planId} updated successfully.` };
+        } catch (error) {
+            console.error(`[SubscriptionService] Error updating premium features for ${planId}:`, error);
+            return { success: false, message: `Failed to update features: ${error.message}` };
         }
     }
 };

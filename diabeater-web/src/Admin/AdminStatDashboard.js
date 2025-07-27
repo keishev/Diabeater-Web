@@ -1,8 +1,9 @@
-// AdminStatDashboard.js
+// AdminStatDashboard.js - FULL UPDATED
 import React, { useState, useEffect, useCallback } from 'react';
 import './AdminStatDashboard.css';
 import UserDetailModal from './UserDetailModal';
 import EditSubscriptionModal from './EditSubscriptionModal';
+import EditPremiumFeaturesModal from './EditPremiumFeaturesModal'; // ⭐ NEW: Import the new modal
 import AdminInsights from './AdminInsights';
 import Tooltip from './Tooltip';
 import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // Import the singleton instance
@@ -26,11 +27,13 @@ const AdminStatDashboard = observer(() => {
         userAccounts, // The full array of user accounts
         selectedUserForManagement, // The currently selected user for the modal
         premiumSubscriptionPrice, // The premium subscription price
+        premiumFeatures, // ⭐ NEW: The premium features array
     } = adminStatViewModel; // Access the entire ViewModel instance
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
+    const [isEditFeaturesModalOpen, setIsEditFeaturesModalOpen] = useState(false); // ⭐ NEW: State for features modal
 
     /**
      * Handles loading initial dashboard data.
@@ -68,6 +71,15 @@ const AdminStatDashboard = observer(() => {
         setIsEditPriceModalOpen(false);
     };
 
+    // ⭐ NEW: Handlers for Premium Features Modal
+    const handleOpenEditFeaturesModal = () => {
+        setIsEditFeaturesModalOpen(true);
+    };
+
+    const handleCloseEditFeaturesModal = () => {
+        setIsEditFeaturesModalOpen(false);
+    };
+
     /**
      * Handles saving the new subscription price.
      * @param {number} newPrice The new price to set.
@@ -92,6 +104,31 @@ const AdminStatDashboard = observer(() => {
             adminStatViewModel.setError(`Failed to update subscription price: ${e.message}`);
         }
     };
+
+    /**
+     * ⭐ NEW: Handles saving the new premium features.
+     * @param {string[]} newFeatures The new array of features to set.
+     */
+    const handleSavePremiumFeatures = async (newFeatures) => {
+        adminStatViewModel.setSuccess('');
+        adminStatViewModel.setError('');
+
+        try {
+            const response = await adminStatViewModel.updatePremiumFeatures(newFeatures);
+            if (response.success) {
+                setIsEditFeaturesModalOpen(false);
+                // ViewModel has already updated 'premiumFeatures' observable and set success message
+                // A full reload via handleLoadDashboardData() is not strictly necessary but ensures consistency
+                handleLoadDashboardData();
+            } else {
+                // ViewModel already set the error message
+            }
+        } catch (e) {
+            console.error("[AdminStatDashboard] Error saving premium features:", e);
+            adminStatViewModel.setError(`Failed to update premium features: ${e.message}`);
+        }
+    };
+
 
     /**
      * Handles suspending a user account.
@@ -480,6 +517,28 @@ const AdminStatDashboard = observer(() => {
 
             <AdminInsights data={insightsData} />
 
+            {/* ⭐ NEW: Premium Plan Features Section */}
+            <section className="premium-features-section">
+                <h2 className="section-title">PREMIUM PLAN FEATURES MANAGEMENT</h2>
+                <div className="premium-features-card">
+                    <div className="feature-list-display">
+                        <h3>Current Premium Features:</h3>
+                        {premiumFeatures && premiumFeatures.length > 0 ? (
+                            <ul>
+                                {premiumFeatures.map((feature, index) => (
+                                    <li key={index}>{feature}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>No premium features defined yet.</p>
+                        )}
+                    </div>
+                    <button className="manage-features-button" onClick={handleOpenEditFeaturesModal}>
+                        MANAGE FEATURES
+                    </button>
+                </div>
+            </section>
+
             <section className="premium-plan-section">
                 <h2 className="section-title">SUBSCRIPTION PRICE MANAGEMENT</h2>
                 <div className="premium-plan-card">
@@ -622,6 +681,16 @@ const AdminStatDashboard = observer(() => {
                     onClose={handleCloseEditPriceModal}
                     initialPrice={premiumSubscriptionPrice} // Get initial price from ViewModel
                     onSave={handleSaveSubscriptionPrice}
+                />
+            )}
+
+            {/* ⭐ NEW: Render the EditPremiumFeaturesModal */}
+            {isEditFeaturesModalOpen && (
+                <EditPremiumFeaturesModal
+                    isOpen={isEditFeaturesModalOpen}
+                    onClose={handleCloseEditFeaturesModal}
+                    initialFeatures={premiumFeatures} // Pass current features from ViewModel
+                    onSave={handleSavePremiumFeatures}
                 />
             )}
         </div>

@@ -1,0 +1,144 @@
+/* src/Admin/EditPremiumFeaturesModal.css */
+
+.edit-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.edit-modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px; /* Adjusted for slightly larger content due to checkboxes */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.edit-modal-close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s ease;
+}
+
+.edit-modal-close-button:hover {
+    color: #333;
+}
+
+.edit-modal-title {
+    font-size: 24px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.edit-modal-description {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.edit-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.features-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between checkboxes */
+}
+
+.feature-checkbox-item {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+}
+
+.feature-checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 20px; /* Larger checkbox */
+    height: 20px; /* Larger checkbox */
+    accent-color: #007bff; /* Highlight color for checkbox */
+}
+
+.edit-modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.edit-save-button,
+.edit-cancel-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.edit-save-button {
+    background-color: #4CAF50; /* Green for Save */
+    color: white;
+}
+
+.edit-save-button:hover {
+    background-color: #45a049;
+}
+
+.edit-cancel-button {
+    background-color: #f44336; /* Red for Cancel */
+    color: white;
+}
+
+.edit-cancel-button:hover {
+    background-color: #da190b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .edit-modal-content {
+        padding: 20px;
+        margin: 20px;
+        width: auto;
+    }
+
+    .edit-modal-title {
+        font-size: 20px;
+    }
+
+    .edit-modal-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .edit-save-button,
+    .edit-cancel-button {
+        width: 100%;
+        text-align: center;
+    }
+}
