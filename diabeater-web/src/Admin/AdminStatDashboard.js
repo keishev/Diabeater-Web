@@ -27,13 +27,13 @@ const AdminStatDashboard = observer(() => {
         userAccounts, // The full array of user accounts
         selectedUserForManagement, // The currently selected user for the modal
         premiumSubscriptionPrice, // The premium subscription price
-        premiumFeatures, // ⭐ NEW: The premium features array
+        premiumFeatures, // The premium features array
     } = adminStatViewModel; // Access the entire ViewModel instance
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
-    const [isEditFeaturesModalOpen, setIsEditFeaturesModalOpen] = useState(false); // ⭐ NEW: State for features modal
+    const [isEditFeaturesModalOpen, setIsEditFeaturesModalOpen] = useState(false); 
 
     const formatDate = (dateValue) => {
     if (!dateValue) return 'N/A';
@@ -92,7 +92,7 @@ const AdminStatDashboard = observer(() => {
         setIsEditPriceModalOpen(false);
     };
 
-    // ⭐ NEW: Handlers for Premium Features Modal
+    // Handlers for Premium Features Modal
     const handleOpenEditFeaturesModal = () => {
         setIsEditFeaturesModalOpen(true);
     };
@@ -538,7 +538,7 @@ const AdminStatDashboard = observer(() => {
 
             <AdminInsights data={insightsData} />
 
-            {/* ⭐ NEW: Premium Plan Features Section */}
+            {/* Premium Plan Features Section */}
             <section className="premium-features-section">
                 <h2 className="section-title">PREMIUM PLAN FEATURES MANAGEMENT</h2>
                 <div className="premium-features-card">
@@ -602,7 +602,7 @@ const AdminStatDashboard = observer(() => {
                             {filteredUserAccounts.length > 0 ? (
                                 filteredUserAccounts.map(user => (
                                     // *** CRITICAL FIX HERE FOR THE MAP LOOP'S TR ***
-                                    <tr key={user._id}><td> {/* THIS IS THE KEY CHANGE: <td> directly after <tr> */}
+                                    <tr key={user._id}><td> 
                                         <div className="tooltip-container">
                                             <Tooltip content={
                                                 <>
@@ -705,7 +705,7 @@ const AdminStatDashboard = observer(() => {
                 />
             )}
 
-            {/* ⭐ NEW: Render the EditPremiumFeaturesModal */}
+            {/* Render the EditPremiumFeaturesModal */}
             {isEditFeaturesModalOpen && (
                 <EditPremiumFeaturesModal
                     isOpen={isEditFeaturesModalOpen}
