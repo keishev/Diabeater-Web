@@ -6,7 +6,8 @@ class StorageService {
     async uploadCertificate(userEmail, file) {
         try {
             const encodedEmail = encodeURIComponent(userEmail);
-            const certificateRef = ref(storage, `certificates/${encodedEmail}/${file.name}`);
+            const encodedFileName = encodeURIComponent(file.name);
+            const certificateRef = ref(storage, `certificates/${encodedEmail}/${encodedFileName}`);
             await uploadBytes(certificateRef, file);
 
             const url = await getDownloadURL(certificateRef);
