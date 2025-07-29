@@ -2,6 +2,7 @@
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const Filter = require('bad-words'); // Import the bad-words library
 
 // Ensure Firebase Admin SDK is initialized only once
 if (!admin.apps.length) {
@@ -10,12 +11,11 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const storage = admin.storage();
+const filter = new Filter(); // Initialize the profanity filter
 
 // Helper to check if a user has the 'admin' custom claim
-// This is critical for security: Only admins should be able to get these URLs.
 const isAdmin = async (context) => {
     if (!context.auth) {
-        // Log for debugging, but throw HttpsError for client
         console.warn("Attempt to call admin function by unauthenticated user.");
         throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
@@ -25,15 +25,91 @@ const isAdmin = async (context) => {
         if (userRecord.customClaims && userRecord.customClaims.admin === true) {
             return true;
         }
-        // Log specific reason for permission denial
         console.warn(`User ${uid} attempted to call admin function without admin claim.`);
         throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
     } catch (error) {
         console.error(`Error checking admin status for UID ${uid}:`, error);
-        // If getUser fails (e.g., user deleted), treat as permission denied
         throw new functions.https.HttpsError('permission-denied', 'Authentication failed or user not authorized.', error.message);
     }
 };
+
+/**
+ * NEW: Cloud Function to process new user feedback.
+ * It checks if the feedback is 5-star and free of profanity.
+ * If so, it copies the feedback to the 'feedbacks' collection for marketing display.
+ * Otherwise, it updates the status in the 'user_feedbacks' collection.
+ * This function listens to the 'user_feedbacks' collection, where users initially submit their feedback.
+ */
+exports.processNewFeedback = functions.firestore
+    .document("user_feedbacks/{feedbackId}") // Listen to creation of new documents in 'user_feedbacks'
+    .onCreate(async (snap, context) => {
+        const feedbackData = snap.data();
+        const feedbackId = context.params.feedbackId; // Get the ID of the new document
+
+        console.log(`Processing new feedback: ${feedbackId} with data:`, feedbackData);
+
+        // 1. Check if it's a 5-star review
+        if (feedbackData.rating !== 5) {
+            console.log(`Feedback ${feedbackId} is not 5-star (rating: ${feedbackData.rating}). Setting status to 'NotApprovedForMarketing'.`);
+            // Update the original document in user_feedbacks to reflect it won't be displayed
+            await db.collection("user_feedbacks").doc(feedbackId).update({
+                status: "NotApprovedForMarketing",
+                displayOnMarketing: false // Explicitly mark as not for marketing
+            });
+            return null; // Stop processing this feedback for marketing display
+        }
+
+        // 2. Perform profanity filtering on the message
+        let cleanedMessage = feedbackData.message;
+        let containsProfanity = false;
+
+        if (typeof feedbackData.message === 'string' && filter.isProfane(feedbackData.message)) {
+            containsProfanity = true;
+            // Optionally clean the message for storage, or just flag it
+            cleanedMessage = filter.clean(feedbackData.message);
+            console.log(`Feedback ${feedbackId} contains profanity.`);
+        }
+
+        if (containsProfanity) {
+            // Mark as flagged for manual review if profanity is found
+            console.log(`Feedback ${feedbackId} flagged due to profanity. Setting status to 'FlaggedForReview'.`);
+            await db.collection("user_feedbacks").doc(feedbackId).update({
+                status: "FlaggedForReview", // Indicate it needs admin review
+                displayOnMarketing: false, // Do not display on marketing site
+                // You might store the original message and cleaned message here if needed
+                // originalMessage: feedbackData.message,
+                // cleanedMessage: cleanedMessage, // If you decide to store cleaned version
+            });
+            return null; // Stop processing this feedback for marketing display
+        }
+
+        // 3. If it's 5-star AND clean, copy to the 'feedbacks' collection
+        // This is the collection your marketing website will read from
+        try {
+            await db.collection("feedbacks").doc(feedbackId).set({
+                ...feedbackData, // Copy all original data
+                message: cleanedMessage, // Use cleaned message (in case it was cleaned, otherwise it's original)
+                status: "Approved", // Mark as approved by the automated system
+                displayOnMarketing: true, // Mark for marketing display
+                processedAt: admin.firestore.FieldValue.serverTimestamp() // Add a timestamp for processing
+            });
+            console.log(`Feedback ${feedbackId} (5-star, clean) copied to 'feedbacks' collection.`);
+
+            // Optionally, update the original user_feedbacks document to 'ApprovedAutomated'
+            await db.collection("user_feedbacks").doc(feedbackId).update({
+                status: "ApprovedAutomated"
+            });
+
+            return null;
+        } catch (error) {
+            console.error(`Error copying feedback ${feedbackId} to 'feedbacks' collection:`, error);
+            // Optionally, mark original user_feedbacks as 'ErrorProcessing'
+            await db.collection("user_feedbacks").doc(feedbackId).update({
+                status: "ErrorProcessing"
+            });
+            return null;
+        }
+    });
 
 /**
  * Callable Cloud Function to get a signed URL for a nutritionist's certificate.
@@ -41,62 +117,48 @@ const isAdmin = async (context) => {
  */
 exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, context) => {
     try {
-        // 1. Security Check: Ensure the caller is an authenticated administrator
-        await isAdmin(context);
+        await isAdmin(context); // Security Check
 
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required.');
         }
 
-        // 2. Fetch the nutritionist document from Firestore
         const nutritionistDoc = await db.collection('nutritionists').doc(userId).get();
-
         if (!nutritionistDoc.exists) {
             throw new functions.https.HttpsError('not-found', 'Nutritionist not found.');
         }
 
         const nutritionistData = nutritionistDoc.data();
-        const certificateStoragePath = nutritionistData.certificateUrl; // This should be the path in Storage, e.g., 'certificates/user123_cert.pdf'
+        const certificateStoragePath = nutritionistData.certificateUrl;
 
         if (!certificateStoragePath) {
             throw new functions.https.HttpsError('not-found', 'Certificate URL (storage path) not found for this nutritionist in Firestore. Please ensure the "certificateUrl" field exists and is populated.');
         }
 
-        // 3. Get a reference to the file in Firebase Storage
         const fileRef = storage.bucket().file(certificateStoragePath);
-
-        // 4. Verify that the file actually exists in Storage
         const [exists] = await fileRef.exists();
         if (!exists) {
             console.warn(`Certificate file not found in storage for path: ${certificateStoragePath} (User ID: ${userId})`);
             throw new functions.https.HttpsError('not-found', 'Certificate file not found in storage. It might have been deleted or the path is incorrect.');
         }
 
-        // 5. Generate a signed URL for temporary public access
-        // This URL allows anyone with the URL to view the file for a limited time.
-        // Adjust the expiration time as appropriate for your security needs.
         const [url] = await fileRef.getSignedUrl({
             action: 'read',
-            expires: Date.now() + 15 * 60 * 1000, // URL valid for 15 minutes from now
-            // For longer durations, use a date string: '03-15-2026'
+            expires: Date.now() + 15 * 60 * 1000, // URL valid for 15 minutes
         });
 
-        // 6. Return the generated URL to the frontend
         return { success: true, certificateUrl: url };
 
     } catch (error) {
         console.error(`Error in getNutritionistCertificateUrl function for userId ${data?.userId || 'unknown'}:`, error);
-
-        // Re-throw HttpsErrors which are safe for client consumption
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
-        // Catch any other unexpected errors and return a generic internal error
         throw new functions.https.HttpsError(
             'internal',
             `An unexpected error occurred while processing your request: ${error.message}`,
-            { originalError: error.message, stack: error.stack } // Include original error details for server logs
+            { originalError: error.message, stack: error.stack }
         );
     }
 });
@@ -107,44 +169,37 @@ exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, cont
  */
 exports.approveNutritionist = functions.https.onCall(async (data, context) => {
     try {
-        // 1. Security Check: Ensure the caller is an authenticated administrator
-        await isAdmin(context);
+        await isAdmin(context); // Security Check
 
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required for approval.');
         }
 
-        // 2. Update Firestore document status
         const nutritionistRef = db.collection('nutritionists').doc(userId);
         const nutritionistDoc = await nutritionistRef.get();
 
         if (!nutritionistDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Nutritionist account not found in Firestore.');
+            throw new new functions.https.HttpsError('not-found', 'Nutritionist account not found in Firestore.'); // Corrected instance creation
         }
 
         const currentData = nutritionistDoc.data();
-        // Ensure we don't accidentally overwrite existing claims if they exist
         const existingClaims = currentData.customClaims || {};
 
         const updatedClaims = {
-            ...existingClaims, // Keep existing claims
-            nutritionist: true, // Mark as a nutritionist
-            approved: true,     // Mark as approved
-            rejected: false     // Ensure rejected is false
+            ...existingClaims,
+            nutritionist: true,
+            approved: true,
+            rejected: false
         };
 
         await nutritionistRef.update({
             status: 'approved',
             approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-            customClaims: updatedClaims // Store custom claims in Firestore for reference
+            customClaims: updatedClaims
         });
 
-        // 3. Set custom claims on the Firebase Authentication user
         await admin.auth().setCustomUserClaims(userId, updatedClaims);
-
-        // 4. Revoke refresh tokens to force the user's ID token to refresh
-        // This makes the new custom claims effective immediately upon next login/token refresh
         await admin.auth().revokeRefreshTokens(userId);
         console.log(`Successfully approved nutritionist ${userId} and set claims. Tokens revoked.`);
 
@@ -152,9 +207,8 @@ exports.approveNutritionist = functions.https.onCall(async (data, context) => {
 
     } catch (error) {
         console.error(`Error approving nutritionist ${data?.userId || 'unknown'}:`, error);
-
         if (error instanceof functions.https.HttpsError) {
-            throw error; // Re-throw Firebase HttpsError
+            throw error;
         }
         throw new functions.https.HttpsError(
             'internal',
@@ -170,16 +224,14 @@ exports.approveNutritionist = functions.https.onCall(async (data, context) => {
  */
 exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
     try {
-        // 1. Security Check: Ensure the caller is an authenticated administrator
-        await isAdmin(context);
+        await isAdmin(context); // Security Check
 
         const userId = data.userId;
-        const rejectionReason = data.rejectionReason || 'No reason provided.'; // Optional rejection reason
+        const rejectionReason = data.rejectionReason || 'No reason provided.';
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required for rejection.');
         }
 
-        // 2. Update Firestore document status
         const nutritionistRef = db.collection('nutritionists').doc(userId);
         const nutritionistDoc = await nutritionistRef.get();
 
@@ -190,23 +242,19 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
         const currentData = nutritionistDoc.data();
         const existingClaims = currentData.customClaims || {};
 
-        // Prepare updated claims: remove nutritionist/approved claims, add rejected claim
         const updatedClaims = { ...existingClaims };
-        delete updatedClaims.nutritionist; // Remove nutritionist claim
-        delete updatedClaims.approved;     // Remove approved claim
-        updatedClaims.rejected = true;    // Explicitly mark as rejected
+        delete updatedClaims.nutritionist;
+        delete updatedClaims.approved;
+        updatedClaims.rejected = true;
 
         await nutritionistRef.update({
             status: 'rejected',
             rejectedAt: admin.firestore.FieldValue.serverTimestamp(),
             rejectionReason: rejectionReason,
-            customClaims: updatedClaims // Store updated claims in Firestore
+            customClaims: updatedClaims
         });
 
-        // 3. Set custom claims on the Firebase Authentication user
         await admin.auth().setCustomUserClaims(userId, updatedClaims);
-
-        // 4. Revoke refresh tokens to force the user's ID token to refresh
         await admin.auth().revokeRefreshTokens(userId);
         console.log(`Successfully rejected nutritionist ${userId} and removed claims. Tokens revoked.`);
 
@@ -214,9 +262,8 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
 
     } catch (error) {
         console.error(`Error rejecting nutritionist ${data?.userId || 'unknown'}:`, error);
-
         if (error instanceof functions.https.HttpsError) {
-            throw error; // Re-throw Firebase HttpsError
+            throw error;
         }
         throw new functions.https.HttpsError(
             'internal',
@@ -233,31 +280,26 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
  */
 exports.suspendUser = functions.https.onCall(async (data, context) => {
     try {
-        // 1. Security Check: Ensure the caller is an authenticated administrator
-        await isAdmin(context);
+        await isAdmin(context); // Security Check
 
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required to suspend a user.');
         }
 
-        // 2. Disable the user in Firebase Authentication
         await admin.auth().updateUser(userId, { disabled: true });
         console.log(`Firebase Auth user ${userId} disabled.`);
 
-        // 3. Update the user's status in Firestore
-        // Assuming your general user accounts are in a collection named 'user_accounts'
         const userAccountRef = db.collection('user_accounts').doc(userId);
         const userAccountDoc = await userAccountRef.get();
 
         if (userAccountDoc.exists) {
-            await userAccountRef.update({ status: 'Inactive' }); // Or 'suspended'
+            await userAccountRef.update({ status: 'Inactive' });
             console.log(`Firestore status for user ${userId} updated to 'Inactive'.`);
         } else {
             console.warn(`User account document not found in Firestore for ID: ${userId}. Auth user still disabled.`);
         }
 
-        // 4. Revoke refresh tokens to force the user's ID token to refresh
         await admin.auth().revokeRefreshTokens(userId);
         console.log(`Refresh tokens revoked for user ${userId}.`);
 
@@ -265,7 +307,6 @@ exports.suspendUser = functions.https.onCall(async (data, context) => {
 
     } catch (error) {
         console.error(`Error suspending user ${data?.userId || 'unknown'}:`, error);
-
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -283,30 +324,26 @@ exports.suspendUser = functions.https.onCall(async (data, context) => {
  */
 exports.unsuspendUser = functions.https.onCall(async (data, context) => {
     try {
-        // 1. Security Check: Ensure the caller is an authenticated administrator
-        await isAdmin(context);
+        await isAdmin(context); // Security Check
 
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required to unsuspend a user.');
         }
 
-        // 2. Enable the user in Firebase Authentication
         await admin.auth().updateUser(userId, { disabled: false });
         console.log(`Firebase Auth user ${userId} enabled.`);
 
-        // 3. Update the user's status in Firestore
         const userAccountRef = db.collection('user_accounts').doc(userId);
         const userAccountDoc = await userAccountRef.get();
 
         if (userAccountDoc.exists) {
-            await userAccountRef.update({ status: 'Active' }); // Or 'active'
+            await userAccountRef.update({ status: 'Active' });
             console.log(`Firestore status for user ${userId} updated to 'Active'.`);
         } else {
             console.warn(`User account document not found in Firestore for ID: ${userId}. Auth user still enabled.`);
         }
 
-        // 4. Revoke refresh tokens to force the user's ID token to refresh
         await admin.auth().revokeRefreshTokens(userId);
         console.log(`Refresh tokens revoked for user ${userId}.`);
 
@@ -314,7 +351,6 @@ exports.unsuspendUser = functions.https.onCall(async (data, context) => {
 
     } catch (error) {
         console.error(`Error unsuspending user ${data?.userId || 'unknown'}:`, error);
-
         if (error instanceof functions.https.HttpsError) {
             throw error;
         }
@@ -329,9 +365,8 @@ exports.unsuspendUser = functions.https.onCall(async (data, context) => {
 
 // Your existing addAdminRole function
 exports.addAdminRole = functions.https.onCall(async (data, context) => {
-    // Note: It's good practice to use the isAdmin helper here for consistency.
-    // However, your current implementation also checks context.auth.token.admin which is fine if it's consistently set.
-    // For robust security, `await isAdmin(context)` is recommended.
+    // For consistency and robustness, it's recommended to use the `isAdmin` helper here too.
+    // The current `context.auth.token.admin !== true` check is also valid if you're sure claims are set.
     if (!context.auth || context.auth.token.admin !== true) {
         throw new functions.https.HttpsError(
             'permission-denied',

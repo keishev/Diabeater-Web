@@ -1,0 +1,212 @@
+/* src/Components/MealCategoryManagementModal.css */
+.category-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.category-modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+    font-size: 1.8em;
+}
+
+.create-category-section, .existing-categories-section {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    border: 1px solid #eee;
+}
+
+.create-category-section h3, .existing-categories-section h3 {
+    margin-top: 0;
+    color: #555;
+    font-size: 1.4em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #444;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.create-category-section button[type="submit"] {
+    background-color: #28a745; /* Green for add */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s;
+}
+
+.create-category-section button[type="submit"]:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.category-list {
+    list-style: none;
+    padding: 0;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.category-item strong {
+    color: #333;
+    font-size: 1.1em;
+}
+
+.category-item p {
+    margin: 5px 0 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.category-actions button {
+    margin-left: 10px;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+.category-actions button:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.edit-form {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-form .form-group {
+    margin-bottom: 8px;
+}
+
+.edit-form button {
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+.category-actions button:first-child { /* Edit button */
+    background-color: #007bff;
+    color: white;
+}
+
+.category-actions button:first-child:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.category-actions .delete-button {
+    background-color: #dc3545; /* Red for delete */
+    color: white;
+}
+
+.category-actions .delete-button:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.edit-form button[type="submit"] {
+    background-color: #ffc107; /* Yellow for update */
+    color: #333;
+}
+.edit-form button[type="submit"]:hover:not(:disabled) {
+    background-color: #e0a800;
+}
+.edit-form .cancel-button {
+    background-color: #6c757d; /* Grey for cancel */
+    color: white;
+}
+.edit-form .cancel-button:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+
+.modal-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.modal-actions .close-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s;
+}
+
+.modal-actions .close-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #dc3545;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: bold;
+}

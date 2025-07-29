@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel';
-import AdminMealPlanDetail from './AdminMealPlanDetail'; // Import the detail component
+import AdminMealPlanDetail from './AdminMealPlanDetail';
+import MealCategoryManagementModal from './MealCategoryManagementModal'; // NEW IMPORT
 import './AdminMealPlans.css';
 
-const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's self-contained now
-    // Local state for UI interactions and temporary data
+const AdminMealPlans = observer(() => {
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedPlanToReject, setSelectedPlanToReject] = useState(null);
     const [selectedRejectReason, setSelectedRejectReason] = useState('');
@@ -15,19 +15,17 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
     const [showApproveConfirmModal, setShowApproveConfirmModal] = useState(false);
     const [selectedPlanToApprove, setSelectedPlanToApprove] = useState(null);
 
-    // Local loading state for this component's UI feedback
     const [localLoading, setLocalLoading] = useState(false);
 
-    // Local state for Category Dropdown visibility
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-    const categoryDropdownRef = useRef(null); // Ref for click-outside functionality
+    const categoryDropdownRef = useRef(null);
 
-    // Local state to manage showing the detail view
     const [showDetailView, setShowDetailView] = useState(false);
-    // MealPlanViewModel.selectedMealPlanForDetail will hold the actual data
 
-    // ViewModel's state properties are accessed directly or via getters
-    const { searchTerm, selectedCategory, allCategories, error } = MealPlanViewModel;
+    // NEW STATE FOR CATEGORY MANAGEMENT MODAL
+    const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
+
+    const { searchTerm, selectedCategory, error } = MealPlanViewModel; // `allCategories` is now `MealPlanViewModel.allCategories`
 
     const rejectionReasons = [
         'Incomplete information provided',
@@ -38,10 +36,9 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
         'Other (please specify)'
     ];
 
-    // Effect to fetch initial meal plans and handle click outside for category dropdown
     useEffect(() => {
-        // ⭐ FIX: Call fetchAdminMealPlans with 'PENDING_APPROVAL' ⭐
         MealPlanViewModel.fetchAdminMealPlans('PENDING_APPROVAL');
+        MealPlanViewModel.fetchMealCategories(); // ⭐ NEW: Fetch categories on component mount ⭐
 
         const handleClickOutside = (event) => {
             if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
@@ -55,7 +52,7 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
         };
     }, []);
 
-    // --- APPROVE MODAL LOGIC ---
+    // --- APPROVE MODAL LOGIC (No changes needed here) ---
     const handleApproveClick = useCallback((id) => {
         setSelectedPlanToApprove(id);
         setShowApproveConfirmModal(true);
@@ -76,7 +73,6 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
             await MealPlanViewModel.approveOrRejectMealPlan(selectedPlanToApprove, 'APPROVED', authorId, adminName, adminId);
             setShowApproveConfirmModal(false);
             setSelectedPlanToApprove(null);
-            // After successful action, ensure detail view is closed if it was open for this plan
             if (MealPlanViewModel.selectedMealPlanForDetail?._id === selectedPlanToApprove) {
                 MealPlanViewModel.clearSelectedMealPlans();
                 setShowDetailView(false);
@@ -94,7 +90,7 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
     }, []);
     // --- END APPROVE MODAL LOGIC ---
 
-    // --- REJECT MODAL LOGIC ---
+    // --- REJECT MODAL LOGIC (No changes needed here) ---
     const handleRejectClick = useCallback((id) => {
         setSelectedPlanToReject(id);
         setSelectedRejectReason('');
@@ -141,7 +137,6 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
             setSelectedPlanToReject(null);
             setSelectedRejectReason('');
             setOtherReasonText('');
-            // After successful action, ensure detail view is closed if it was open for this plan
             if (MealPlanViewModel.selectedMealPlanForDetail?._id === selectedPlanToReject) {
                 MealPlanViewModel.clearSelectedMealPlans();
                 setShowDetailView(false);
@@ -160,22 +155,32 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
         setOtherReasonText('');
     }, []);
 
-    // --- Detail View Logic ---
+    // --- Detail View Logic (No changes needed here) ---
     const handleViewDetailsClick = useCallback(async (id) => {
-        await MealPlanViewModel.loadMealPlanDetails(id); // Fetch details into the ViewModel
+        await MealPlanViewModel.loadMealPlanDetails(id);
         if (MealPlanViewModel.selectedMealPlanForDetail) {
-            setShowDetailView(true); // Show the detail component if data is loaded
+            setShowDetailView(true);
         }
     }, []);
 
     const handleCloseDetailView = useCallback(() => {
-        MealPlanViewModel.clearSelectedMealPlans(); // Clear the selected plan in ViewModel
-        setShowDetailView(false); // Hide the detail component
+        MealPlanViewModel.clearSelectedMealPlans();
+        setShowDetailView(false);
+    }, []);
+
+    // --- NEW Category Management Logic ---
+    const handleOpenCategoryManagement = useCallback(() => {
+        setShowCategoryManagementModal(true);
+    }, []);
+
+    const handleCloseCategoryManagement = useCallback(() => {
+        setShowCategoryManagementModal(false);
+        // Re-fetch categories in case changes were made in the modal
+        MealPlanViewModel.fetchMealCategories();
     }, []);
 
     // --- Render Logic ---
     if (showDetailView && MealPlanViewModel.selectedMealPlanForDetail) {
-        // If showDetailView is true and we have a selected plan, render the detail component
         return (
             <AdminMealPlanDetail
                 mealPlan={MealPlanViewModel.selectedMealPlanForDetail}
@@ -184,7 +189,6 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
         );
     }
 
-    // Otherwise, render the main AdminMealPlans list
     return (
         <div className="admin-meal-plans-container">
             <div className="admin-meal-plans-header">
@@ -230,21 +234,28 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
                                 <button className="dropdown-item" onClick={() => { MealPlanViewModel.setSelectedCategory(''); setShowCategoryDropdown(false); }}>
                                     All Categories
                                 </button>
-                                {allCategories.map((category, index) => (
+                                {MealPlanViewModel.allCategories.map((categoryName, index) => ( // Use MealPlanViewModel.allCategories
                                     <button
-                                        key={index}
-                                        className={`dropdown-item ${selectedCategory === category ? 'selected' : ''}`}
+                                        key={categoryName} // Changed key to categoryName assuming it's unique
+                                        className={`dropdown-item ${selectedCategory === categoryName ? 'selected' : ''}`}
                                         onClick={() => {
-                                            MealPlanViewModel.setSelectedCategory(category);
+                                            MealPlanViewModel.setSelectedCategory(categoryName);
                                             setShowCategoryDropdown(false);
                                         }}
                                     >
-                                        {category}
+                                        {categoryName}
                                     </button>
                                 ))}
                             </div>
                         )}
                     </div>
+                    {/* NEW: Manage Categories Button */}
+                    <button
+                        className="manage-categories-button" // Add styling in AdminMealPlans.css
+                        onClick={handleOpenCategoryManagement}
+                    >
+                        Manage Categories
+                    </button>
                 </div>
             </div>
 
@@ -299,7 +310,7 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
                 </div>
             )}
 
-            {/* Rejection Reasons Modal */}
+            {/* Rejection Reasons Modal (Keep as is) */}
             {showRejectModal && (
                 <div className="reject-modal-overlay">
                     <div className="reject-modal-content">
@@ -338,7 +349,7 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
                 </div>
             )}
 
-            {/* Approve Confirmation Modal */}
+            {/* Approve Confirmation Modal (Keep as is) */}
             {showApproveConfirmModal && (
                 <div className="approve-modal-overlay">
                     <div className="approve-modal-content">
@@ -355,6 +366,13 @@ const AdminMealPlans = observer(() => { // Removed onViewDetails prop as it's se
                     </div>
                 </div>
             )}
+
+            {/* NEW: Meal Category Management Modal */}
+            <MealCategoryManagementModal
+                isOpen={showCategoryManagementModal}
+                onClose={handleCloseCategoryManagement}
+                mealPlanViewModel={MealPlanViewModel} // Pass the ViewModel instance
+            />
         </div>
     );
 });
