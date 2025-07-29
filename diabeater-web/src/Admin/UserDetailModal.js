@@ -114,7 +114,7 @@ const UserDetailModal = observer(({ onClose }) => {
                     <p><strong>Name:</strong> {user.firstName ? `${user.firstName} ${user.lastName}` : (user.name || 'N/A')}</p>
                     <p><strong>Email:</strong> {user.email || 'N/A'}</p>
                     {user.accountType && <p><strong>Account Type:</strong> {user.accountType}</p>}
-                    {user.dob && <p><strong>Date of Birth:</strong> {user.dob}</p>}
+                    {user.dob && <p><strong>Date of Birth:</strong> {formatDate(user.dob)}</p>}
                     <p>
                         <strong>Status:</strong>
                         <span className={`status-dot status-${user.status ? user.status.toLowerCase() : 'unknown'}`}></span>
