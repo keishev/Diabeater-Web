@@ -526,7 +526,7 @@ const AdminStatDashboard = observer(() => {
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Status</th> {/* This will now correctly show Subscription Status */}
+                                <th>Subscription Status</th> {/* This will now correctly show Subscription Status */}
                                 <th>Renewal Date</th> {/* This will now correctly show Subscription End Date */}
                                 <th>Details</th>
                                 <th>History</th>

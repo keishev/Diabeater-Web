@@ -15,7 +15,6 @@ import {
     updateDoc,
     deleteDoc
 } from 'firebase/firestore';
-import moment from 'moment'; // Make sure moment is installed (npm install moment) if used for date calculations here
 
 const db = getFirestore(app);
 
@@ -37,11 +36,6 @@ const AdminStatService = {
         }
     },
 
-    /**
-     * Fetches user accounts, optionally filtered by role.
-     * @param {string | null} role - The role to filter by (e.g., 'premium', 'nutritionist'), or null for all.
-     * @returns {Promise<Array<Object>>} A promise that resolves to an array of user documents.
-     */
     async getAllUserAccounts(role = null) {
         try {
             let q = collection(db, 'user_accounts');
