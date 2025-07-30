@@ -12,6 +12,8 @@ import { observer } from 'mobx-react-lite'; // Corrected import from 'mobobx-rea
 import moment from 'moment';
 
 const AdminStatDashboard = observer(() => {
+    // Destructure directly from the singleton ViewModel instance
+    // This makes the component reactively observe changes in these properties
     const {
         loading,
         error,
@@ -24,15 +26,23 @@ const AdminStatDashboard = observer(() => {
         dailySignupsData,
         weeklyTopMealPlans,
         userAccounts, // This array now contains ONLY premium users with correct status/endDate
-        selectedUserForManagement, // For UserDetailModal
-        selectedUserForHistory,    // NEW: For UserHistoryModal visibility
+        selectedUserForManagement, // Controlled by ViewModel, used for UserDetailModal
+        selectedUserForHistory,    // Controlled by ViewModel, used for UserHistoryModal visibility
         premiumSubscriptionPrice,
         premiumFeatures,
+        // Also destructure actions from the ViewModel if they are to be called directly
+        setError,
+        setSuccess,
+        setSelectedUserForManagement,
+        clearSelectedUserForManagement,
+        setSelectedUserForHistory,
+        clearSelectedUserForHistory, // Ensure this is also available from ViewModel
+        loadDashboardData, // Direct access to the data loading method
     } = adminStatViewModel;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    // REMOVED: isHistoryModalOpen as its visibility is now controlled by adminStatViewModel.selectedUserForHistory
+    // isHistoryModalOpen is now controlled by selectedUserForHistory being truthy
     const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
     const [isEditFeaturesModal, setIsEditFeaturesModal] = useState(false);
 
@@ -61,38 +71,36 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
+    // Use useCallback for memoizing the data loading function
     const handleLoadDashboardData = useCallback(async () => {
-        await adminStatViewModel.loadDashboardData();
-    }, []);
+        await loadDashboardData(); // Call the ViewModel's method
+    }, [loadDashboardData]); // Dependency on loadDashboardData (from ViewModel)
 
     // Initial data load on component mount
     useEffect(() => {
         handleLoadDashboardData();
-    }, [handleLoadDashboardData]);
+    }, [handleLoadDashboardData]); // Depend on memoized handler
 
     const handleOpenUserModal = (user) => {
-        adminStatViewModel.setSelectedUserForManagement(user);
+        setSelectedUserForManagement(user); // Set in ViewModel
         setIsUserModalOpen(true);
     };
 
     const handleCloseUserModal = () => {
         setIsUserModalOpen(false);
-        adminStatViewModel.clearSelectedUserForManagement();
+        clearSelectedUserForManagement(); // Clear in ViewModel
         handleLoadDashboardData(); // Reload data after user modal closes
     };
 
     // UPDATED: This now triggers the ViewModel to set the user for history,
     // which in turn will cause UserHistoryModal to open.
     const handleOpenHistoryModal = (user) => {
-        adminStatViewModel.setSelectedUserForHistory(user);
+        setSelectedUserForHistory(user); // Set in ViewModel
     };
 
-    // REMOVED: handleCloseHistoryModal as the modal itself will call
-    // adminStatViewModel.clearSelectedUserForHistory() on its own close logic.
-    // const handleCloseHistoryModal = () => {
-    //     setIsHistoryModalOpen(false); // No longer needed
-    //     adminStatViewModel.clearSelectedUserForManagement(); // This might not be needed either if UserHistoryModal handles it
-    // };
+    // No explicit handleCloseHistoryModal needed here in parent
+    // The UserHistoryModal itself should call adminStatViewModel.clearSelectedUserForHistory()
+    // when it closes internally.
 
     const handleOpenEditPriceModal = () => {
         setIsEditPriceModalOpen(true);
@@ -108,34 +116,42 @@ const AdminStatDashboard = observer(() => {
 
     const handleCloseEditFeaturesModal = () => {
         setIsEditFeaturesModal(false);
+        handleLoadDashboardData(); // Refresh to ensure UI reflects changes from feature update
     };
 
     const handleSaveSubscriptionPrice = async (newPrice) => {
-        adminStatViewModel.setSuccess('');
-        adminStatViewModel.setError('');
+        setSuccess(''); // Clear previous messages
+        setError('');   // Clear previous messages
         try {
             const response = await adminStatViewModel.updatePremiumSubscriptionPrice(newPrice);
             if (response.success) {
                 setIsEditPriceModalOpen(false);
+                setSuccess(response.message || "Subscription price updated successfully!");
+                // No need to load dashboard data here explicitly if ViewModel updates premiumSubscriptionPrice directly
+            } else {
+                setError(response.message || "Failed to update subscription price.");
             }
         } catch (e) {
             console.error("[AdminStatDashboard] Error saving subscription price:", e);
-            adminStatViewModel.setError(`Failed to update subscription price: ${e.message}`);
+            setError(`Failed to update subscription price: ${e.message}`);
         }
     };
 
     const handleSavePremiumFeatures = async (newFeatures) => {
-        adminStatViewModel.setSuccess('');
-        adminStatViewModel.setError('');
+        setSuccess(''); // Clear previous messages
+        setError('');   // Clear previous messages
         try {
             const response = await adminStatViewModel.updatePremiumFeatures(newFeatures);
             if (response.success) {
                 setIsEditFeaturesModal(false);
+                setSuccess(response.message || "Premium features updated successfully!");
                 handleLoadDashboardData(); // Refresh to ensure UI reflects changes
+            } else {
+                setError(response.message || "Failed to update premium features.");
             }
         } catch (e) {
             console.error("[AdminStatDashboard] Error saving premium features:", e);
-            adminStatViewModel.setError(`Failed to update premium features: ${e.message}`);
+            setError(`Failed to update premium features: ${e.message}`);
         }
     };
 
@@ -148,7 +164,7 @@ const AdminStatDashboard = observer(() => {
         return (
             fullName.includes(searchTermLower) ||
             (user.email && user.email.toLowerCase().includes(searchTermLower)) ||
-            (user.status && user.status.toLowerCase().includes(searchTermLower))
+            (user.subscriptionStatus && user.subscriptionStatus.toLowerCase().includes(searchTermLower))
         );
     });
 
@@ -264,13 +280,13 @@ const AdminStatDashboard = observer(() => {
             {error && (
                 <div className="admin-dashboard-message error-message" role="alert">
                     <i className="fas fa-exclamation-circle"></i> {error}
-                    <button onClick={() => adminStatViewModel.setError('')} className="close-message-button" aria-label="Close error message">&times;</button>
+                    <button onClick={() => setError('')} className="close-message-button" aria-label="Close error message">&times;</button>
                 </div>
             )}
             {success && (
                 <div className="admin-dashboard-message success-message" role="status">
                     <i className="fas fa-check-circle"></i> {success}
-                    <button onClick={() => adminStatViewModel.setSuccess('')} className="close-message-button" aria-label="Close success message">&times;</button>
+                    <button onClick={() => setSuccess('')} className="close-message-button" aria-label="Close success message">&times;</button>
                 </div>
             )}
         </>
@@ -526,7 +542,7 @@ const AdminStatDashboard = observer(() => {
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Subscription Status</th> {/* This will now correctly show Subscription Status */}
+                                <th>Status</th> {/* This will now correctly show Subscription Status */}
                                 <th>Renewal Date</th> {/* This will now correctly show Subscription End Date */}
                                 <th>Details</th>
                                 <th>History</th>
@@ -589,9 +605,7 @@ const AdminStatDashboard = observer(() => {
                                         <td>
                                             <button
                                                 className="deets-action-button history-button"
-                                                // THIS IS THE CRUCIAL CHANGE:
-                                                // Calls the handler that updates the ViewModel's selected user for history
-                                                onClick={() => handleOpenHistoryModal(user)}
+                                                onClick={() => handleOpenHistoryModal(user)} // Calls ViewModel setter
                                                 aria-label={`View history for ${user.firstName || ''} ${user.lastName || ''}`}
                                             >
                                                 View History
@@ -610,32 +624,25 @@ const AdminStatDashboard = observer(() => {
             </section>
 
             {/* Modals */}
-            {/* User Detail Modal */}
             {isUserModalOpen && selectedUserForManagement && (
                 <UserDetailModal
-                    user={selectedUserForManagement}
+                    isOpen={isUserModalOpen}
                     onClose={handleCloseUserModal}
-                    updateUserRole={(uid, role) => adminStatViewModel.updateUserRole(uid, role)}
-                    // updateNutritionistStatus={(uid, status) => adminStatViewModel.updateNutritionistStatus(uid, status)} // Assuming this might be handled by updateUserRole or separate
-                    deleteUserAccount={(uid) => adminStatViewModel.deleteUserAccount(uid)}
-                    suspendUserAccount={(uid) => adminStatViewModel.suspendUserAccount(uid, true)}
-                    unsuspendUserAccount={(uid) => adminStatViewModel.suspendUserAccount(uid, false)}
-                    onUserActionSuccess={(msg) => adminStatViewModel.setSuccess(msg)}
-                    onUserActionError={(msg) => adminStatViewModel.setError(`User action failed: ${msg}`)}
+                    user={selectedUserForManagement} // Pass the selected user directly
+                    adminStatViewModel={adminStatViewModel} // Pass the entire ViewModel for actions
                 />
             )}
-            {/* User History Modal - Now conditionally rendered based on adminStatViewModel.selectedUserForHistory */}
-            {selectedUserForHistory && ( // Renders only if a user is set for history viewing
-                <UserHistoryModal />
-                // Note: UserHistoryModal itself should observe adminStatViewModel.selectedUserForHistory
-                // and call adminStatViewModel.clearSelectedUserForHistory() when it closes.
-            )}
+
             {isEditPriceModalOpen && (
                 <EditSubscriptionModal
                     isOpen={isEditPriceModalOpen}
                     onClose={handleCloseEditPriceModal}
-                    initialPrice={premiumSubscriptionPrice}
-                    onSave={handleSaveSubscriptionPrice}
+                    currentPrice={premiumSubscriptionPrice}
+                    onSave={handleSaveSubscriptionPrice} // Pass the saving handler
+                    // You might also pass setError/setSuccess if the modal itself needs to display messages
+                    // Or, the modal could call a ViewModel method that handles messages
+                    errorMessage={error} // Pass existing error for context
+                    successMessage={success} // Pass existing success for context
                 />
             )}
 
@@ -643,8 +650,18 @@ const AdminStatDashboard = observer(() => {
                 <EditPremiumFeaturesModal
                     isOpen={isEditFeaturesModal}
                     onClose={handleCloseEditFeaturesModal}
-                    initialFeatures={premiumFeatures}
-                    onSave={handleSavePremiumFeatures}
+                    adminStatViewModel={adminStatViewModel} // Pass the entire ViewModel
+                />
+            )}
+
+            {/* UserHistoryModal controlled by ViewModel's selectedUserForHistory */}
+            {selectedUserForHistory && (
+                <UserHistoryModal
+                    isOpen={!!selectedUserForHistory} // isOpen is true if selectedUserForHistory is set
+                    // The modal itself should call adminStatViewModel.clearSelectedUserForHistory() on close
+                    // so you don't need a direct onClose prop here from the parent.
+                    // Instead, the modal's internal close button will trigger the ViewModel clear.
+                    adminStatViewModel={adminStatViewModel} // Pass the ViewModel to the modal
                 />
             )}
         </div>
