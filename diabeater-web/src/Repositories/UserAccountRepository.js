@@ -1,7 +1,6 @@
-// src/Repositories/UserAccountRepository.js
 import { auth, db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import UserAccountService from '../Services/UserAccountService'; // Assuming this service exists for profile handling
+import UserAccountService from '../Services/UserAccountService';
 
 class UserAccountRepository {
     backendBaseUrl = 'http://localhost:5000';
@@ -17,7 +16,24 @@ class UserAccountRepository {
     async getAllUsers() {
         try {
             const usersSnapshot = await getDocs(collection(db, 'user_accounts'));
-            const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const users = usersSnapshot.docs.map(doc => {
+                const data = doc.data();
+                let userSince = 'N/A';
+                if (data.createdAt && data.createdAt.toDate) {
+                    // Convert Firebase Timestamp to a Date object, then format it
+                    const date = data.createdAt.toDate();
+                    userSince = date.toLocaleDateString('en-SG', { // 'en-SG' for Singapore date format, adjust as needed
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                return {
+                    id: doc.id,
+                    ...data,
+                    userSince: userSince // Add the formatted userSince field
+                };
+            });
             return users;
         } catch (error) {
             console.error("Error fetching all users from Firestore:", error);
@@ -25,7 +41,6 @@ class UserAccountRepository {
         }
     }
 
-    // ⭐ Moved: Suspend User method
     async suspendUser(userId) {
         try {
             const idToken = await this.getAdminIdToken();
@@ -42,7 +57,6 @@ class UserAccountRepository {
             const data = await response.json();
 
             if (!response.ok) {
-                // Backend sent an error response
                 throw new Error(data.message || `Backend error: HTTP status ${response.status}`);
             }
 
@@ -53,7 +67,6 @@ class UserAccountRepository {
         }
     }
 
-    // ⭐ Moved: Unsuspend User method
     async unsuspendUser(userId) {
         try {
             const idToken = await this.getAdminIdToken();
@@ -62,7 +75,7 @@ class UserAccountRepository {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}` // Send the admin's ID token
+                    'Authorization': `Bearer ${idToken}`
                 },
                 body: JSON.stringify({ userId })
             });

@@ -1,3 +1,4 @@
+// src/ViewModels/AdminDashboardViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import { getAuth } from 'firebase/auth';
 import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
@@ -24,32 +25,32 @@ class AdminDashboardViewModel {
     userAccountsVM = userAccountsViewModel;
 
     constructor() {
-        makeAutoObservable(this);
+        makeAutoObservable(this); // Makes all properties observable and methods actionable
     }
 
-    // --- State Setters ---
-    setPendingAccounts(accounts) {
+    // --- State Setters (Changed to arrow functions) ---
+    setPendingAccounts = (accounts) => { // Added '=' and '=>'
         this.pendingAccounts = accounts;
     }
 
-    setActiveTab(tab) {
+    setActiveTab = (tab) => { // Added '=' and '=>'
         this.activeTab = tab;
     }
 
-    setCurrentView(view) {
+    setCurrentView = (view) => { // Added '=' and '=>'
         this.currentView = view;
         if (view === 'userAccounts') {
             this.userAccountsVM.fetchAccounts();
         }
     }
 
-    setSelectedUser(user) {
+    setSelectedUser = (user) => { // Added '=' and '=>'
         this.selectedUser = user;
         this.error = ''; 
         this.rejectionReason = ''; 
     }
 
-    setShowUserDetailModal(value) {
+    setShowUserDetailModal = (value) => { // Added '=' and '=>'
         this.showUserDetailModal = value;
         if (!value) {
             this.selectedUser = null; 
@@ -57,26 +58,26 @@ class AdminDashboardViewModel {
         }
     }
 
-    setShowRejectionReasonModal(value) {
+    setShowRejectionReasonModal = (value) => { // Added '=' and '=>'
         this.showRejectionReasonModal = value;
         if (!value) {
             this.rejectionReason = ''; 
         }
     }
 
-    setRejectionReason(reason) {
+    setRejectionReason = (reason) => { // Added '=' and '=>'
         this.rejectionReason = reason;
     }
 
-    setLoading(value) {
+    setLoading = (value) => { // Added '=' and '=>'
         this.isLoading = value;
     }
 
-    setError(message) {
+    setError = (message) => { // Added '=' and '=>'
         this.error = message;
     }
 
-    // --- Computed Properties ---
+    // --- Computed Properties (No change needed) ---
     get filteredPendingAccounts() {
         const lowerCaseSearchTerm = this.userAccountsVM.searchTerm.toLowerCase(); 
         return this.pendingAccounts.filter(user =>
@@ -90,7 +91,7 @@ class AdminDashboardViewModel {
      * Fetches both pending nutritionist accounts and all general user accounts.
      * The latter is delegated to UserAccountsViewModel.
      */
-    fetchAccounts = async () => {
+    fetchAccounts = async () => { // Already an arrow function
         this.setLoading(true);
         this.setError('');
         try {
@@ -124,7 +125,7 @@ class AdminDashboardViewModel {
      * Approves a pending nutritionist.
      * Updates Firestore, sets custom claims, and revokes tokens.
      */
-    approveNutritionist = async (userId) => { 
+    approveNutritionist = async (userId) => { // Already an arrow function
         this.setLoading(true);
         this.setError('');
         try {
@@ -150,7 +151,7 @@ class AdminDashboardViewModel {
             runInAction(() => {
                 this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
                 this.userAccountsVM.fetchAccounts();
-                this.setShowUserDetailModal(false);
+                this.setShowUserDetailModal(false); // This setter is now an arrow function
                 alert("Nutritionist account has been approved!");
             });
             console.log("Approved nutritionist:", userId, result);
@@ -169,7 +170,7 @@ class AdminDashboardViewModel {
      * Rejects a pending nutritionist.
      * Updates Firestore, removes/modifies custom claims, and revokes tokens.
      */
-    rejectNutritionist = async (userId) => { 
+    rejectNutritionist = async (userId) => { // Already an arrow function
         this.setLoading(true);
         this.setError('');
         try {
@@ -195,9 +196,9 @@ class AdminDashboardViewModel {
             runInAction(() => {
                 this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
                 this.userAccountsVM.fetchAccounts();
-                this.setShowRejectionReasonModal(false);
-                this.setShowUserDetailModal(false);
-                this.setRejectionReason('');
+                this.setShowRejectionReasonModal(false); // This setter is now an arrow function
+                this.setShowUserDetailModal(false); // This setter is now an arrow function
+                this.setRejectionReason(''); // This setter is now an arrow function
                 alert("Nutritionist account has been rejected!");
             });
             console.log("Rejected nutritionist:", userId, result);
@@ -215,7 +216,7 @@ class AdminDashboardViewModel {
     /**
      * Fetches a signed URL for a nutritionist's certificate from Firebase Storage.
      */
-    viewCertificate = async (userId) => { 
+    viewCertificate = async (userId) => { // Already an arrow function
         this.setLoading(true);
         this.setError('');
         try {
@@ -259,7 +260,7 @@ class AdminDashboardViewModel {
      * Checks if the currently logged-in user has admin claims.
      * Useful for conditional rendering of admin-only UI elements.
      */
-    checkAdminStatus = async () => { 
+    checkAdminStatus = async () => { // Already an arrow function
         try {
             const auth = getAuth();
             const user = auth.currentUser;

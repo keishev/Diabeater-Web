@@ -1,93 +1,72 @@
-// src/Admin/UserDetailModal.js
+// src/UserDetailModal.js
 import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import adminStatViewModel from '../ViewModels/AdminStatViewModel';
 import './UserDetailModal.css';
 import moment from 'moment'; // For date formatting
 
-const UserDetailModal = observer(({ onClose }) => {
-    const user = adminStatViewModel.selectedUserForManagement;
-    const { loading, error, success, showRejectionReasonModal, rejectionReason } = adminStatViewModel;
+// Destructure all expected props
+const UserDetailModal = observer(({
+    user, // <-- Now received as a prop
+    onClose,
+    onApprove, // <-- Action callback props
+    onReject,
+    onViewDocument,
+    // Removed: onSuspend,
+    // Removed: onUnsuspend,
+    // Removed: onChangeRole,
+    // Removed: onDeleteAccount,
+    loading, // <-- Loading state for actions
+    error,   // <-- Error state for actions
+    success, // <-- Success state for actions
+    showRejectionReasonModal, // Rejection modal state for the nested modal
+    rejectionReason,          // Rejection reason state for the nested modal
+    setRejectionReason,       // Setter for rejection reason
+    onConfirmReject           // Callback for confirming rejection from the nested modal
+}) => {
+    // Line 13: Log the received user prop for debugging
+    // This will now correctly show the 'user' prop that was passed.
+    console.log("[UserDetailModal] Received user prop:", user);
 
-    useEffect(() => {
-        console.log("[UserDetailModal] Received user prop:", user);
-        if (!user) {
-            console.warn("[UserDetailModal] User prop is null or undefined.");
-        }
-    }, [user]);
+    // Defensive check: If user is null or undefined, return null to prevent rendering errors.
+    // This is crucial to avoid attempting to access properties on a non-existent object.
+    if (!user) {
+        // Line 15: Adjusted log to be a warning as it's a valid early exit
+        console.warn("[UserDetailModal] User prop is null or undefined. Not rendering modal content.");
+        return null; // Do not render the modal content if the user prop is invalid
+    }
 
-    if (!user) return null;
+    // Now, 'user' is guaranteed to be a valid object for the rest of the component's logic.
 
     const isNutritionistCandidate = user.role === 'pending_nutritionist' || (user.role === 'user' && user.nutritionistApplicationStatus === 'pending');
     const isApprovedNutritionist = user.role === 'nutritionist';
 
-    const handleApprove = async () => {
+    // Callbacks now use the props passed from the parent
+    const handleApproveClick = () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to APPROVE ${userName}'s nutritionist application?`)) {
-            const response = await adminStatViewModel.approveNutritionist(user._id);
-            if (response.success) {
-                onClose();
-            }
+            onApprove(user.id || user._id); // Use user.id or user._id consistently
         }
     };
 
-    const handleOpenRejectReason = () => {
-        adminStatViewModel.setShowRejectionReasonModal(true);
+    const handleOpenRejectReasonClick = () => {
+        onReject(user.id || user._id); // This will trigger the parent to show the rejection modal
     };
 
-    const handleConfirmReject = async () => {
+    const handleConfirmRejectClick = () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to REJECT ${userName}'s nutritionist application? This action cannot be undone.`)) {
-            const response = await adminStatViewModel.rejectNutritionist(user._id);
-            if (response.success) {
-                onClose();
-            }
+            onConfirmReject(user.id || user._id, rejectionReason); // Pass id and reason back to parent
         }
     };
 
-    const handleViewDocument = async () => {
-        await adminStatViewModel.viewCertificate(user._id);
+    const handleViewDocumentClick = () => {
+        onViewDocument(user.id || user._id);
     };
 
-    const handleSuspend = async () => {
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
-        if (window.confirm(`Are you sure you want to suspend ${userName}'s account?`)) {
-            const response = await adminStatViewModel.suspendUserAccount(user._id, true);
-            if (response.success) {
-                onClose();
-            }
-        }
-    };
-
-    const handleUnsuspend = async () => {
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
-        if (window.confirm(`Are you sure you want to unsuspend ${userName}'s account?`)) {
-            const response = await adminStatViewModel.suspendUserAccount(user._id, false);
-            if (response.success) {
-                onClose();
-            }
-        }
-    };
-
-    const handleChangeRole = async (newRole) => {
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
-        if (window.confirm(`Are you sure you want to change ${userName}'s role to ${newRole}?`)) {
-            const response = await adminStatViewModel.updateUserRole(user._id, newRole);
-            if (response.success) {
-                onClose();
-            }
-        }
-    };
-
-    const handleDeleteAccount = async () => {
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
-        if (window.confirm(`Are you sure you want to PERMANENTLY DELETE ${userName}'s account? This action cannot be undone.`)) {
-            const response = await adminStatViewModel.deleteUserAccount(user._id);
-            if (response.success) {
-                onClose();
-            }
-        }
-    };
+    // Removed: handleSuspendClick
+    // Removed: handleUnsuspendClick
+    // Removed: handleChangeRoleClick
+    // Removed: handleDeleteAccountClick
 
     // Helper function to format date
     const formatDate = (timestamp) => {
@@ -127,7 +106,7 @@ const UserDetailModal = observer(({ onClose }) => {
                     {(isNutritionistCandidate || isApprovedNutritionist) && user.certificateUrl && (
                         <div className="certificate-section">
                             <p><strong>Certificate:</strong>
-                                <button className="doc-action-button view-button" onClick={handleViewDocument} disabled={loading}>
+                                <button className="doc-action-button view-button" onClick={handleViewDocumentClick} disabled={loading}>
                                     {loading ? 'Loading...' : 'VIEW DOCUMENT'}
                                 </button>
                             </p>
@@ -135,50 +114,21 @@ const UserDetailModal = observer(({ onClose }) => {
                     )}
 
                     <div className="user-detail-modal-actions">
-                        {user.status && user.status.toLowerCase() === 'active' ? (
-                            <button
-                                className="action-button suspend-button"
-                                onClick={handleSuspend}
-                                disabled={loading}
-                            >
-                                {loading ? 'Suspending...' : 'Suspend Account'}
-                            </button>
-                        ) : (user.status && user.status.toLowerCase() === 'suspended') ? (
-                            <button
-                                className="action-button unsuspend-button"
-                                onClick={handleUnsuspend}
-                                disabled={loading}
-                            >
-                                {loading ? 'Unsuspending...' : 'Unsuspend Account'}
-                            </button>
-                        ) : null}
-
-                        <div className="role-change-section">
-                            <label htmlFor="user-role-select">Change Role:</label>
-                            <select
-                                id="user-role-select"
-                                value={user.role || ''}
-                                onChange={(e) => handleChangeRole(e.target.value)}
-                                disabled={loading}
-                            >
-                                <option value="user">User</option>
-                                <option value="nutritionist">Nutritionist</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-
+                        {/* Removed Suspend/Unsuspend button */}
+                        {/* Removed Change Role section */}
+                        
                         {isNutritionistCandidate && user.nutritionistApplicationStatus === 'pending' && (
                             <>
                                 <button
                                     className="approve-button"
-                                    onClick={handleApprove}
+                                    onClick={handleApproveClick}
                                     disabled={loading}
                                 >
                                     {loading ? 'Approving...' : 'Approve Nutritionist'}
                                 </button>
                                 <button
                                     className="reject-button"
-                                    onClick={handleOpenRejectReason}
+                                    onClick={handleOpenRejectReasonClick}
                                     disabled={loading}
                                 >
                                     Reject Nutritionist
@@ -186,17 +136,12 @@ const UserDetailModal = observer(({ onClose }) => {
                             </>
                         )}
 
-                        <button
-                            className="delete-button"
-                            onClick={handleDeleteAccount}
-                            disabled={loading}
-                        >
-                            {loading ? 'Deleting...' : 'Delete Account'}
-                        </button>
+                        {/* Removed Delete Account button */}
                     </div>
                 </div>
             </div>
 
+            {/* This rejection modal is now controlled by props, can be from parent (AdminDashboardViewModel) */}
             {showRejectionReasonModal && (
                 <div className="user-detail-modal-overlay rejection-modal-overlay">
                     <div className="user-detail-modal-content rejection-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -204,14 +149,14 @@ const UserDetailModal = observer(({ onClose }) => {
                         <textarea
                             placeholder="Enter rejection reason (optional)"
                             value={rejectionReason}
-                            onChange={(e) => adminStatViewModel.setRejectionReason(e.target.value)}
+                            onChange={(e) => setRejectionReason(e.target.value)}
                             rows="4"
                         ></textarea>
                         <div className="rejection-modal-actions">
-                            <button className="cancel-button" onClick={() => adminStatViewModel.setShowRejectionReasonModal(false)} disabled={loading}>Cancel</button>
+                            <button className="cancel-button" onClick={() => { /* needs to tell parent to close */ }} disabled={loading}>Cancel</button>
                             <button
                                 className="confirm-reject-button"
-                                onClick={handleConfirmReject}
+                                onClick={handleConfirmRejectClick}
                                 disabled={loading}
                             >
                                 {loading ? 'Rejecting...' : 'Confirm Reject'}

@@ -2,30 +2,27 @@
 import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import adminStatViewModel from '../ViewModels/AdminStatViewModel';
-// Removed direct import of SubscriptionService as data will come from ViewModel
 import moment from 'moment';
 import './UserHistoryModal.css';
 
 const UserHistoryModal = observer(() => {
-    // Get all necessary states and actions from the ViewModel
     const {
         selectedUserForHistory: user,
-        userSubscriptionHistory: userHistory, // Renamed for clarity in the component
+        userSubscriptionHistory: userHistory,
         loadingHistory,
         historyError,
         clearSelectedUserForHistory,
-        loadUserSubscriptionHistory // New action to trigger data load
+        loadUserSubscriptionHistory
     } = adminStatViewModel;
 
-    // The useEffect now triggers the ViewModel's data loading method
     useEffect(() => {
         if (user) {
-            // The ViewModel will handle setting loading, error, and history data
             loadUserSubscriptionHistory(user._id);
         }
-    }, [user, loadUserSubscriptionHistory]); // Dependency array: re-run if user or the load function changes
+    }, [user, loadUserSubscriptionHistory]);
 
-    if (!user) return null; // Only render modal if a user is selected
+    // IMPORTANT: Remove 'if (!user) return null;' here.
+    // We always render the overlay, but control its visibility with the 'show' class.
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
@@ -37,14 +34,16 @@ const UserHistoryModal = observer(() => {
         return user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
     };
 
-    const userName = getUserDisplayName(user);
+    const userName = user ? getUserDisplayName(user) : ''; // Handle case where user might be null initially
 
     return (
-        <div className="modal-overlay" onClick={clearSelectedUserForHistory}>
+        // Add the .show class conditionally to the modal-overlay
+        <div className={`modal-overlay ${user ? 'show' : ''}`} onClick={clearSelectedUserForHistory}>
             <div className="modal-content user-history-modal" onClick={(e) => e.stopPropagation()}>
                 <button className="close-button" onClick={clearSelectedUserForHistory}>&times;</button>
                 <h2>Subscription History for {userName}</h2>
 
+                {/* Conditional rendering for content *inside* the modal body */}
                 {loadingHistory && <p className="loading-message">Loading history...</p>}
                 {historyError && <p className="error-message">{historyError}</p>}
 
