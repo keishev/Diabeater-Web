@@ -154,7 +154,6 @@ class AdminStatViewModel {
         }
     }
 
-    // --- Data Loading Action ---
     async loadDashboardData() {
         console.log("[ViewModel] Starting loadDashboardData...");
         this.setLoading(true);
@@ -171,7 +170,8 @@ class AdminStatViewModel {
                 dailySignupsRawData,
                 weeklyTopMealPlans,
                 allSubscriptionsData,
-                premiumUserAccountsData
+                premiumPrice,
+                premiumFeatures
             ] = await Promise.all([
                 AdminStatService.getDocumentCount('user_accounts'),
                 AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
@@ -181,25 +181,11 @@ class AdminStatViewModel {
                 AdminStatService.getDailySignups(7),
                 AdminStatService.getWeeklyTopMealPlans(3),
                 AdminStatService.getAllSubscriptions(),
-                AdminStatService.getPremiumUserAccounts()
+                SubscriptionService.getSubscriptionPrice('premium'),
+                SubscriptionService.getPremiumFeatures('premium')
             ]);
 
-            let fetchedPremiumPrice = 0;
-            try {
-                const price = await SubscriptionService.getSubscriptionPrice('premium');
-                fetchedPremiumPrice = price !== null ? price : 0;
-            } catch (priceError) {
-                console.error("[ViewModel] Error fetching premium subscription price:", priceError);
-            }
-
-            let fetchedPremiumFeatures = [];
-            try {
-                const features = await SubscriptionService.getPremiumFeatures('premium');
-                fetchedPremiumFeatures = features !== null ? features : [];
-            } catch (featuresError) {
-                console.error("[ViewModel] Error fetching premium features:", featuresError);
-            }
-
+            // Format signups
             const processedDailySignups = {};
             const today = moment().startOf('day');
             for (let i = 6; i >= 0; i--) {
@@ -208,20 +194,41 @@ class AdminStatViewModel {
             }
 
             dailySignupsRawData.forEach(user => {
-                const createdAtDate = user.createdAt?.toDate ? moment(user.createdAt.toDate()) : null;
-                if (createdAtDate && moment(createdAtDate).isBetween(moment(today).subtract(7, 'days'), moment(today).add(1, 'day'), null, '[]')) {
-                    const dateString = createdAtDate.format('YYYY-MM-DD');
-                    processedDailySignups[dateString] = (processedDailySignups[dateString] || 0) + 1;
+                const createdAt = user.createdAt?.toDate ? moment(user.createdAt.toDate()) : null;
+                if (createdAt && createdAt.isBetween(moment(today).subtract(7, 'days'), moment(today).add(1, 'day'), null, '[]')) {
+                    const key = createdAt.format('YYYY-MM-DD');
+                    processedDailySignups[key] = (processedDailySignups[key] || 0) + 1;
                 }
             });
 
-            const premiumUsersWithStatusAndEndDate = premiumUserAccountsData.map(user => {
-                const subscription = allSubscriptionsData.find(sub => sub.userId === user._id);
+            // Group subscriptions by user
+            const subsByUser = {};
+            for (const sub of allSubscriptionsData) {
+                const userId = sub.userId;
+                if (!subsByUser[userId]) subsByUser[userId] = [];
+                subsByUser[userId].push(sub);
+            }
+
+            // Fetch user accounts for those subscriptions
+            const userIds = Object.keys(subsByUser);
+            const userFetches = await Promise.all(userIds.map(uid => AdminStatService.getUserAccountById(uid)));
+            const users = userFetches.filter(Boolean); // remove nulls if any
+
+            // Merge user + latest subscription
+            const enrichedUsers = users.map(user => {
+                const userSubs = subsByUser[user._id] || [];
+                userSubs.sort((a, b) => {
+                    const dateA = a.endDate?.toDate?.() || new Date(0);
+                    const dateB = b.endDate?.toDate?.() || new Date(0);
+                    return dateB - dateA;
+                });
+                const latestSub = userSubs[0];
+
                 return {
                     ...user,
-                    isPremium: user.isPremium || false,
-                    subscriptionStatus: subscription ? subscription.status : 'No Subscription Found',
-                    subscriptionEndDate: subscription ? (subscription.endDate?.toDate ? subscription.endDate.toDate() : null) : null
+                    subscriptionStatus: latestSub?.status || 'unknown',
+                    subscriptionEndDate: latestSub?.endDate?.toDate?.() || null,
+                    currentSubscription: latestSub,
                 };
             });
 
@@ -234,9 +241,9 @@ class AdminStatViewModel {
                 this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
                 this.allSubscriptions = allSubscriptionsData;
-                this.userAccounts = premiumUsersWithStatusAndEndDate;
-                this.premiumSubscriptionPrice = fetchedPremiumPrice;
-                this.premiumFeatures = fetchedPremiumFeatures;
+                this.userAccounts = enrichedUsers;
+                this.premiumSubscriptionPrice = premiumPrice || 0;
+                this.premiumFeatures = premiumFeatures || [];
             });
 
             console.log("[ViewModel] Dashboard data loaded successfully.");
@@ -249,6 +256,7 @@ class AdminStatViewModel {
             this.setLoading(false);
         }
     }
+
 
     // ... rest of your AdminStatViewModel methods (updatePremiumSubscriptionPrice, updatePremiumFeatures, suspendUserAccount, etc.)
     // Ensure any methods that are passed as callbacks or event handlers are also arrow functions.
