@@ -28,7 +28,10 @@ class MealPlanViewModel {
     constructor() {
         makeAutoObservable(this, {
             filteredMealPlans: computed,
-            allCategoriesWithDetails: computed
+            allCategoriesWithDetails: computed,
+            pendingCount: computed, // Add computed property for pending count
+            approvedCount: computed, // Add computed property for approved count
+            rejectedCount: computed // Add computed property for rejected count
         });
         this.initializeUser();
     }
@@ -42,7 +45,8 @@ class MealPlanViewModel {
                 this.currentUserName = user.name || user.username || user.email;
             });
             if (user.role === 'admin') {
-                this.fetchAdminMealPlans(this.adminActiveTab);
+                // Call fetchAdminMealPlans without a specific status to get all for counts
+                this.fetchAdminMealPlans();
                 this.fetchMealCategories();
             } else {
                 this.fetchNutritionistMealPlans(user.uid);
@@ -71,9 +75,8 @@ class MealPlanViewModel {
             runInAction(() => {
                 this.adminActiveTab = tab;
             });
-            if (this.currentUserRole === 'admin') {
-                await this.fetchAdminMealPlans(tab);
-            }
+            // No need to re-fetch here if fetchAdminMealPlans already gets all
+            // The filteredMealPlans computed will handle the view
         }
     };
 
@@ -228,8 +231,9 @@ class MealPlanViewModel {
                 mealPlanId,
                 rejectionReason
             );
+            // After approval/rejection, re-fetch all admin meal plans to update counts
             if (this.currentUserRole === 'admin') {
-                await this.fetchAdminMealPlans(this.adminActiveTab);
+                await this.fetchAdminMealPlans(); // Fetch all to update counts
             } else if (this.currentUserId) {
                 await this.fetchNutritionistMealPlans(this.currentUserId);
             }
@@ -265,7 +269,7 @@ class MealPlanViewModel {
             await MealPlanRepository.addMealPlan(newMealPlan, imageFile);
             this.setSuccess('Meal plan created successfully and sent for approval!');
             if (this.currentUserRole === 'admin') {
-                await this.fetchAdminMealPlans(this.adminActiveTab);
+                await this.fetchAdminMealPlans(); // Fetch all to update counts
             } else if (this.currentUserId) {
                 await this.fetchNutritionistMealPlans(authorId);
             }
@@ -308,7 +312,8 @@ class MealPlanViewModel {
         }
     }
 
-    fetchAdminMealPlans = async (statusFilter) => {
+    // Modified to fetch all meal plans when no statusFilter is provided
+    fetchAdminMealPlans = async (statusFilter = null) => {
         this.setLoading(true);
         this.setError('');
         try {
@@ -320,6 +325,7 @@ class MealPlanViewModel {
             } else if (statusFilter === 'REJECTED') {
                 fetchedPlans = await MealPlanRepository.getRejectedMealPlans();
             } else {
+                // If no specific filter, fetch all statuses for consistent counting
                 const pending = await MealPlanRepository.getPendingMealPlans();
                 const approved = await MealPlanRepository.getApprovedMealPlans();
                 const rejected = await MealPlanRepository.getRejectedMealPlans();
@@ -545,6 +551,19 @@ class MealPlanViewModel {
         }
     };
 
+    // New computed properties to get the counts for each status
+    get pendingCount() {
+        return this.mealPlans.filter(p => p.status === 'PENDING_APPROVAL').length;
+    }
+
+    get approvedCount() {
+        return this.mealPlans.filter(p => p.status === 'APPROVED').length;
+    }
+
+    get rejectedCount() {
+        return this.mealPlans.filter(p => p.status === 'REJECTED').length;
+    }
+
     get filteredMealPlans() {
         let plansToFilter = Array.isArray(this.mealPlans) ? this.mealPlans : [];
         if (this.currentUserRole === 'admin') {
@@ -558,8 +577,8 @@ class MealPlanViewModel {
                 planAuthor.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                 planDescription.toLowerCase().includes(this.searchTerm.toLowerCase());
             const matchesCategory = this.selectedCategory === '' ||
-                                     (Array.isArray(plan.categories) && plan.categories.includes(this.selectedCategory)) ||
-                                     (plan.category && plan.category === this.selectedCategory);
+                (Array.isArray(plan.categories) && plan.categories.includes(this.selectedCategory)) ||
+                (plan.category && plan.category === this.selectedCategory);
             return matchesSearchTerm && matchesCategory;
         });
     }

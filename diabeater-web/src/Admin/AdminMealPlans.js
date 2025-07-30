@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel';
 import AdminMealPlanDetail from './AdminMealPlanDetail';
-import MealCategoryManagementModal from './MealCategoryManagementModal'; // NEW IMPORT
+import MealCategoryManagementModal from './MealCategoryManagementModal';
 import './AdminMealPlans.css';
 
 const AdminMealPlans = observer(() => {
@@ -22,10 +22,10 @@ const AdminMealPlans = observer(() => {
 
     const [showDetailView, setShowDetailView] = useState(false);
 
-    // NEW STATE FOR CATEGORY MANAGEMENT MODAL
     const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
 
-    const { searchTerm, selectedCategory, error } = MealPlanViewModel; // `allCategories` is now `MealPlanViewModel.allCategories`
+    // Destructure the computed counts from MealPlanViewModel
+    const { searchTerm, selectedCategory, error, pendingCount, approvedCount, rejectedCount } = MealPlanViewModel;
 
     const rejectionReasons = [
         'Incomplete information provided',
@@ -37,8 +37,9 @@ const AdminMealPlans = observer(() => {
     ];
 
     useEffect(() => {
-        MealPlanViewModel.fetchAdminMealPlans('PENDING_APPROVAL');
-        MealPlanViewModel.fetchMealCategories(); // ⭐ NEW: Fetch categories on component mount ⭐
+        // Fetch all admin meal plans on component mount to ensure all counts are available
+        MealPlanViewModel.fetchAdminMealPlans(); // Fetch without a specific status filter
+        MealPlanViewModel.fetchMealCategories();
 
         const handleClickOutside = (event) => {
             if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
@@ -52,7 +53,6 @@ const AdminMealPlans = observer(() => {
         };
     }, []);
 
-    // --- APPROVE MODAL LOGIC (No changes needed here) ---
     const handleApproveClick = useCallback((id) => {
         setSelectedPlanToApprove(id);
         setShowApproveConfirmModal(true);
@@ -88,9 +88,7 @@ const AdminMealPlans = observer(() => {
         setShowApproveConfirmModal(false);
         setSelectedPlanToApprove(null);
     }, []);
-    // --- END APPROVE MODAL LOGIC ---
 
-    // --- REJECT MODAL LOGIC (No changes needed here) ---
     const handleRejectClick = useCallback((id) => {
         setSelectedPlanToReject(id);
         setSelectedRejectReason('');
@@ -155,7 +153,6 @@ const AdminMealPlans = observer(() => {
         setOtherReasonText('');
     }, []);
 
-    // --- Detail View Logic (No changes needed here) ---
     const handleViewDetailsClick = useCallback(async (id) => {
         await MealPlanViewModel.loadMealPlanDetails(id);
         if (MealPlanViewModel.selectedMealPlanForDetail) {
@@ -168,18 +165,15 @@ const AdminMealPlans = observer(() => {
         setShowDetailView(false);
     }, []);
 
-    // --- NEW Category Management Logic ---
     const handleOpenCategoryManagement = useCallback(() => {
         setShowCategoryManagementModal(true);
     }, []);
 
     const handleCloseCategoryManagement = useCallback(() => {
         setShowCategoryManagementModal(false);
-        // Re-fetch categories in case changes were made in the modal
         MealPlanViewModel.fetchMealCategories();
     }, []);
 
-    // --- Render Logic ---
     if (showDetailView && MealPlanViewModel.selectedMealPlanForDetail) {
         return (
             <AdminMealPlanDetail
@@ -199,19 +193,19 @@ const AdminMealPlans = observer(() => {
                         className={`tab-button ${MealPlanViewModel.adminActiveTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
                         onClick={() => MealPlanViewModel.setAdminActiveTab('PENDING_APPROVAL')}
                     >
-                        Pending ({MealPlanViewModel.mealPlans.filter(p => p.status === 'PENDING_APPROVAL').length})
+                        Pending ({pendingCount})
                     </button>
                     <button
                         className={`tab-button ${MealPlanViewModel.adminActiveTab === 'APPROVED' ? 'active' : ''}`}
                         onClick={() => MealPlanViewModel.setAdminActiveTab('APPROVED')}
                     >
-                        Approved ({MealPlanViewModel.mealPlans.filter(p => p.status === 'APPROVED').length})
+                        Approved ({approvedCount})
                     </button>
                     <button
                         className={`tab-button ${MealPlanViewModel.adminActiveTab === 'REJECTED' ? 'active' : ''}`}
                         onClick={() => MealPlanViewModel.setAdminActiveTab('REJECTED')}
                     >
-                        Rejected ({MealPlanViewModel.mealPlans.filter(p => p.status === 'REJECTED').length})
+                        Rejected ({rejectedCount})
                     </button>
                 </div>
                 <div className="search-controls">
@@ -234,9 +228,9 @@ const AdminMealPlans = observer(() => {
                                 <button className="dropdown-item" onClick={() => { MealPlanViewModel.setSelectedCategory(''); setShowCategoryDropdown(false); }}>
                                     All Categories
                                 </button>
-                                {MealPlanViewModel.allCategories.map((categoryName, index) => ( // Use MealPlanViewModel.allCategories
+                                {MealPlanViewModel.allCategories.map((categoryName) => (
                                     <button
-                                        key={categoryName} // Changed key to categoryName assuming it's unique
+                                        key={categoryName}
                                         className={`dropdown-item ${selectedCategory === categoryName ? 'selected' : ''}`}
                                         onClick={() => {
                                             MealPlanViewModel.setSelectedCategory(categoryName);
@@ -249,9 +243,8 @@ const AdminMealPlans = observer(() => {
                             </div>
                         )}
                     </div>
-                    {/* NEW: Manage Categories Button */}
                     <button
-                        className="manage-categories-button" // Add styling in AdminMealPlans.css
+                        className="manage-categories-button"
                         onClick={handleOpenCategoryManagement}
                     >
                         Manage Categories
@@ -310,7 +303,6 @@ const AdminMealPlans = observer(() => {
                 </div>
             )}
 
-            {/* Rejection Reasons Modal (Keep as is) */}
             {showRejectModal && (
                 <div className="reject-modal-overlay">
                     <div className="reject-modal-content">
@@ -349,7 +341,6 @@ const AdminMealPlans = observer(() => {
                 </div>
             )}
 
-            {/* Approve Confirmation Modal (Keep as is) */}
             {showApproveConfirmModal && (
                 <div className="approve-modal-overlay">
                     <div className="approve-modal-content">
@@ -367,11 +358,10 @@ const AdminMealPlans = observer(() => {
                 </div>
             )}
 
-            {/* NEW: Meal Category Management Modal */}
             <MealCategoryManagementModal
                 isOpen={showCategoryManagementModal}
                 onClose={handleCloseCategoryManagement}
-                mealPlanViewModel={MealPlanViewModel} // Pass the ViewModel instance
+                mealPlanViewModel={MealPlanViewModel}
             />
         </div>
     );
