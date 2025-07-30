@@ -1,7 +1,7 @@
-// AdminStatViewModel.js
+// src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService';
-import SubscriptionService from '../Services/SubscriptionService'; // Ensure this is imported
+import SubscriptionService from '../Services/SubscriptionService';
 import moment from 'moment';
 
 class AdminStatViewModel {
@@ -17,24 +17,31 @@ class AdminStatViewModel {
     totalSubscriptions = 0;
     dailySignupsData = {}; // { 'YYYY-MM-DD': count }
     weeklyTopMealPlans = [];
-    userAccounts = []; // For management table
-    allSubscriptions = []; // For subscriptions table
+    userAccounts = [];
+    allSubscriptions = [];
     selectedUserForManagement = null;
 
     // Observable for Premium Subscription Price and Features
-    premiumSubscriptionPrice = 0; // Initialize with a default value
-    premiumFeatures = []; // ⭐ NEW: Initialize for premium features
+    premiumSubscriptionPrice = 0;
+    premiumFeatures = [];
 
     // For Nutritionist Application Modals
     showRejectionReasonModal = false;
     rejectionReason = '';
 
+    // NEW: For User History Modal
+    selectedUserForHistory = null;
+    userSubscriptionHistory = [];
+    loadingHistory = false;
+    historyError = null;
+
+
     constructor() {
-        makeAutoObservable(this); // This makes all properties observable and all methods actions
-        this.loadDashboardData(); // Initial data load when ViewModel is instantiated
+        makeAutoObservable(this);
+        this.loadDashboardData();
     }
 
-    // --- State Management Actions (automatically bound by makeAutoObservable) ---
+    // --- State Management Actions (unchanged) ---
     setLoading(status) {
         runInAction(() => {
             this.loading = status;
@@ -45,9 +52,9 @@ class AdminStatViewModel {
         runInAction(() => {
             this.error = message;
             if (message) {
-                this.success = null; // Clear success message when an error occurs
+                this.success = null;
                 setTimeout(() => {
-                    if (this.error === message) { // Only clear if it's the same message
+                    if (this.error === message) {
                         this.error = null;
                     }
                 }, 5000);
@@ -59,9 +66,9 @@ class AdminStatViewModel {
         runInAction(() => {
             this.success = message;
             if (message) {
-                this.error = null; // Clear error message when a success occurs
+                this.error = null;
                 setTimeout(() => {
-                    if (this.success === message) { // Only clear if it's the same message
+                    if (this.success === message) {
                         this.success = null;
                     }
                 }, 5000);
@@ -75,7 +82,8 @@ class AdminStatViewModel {
         });
     }
 
-    clearSelectedUserForManagement() {
+    // Change to arrow function
+    clearSelectedUserForManagement = () => { // <--- CHANGE IS HERE
         runInAction(() => {
             this.selectedUserForManagement = null;
         });
@@ -91,6 +99,59 @@ class AdminStatViewModel {
         runInAction(() => {
             this.rejectionReason = reason;
         });
+    }
+
+    // NEW: User History Modal Actions
+    setSelectedUserForHistory = (user) => { // <--- ALSO CHANGE THIS TO ARROW FUNCTION FOR CONSISTENCY
+        runInAction(() => {
+            this.selectedUserForHistory = user;
+            if (user) {
+                this.loadUserSubscriptionHistory(user._id);
+            } else {
+                this.userSubscriptionHistory = [];
+                this.loadingHistory = false;
+                this.historyError = null;
+            }
+        });
+    }
+
+    // Change to arrow function
+    clearSelectedUserForHistory = () => { // <--- CHANGE IS HERE (already done in your code, but re-confirm)
+        runInAction(() => {
+            this.selectedUserForHistory = null;
+            this.userSubscriptionHistory = [];
+            this.loadingHistory = false;
+            this.historyError = null;
+        });
+    }
+
+    // This was already an arrow function, which is good.
+    loadUserSubscriptionHistory = async (userId) => {
+        runInAction(() => {
+            this.loadingHistory = true;
+            this.historyError = null;
+            this.userSubscriptionHistory = []; // Clear previous history
+        });
+        try {
+            const history = await AdminStatService.getUserSubscriptions(userId);
+            const sortedHistory = history.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+                return dateB - dateA; // Sort descending
+            });
+            runInAction(() => {
+                this.userSubscriptionHistory = sortedHistory;
+            });
+        } catch (err) {
+            console.error("Error fetching user history:", err);
+            runInAction(() => {
+                this.historyError = "Failed to load user's subscription history.";
+            });
+        } finally {
+            runInAction(() => {
+                this.loadingHistory = false;
+            });
+        }
     }
 
     // --- Data Loading Action ---
@@ -109,8 +170,8 @@ class AdminStatViewModel {
                 totalSubscriptions,
                 dailySignupsRawData,
                 weeklyTopMealPlans,
-                allSubscriptions,
-                allUserAccounts // Fetch all user accounts
+                allSubscriptionsData,
+                premiumUserAccountsData
             ] = await Promise.all([
                 AdminStatService.getDocumentCount('user_accounts'),
                 AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
@@ -120,7 +181,7 @@ class AdminStatViewModel {
                 AdminStatService.getDailySignups(7),
                 AdminStatService.getWeeklyTopMealPlans(3),
                 AdminStatService.getAllSubscriptions(),
-                AdminStatService.getAllUserAccounts() // Fetch all user accounts
+                AdminStatService.getPremiumUserAccounts()
             ]);
 
             let fetchedPremiumPrice = 0;
@@ -129,17 +190,14 @@ class AdminStatViewModel {
                 fetchedPremiumPrice = price !== null ? price : 0;
             } catch (priceError) {
                 console.error("[ViewModel] Error fetching premium subscription price:", priceError);
-                // Don't throw, allow other data to load
             }
 
-            // ⭐ NEW: Fetch premium features
             let fetchedPremiumFeatures = [];
             try {
                 const features = await SubscriptionService.getPremiumFeatures('premium');
                 fetchedPremiumFeatures = features !== null ? features : [];
             } catch (featuresError) {
                 console.error("[ViewModel] Error fetching premium features:", featuresError);
-                // Don't throw, allow other data to load
             }
 
             const processedDailySignups = {};
@@ -157,6 +215,16 @@ class AdminStatViewModel {
                 }
             });
 
+            const premiumUsersWithStatusAndEndDate = premiumUserAccountsData.map(user => {
+                const subscription = allSubscriptionsData.find(sub => sub.userId === user._id);
+                return {
+                    ...user,
+                    isPremium: user.isPremium || false,
+                    subscriptionStatus: subscription ? subscription.status : 'No Subscription Found',
+                    subscriptionEndDate: subscription ? (subscription.endDate?.toDate ? subscription.endDate.toDate() : null) : null
+                };
+            });
+
             runInAction(() => {
                 this.totalUsers = totalUsers;
                 this.totalNutritionists = totalNutritionists;
@@ -165,10 +233,10 @@ class AdminStatViewModel {
                 this.totalSubscriptions = totalSubscriptions;
                 this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
-                this.allSubscriptions = allSubscriptions;
-                this.userAccounts = allUserAccounts;
+                this.allSubscriptions = allSubscriptionsData;
+                this.userAccounts = premiumUsersWithStatusAndEndDate;
                 this.premiumSubscriptionPrice = fetchedPremiumPrice;
-                this.premiumFeatures = fetchedPremiumFeatures; // ⭐ NEW: Set premium features
+                this.premiumFeatures = fetchedPremiumFeatures;
             });
 
             console.log("[ViewModel] Dashboard data loaded successfully.");
@@ -182,7 +250,11 @@ class AdminStatViewModel {
         }
     }
 
-    // --- User Management Actions ---
+    // ... rest of your AdminStatViewModel methods (updatePremiumSubscriptionPrice, updatePremiumFeatures, suspendUserAccount, etc.)
+    // Ensure any methods that are passed as callbacks or event handlers are also arrow functions.
+    // For instance, consider making `setLoading`, `setError`, `setSuccess` also arrow functions
+    // if they are used as callbacks to other components, although `runInAction` itself provides some binding.
+    // Making all methods that mutate state arrow functions is a safe and common MobX practice.
 
     async updatePremiumSubscriptionPrice(newPrice) {
         console.log(`[ViewModel] Attempting to update premium subscription price to: ${newPrice}`);
@@ -212,7 +284,6 @@ class AdminStatViewModel {
         }
     }
 
-    // ⭐ NEW: Action to update premium features
     async updatePremiumFeatures(newFeatures) {
         console.log(`[ViewModel] Attempting to update premium features to:`, newFeatures);
         this.setLoading(true);
@@ -223,7 +294,7 @@ class AdminStatViewModel {
 
             if (response.success) {
                 runInAction(() => {
-                    this.premiumFeatures = newFeatures; // Update local state
+                    this.premiumFeatures = newFeatures;
                     this.setSuccess(`Premium features updated successfully.`);
                 });
                 console.log(`[ViewModel] Premium features successfully updated.`);
@@ -240,7 +311,6 @@ class AdminStatViewModel {
             this.setLoading(false);
         }
     }
-
 
     async suspendUserAccount(userId, suspend) {
         this.setLoading(true);
@@ -270,7 +340,6 @@ class AdminStatViewModel {
             this.setLoading(false);
         }
     }
-
 
     async updateUserRole(userId, newRole) {
         this.setLoading(true);
@@ -367,6 +436,7 @@ class AdminStatViewModel {
                 });
                 this.clearSelectedUserForManagement();
                 this.setShowRejectionReasonModal(false);
+                this.setRejectionReason('');
                 return { success: true };
             } else {
                 throw new Error(response.message || 'Failed to approve nutritionist.');

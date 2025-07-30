@@ -1,0 +1,244 @@
+/* src/Components/Modals/UserHistoryModal.css */
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent dark overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensures the modal is on top of other content when active */
+
+    /* KEY CHANGES FOR CLICKABILITY */
+    opacity: 0; /* Initially hidden */
+    visibility: hidden; /* Ensures it doesn't take up space or block events when hidden */
+    pointer-events: none; /* Crucial: Allows clicks to pass through when hidden */
+    user-select: none; /* Prevents text selection on the overlay */
+
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth fade in/out */
+}
+
+/* Class added when the modal should be visible */
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto; /* Re-enable pointer events when shown */
+    user-select: auto; /* Re-enable user selection when shown */
+}
+
+/* Modal Content Container */
+.modal-content.user-history-modal {
+    background-color: #ffffff; /* White background for the modal */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); /* Soft shadow for depth */
+    width: 95%; /* Take up most of the width */
+    max-width: 750px; /* Maximum width on larger screens */
+    max-height: 90vh; /* Maximum height, allows scrolling for long content */
+    display: flex;
+    flex-direction: column; /* Arrange header, content vertically */
+    overflow: hidden; /* Ensures nothing spills outside rounded corners */
+    padding: 25px; /* Inner padding for content */
+    position: relative; /* Needed for absolute positioning of close button */
+    transform: translateY(-20px); /* Initial slight upward displacement for animation */
+    transition: transform 0.3s ease; /* Smooth slide-in animation */
+}
+
+/* Animation for when the modal appears */
+.modal-overlay.show .modal-content.user-history-modal {
+    transform: translateY(0);
+}
+
+/* Modal Title */
+.modal-content.user-history-modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: #333333; /* Dark gray text */
+    text-align: center;
+    border-bottom: 1px solid #eeeeee; /* Subtle separator line */
+    padding-bottom: 15px;
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2.2rem; /* Large 'X' */
+    color: #aaaaaa; /* Light gray */
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 50%; /* Make it circular */
+    transition: color 0.2s ease, background-color 0.2s ease;
+    line-height: 1; /* Helps vertical alignment of the 'x' */
+}
+
+.close-button:hover {
+    color: #555555; /* Darker on hover */
+    background-color: #f0f0f0; /* Light background on hover */
+}
+
+/* Loading, Error, and No History Messages */
+.loading-message,
+.error-message,
+.modal-content.user-history-modal > p {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 1.1rem;
+    color: #555555;
+}
+
+.error-message {
+    color: #dc3545; /* Red for error messages */
+    font-weight: bold;
+}
+
+/* Subscription History List Container */
+.history-list {
+    flex-grow: 1; /* Allows the list to take up available vertical space */
+    overflow-y: auto; /* Enables vertical scrolling for long lists */
+    padding-right: 5px; /* Provides a small gutter for the scrollbar */
+    margin-top: 15px; /* Space from the modal title */
+}
+
+/* Individual History Item (Card) */
+.history-item {
+    background-color: #f9f9f9; /* Light background for each card */
+    border: 1px solid #e0e0e0; /* Subtle border */
+    border-radius: 8px; /* Rounded corners for cards */
+    padding: 18px 25px;
+    margin-bottom: 15px; /* Space between cards */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Soft shadow for card elevation */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Hover animations */
+}
+
+.history-item:hover {
+    transform: translateY(-3px); /* Lifts the card slightly on hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* More pronounced shadow on hover */
+}
+
+.history-item h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #007bff; /* A primary blue color for the card's section title */
+    font-size: 1.3rem;
+    border-bottom: 1px dashed #e0e0e0; /* Dashed separator within the card */
+    padding-bottom: 8px;
+}
+
+.history-item p {
+    margin: 6px 0;
+    font-size: 1rem;
+    color: #444444;
+    display: flex; /* Use flexbox for label-value alignment */
+    flex-wrap: wrap; /* Allow content to wrap on smaller screens */
+}
+
+.history-item p strong {
+    flex-basis: 150px; /* Fixed width for labels (e.g., "Plan:", "Status:") */
+    flex-shrink: 0; /* Prevents shrinking */
+    color: #333333;
+}
+
+.history-item p span {
+    flex-grow: 1; /* Allows the value to take up the remaining space */
+}
+
+/* Status Dot Styling */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%; /* Makes it a circle */
+    margin-right: 8px;
+    vertical-align: middle; /* Aligns with text */
+}
+
+/* Specific colors for different statuses */
+.status-active {
+    background-color: #28a745; /* Green */
+}
+
+.status-expired {
+    background-color: #6c757d; /* Gray */
+}
+
+.status-cancelled {
+    background-color: #ffc107; /* Yellow/Orange */
+}
+
+.status-pending {
+    background-color: #17a2b8; /* Cyan/Info blue */
+}
+
+.status-failed {
+    background-color: #dc3545; /* Red */
+}
+
+.status-unknown {
+    background-color: #999999; /* Default gray for unknown statuses */
+}
+
+/* --- Responsive Adjustments --- */
+
+@media (max-width: 768px) {
+    .modal-content.user-history-modal {
+        width: 98%; /* Slightly wider on smaller tablets */
+        margin: 10px; /* Add some margin around the modal */
+        padding: 20px; /* Reduce padding slightly */
+    }
+
+    .modal-content.user-history-modal h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    .history-item {
+        padding: 15px 20px;
+    }
+
+    .history-item h4 {
+        font-size: 1.2rem;
+    }
+
+    .history-item p {
+        flex-direction: column; /* Stack label and value vertically on smaller screens */
+        align-items: flex-start; /* Align stacked items to the left */
+    }
+
+    .history-item p strong {
+        margin-bottom: 3px; /* Add space between stacked label and value */
+        flex-basis: auto; /* Remove fixed width when stacked */
+    }
+}
+
+@media (max-width: 480px) {
+    .close-button {
+        font-size: 1.8rem;
+        top: 10px;
+        right: 10px;
+    }
+
+    .modal-content.user-history-modal h2 {
+        font-size: 1.3rem;
+        padding-top: 10px;
+    }
+
+    .history-item {
+        padding: 12px 15px;
+    }
+
+    .history-item h4 {
+        font-size: 1.1rem;
+    }
+
+    .history-item p {
+        font-size: 0.95rem;
+    }
+}
