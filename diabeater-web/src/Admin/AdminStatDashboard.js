@@ -1,18 +1,17 @@
-// AdminStatDashboard.js - FULL UPDATED
+// src/Admin/AdminStatDashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
-import './AdminStatDashboard.css';
-import UserDetailModal from './UserDetailModal';
-import EditSubscriptionModal from './EditSubscriptionModal';
-import EditPremiumFeaturesModal from './EditPremiumFeaturesModal'; // ⭐ NEW: Import the new modal
-import AdminInsights from './AdminInsights';
-import Tooltip from './Tooltip';
+import './AdminStatDashboard.css'; // Ensure your CSS is correctly linked
+import UserDetailModal from './UserDetailModal'; // Ensure this component exists
+import EditSubscriptionModal from './EditSubscriptionModal'; // Ensure this component exists
+import EditPremiumFeaturesModal from './EditPremiumFeaturesModal'; // Ensure this component exists
+import AdminInsights from './AdminInsights'; // Ensure this component exists
+import Tooltip from './Tooltip'; // Ensure this component exists
+import UserHistoryModal from './UserHistoryModal'; // Import the new UserHistoryModal
 import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // Import the singleton instance
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react-lite'; // Corrected import from 'mobobx-react-lite' to 'mobx-react-lite'
 import moment from 'moment';
 
 const AdminStatDashboard = observer(() => {
-    // Destructure ONLY observable properties (data), not methods that change state.
-    // Methods should be called directly on the 'adminStatViewModel' instance.
     const {
         loading,
         error,
@@ -24,65 +23,76 @@ const AdminStatDashboard = observer(() => {
         totalSubscriptions,
         dailySignupsData,
         weeklyTopMealPlans,
-        userAccounts, // The full array of user accounts
-        selectedUserForManagement, // The currently selected user for the modal
-        premiumSubscriptionPrice, // The premium subscription price
-        premiumFeatures, // The premium features array
-    } = adminStatViewModel; // Access the entire ViewModel instance
+        userAccounts, // This array now contains ONLY premium users with correct status/endDate
+        selectedUserForManagement, // For UserDetailModal
+        selectedUserForHistory,    // NEW: For UserHistoryModal visibility
+        premiumSubscriptionPrice,
+        premiumFeatures,
+    } = adminStatViewModel;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    // REMOVED: isHistoryModalOpen as its visibility is now controlled by adminStatViewModel.selectedUserForHistory
     const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
-    const [isEditFeaturesModalOpen, setIsEditFeaturesModalOpen] = useState(false); 
+    const [isEditFeaturesModal, setIsEditFeaturesModal] = useState(false);
 
+    // Helper function to format any date value (Firestore Timestamp or JS Date)
+    // Used for general date display like in tooltips
     const formatDate = (dateValue) => {
-    if (!dateValue) return 'N/A';
-
-    // Check if it's a Firestore Timestamp (from older data or specific query)
-    if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+        if (!dateValue) return 'N/A';
+        const date = dateValue.toDate ? dateValue.toDate() : dateValue; // Convert Firestore Timestamp to Date
         try {
-            return moment(dateValue.toDate()).format('DD/MM/YYYY');
+            return moment(date).format('DD/MM/YYYY');
         } catch (e) {
-            console.error("Error converting Firebase Timestamp to Date for display:", e);
+            console.error("Error formatting date:", e);
             return 'Invalid Date';
         }
-    }
-    // Assume it's already a JS Date object or a valid date string
-    try {
-        return moment(dateValue).format('DD/MM/YYYY');
-    } catch (e) {
-        console.error("Error formatting date with moment:", e);
-        return 'Invalid Date';
-    }
-};
+    };
 
-    /**
-     * Handles loading initial dashboard data.
-     * This callback is memoized to prevent unnecessary re-creations.
-     * It calls the loadDashboardData method directly on the ViewModel instance.
-     */
+    // New helper function to calculate and format the renewal date (endDate + 1 day)
+    const formatRenewalDate = (endDateValue) => {
+        if (!endDateValue) return 'N/A';
+        const endDate = endDateValue.toDate ? endDateValue.toDate() : endDateValue; // Convert Firestore Timestamp to Date
+        try {
+            return moment(endDate).add(1, 'days').format('DD/MM/YYYY');
+        } catch (e) {
+            console.error("Error formatting renewal date:", e);
+            return 'Invalid Date';
+        }
+    };
+
     const handleLoadDashboardData = useCallback(async () => {
         await adminStatViewModel.loadDashboardData();
-    }, []); // No dependencies needed for adminStatViewModel.loadDashboardData as it's a singleton
+    }, []);
 
-    // Effect to load data on component mount
+    // Initial data load on component mount
     useEffect(() => {
         handleLoadDashboardData();
     }, [handleLoadDashboardData]);
 
     const handleOpenUserModal = (user) => {
-        // Call the ViewModel method directly to set the selected user
         adminStatViewModel.setSelectedUserForManagement(user);
         setIsUserModalOpen(true);
     };
 
     const handleCloseUserModal = () => {
         setIsUserModalOpen(false);
-        // Call the ViewModel method directly to clear the selected user
         adminStatViewModel.clearSelectedUserForManagement();
-        // Reload data after user modal closes to reflect any potential changes (e.g., role, status)
-        handleLoadDashboardData();
+        handleLoadDashboardData(); // Reload data after user modal closes
     };
+
+    // UPDATED: This now triggers the ViewModel to set the user for history,
+    // which in turn will cause UserHistoryModal to open.
+    const handleOpenHistoryModal = (user) => {
+        adminStatViewModel.setSelectedUserForHistory(user);
+    };
+
+    // REMOVED: handleCloseHistoryModal as the modal itself will call
+    // adminStatViewModel.clearSelectedUserForHistory() on its own close logic.
+    // const handleCloseHistoryModal = () => {
+    //     setIsHistoryModalOpen(false); // No longer needed
+    //     adminStatViewModel.clearSelectedUserForManagement(); // This might not be needed either if UserHistoryModal handles it
+    // };
 
     const handleOpenEditPriceModal = () => {
         setIsEditPriceModalOpen(true);
@@ -92,33 +102,21 @@ const AdminStatDashboard = observer(() => {
         setIsEditPriceModalOpen(false);
     };
 
-    // Handlers for Premium Features Modal
     const handleOpenEditFeaturesModal = () => {
-        setIsEditFeaturesModalOpen(true);
+        setIsEditFeaturesModal(true);
     };
 
     const handleCloseEditFeaturesModal = () => {
-        setIsEditFeaturesModalOpen(false);
+        setIsEditFeaturesModal(false);
     };
 
-    /**
-     * Handles saving the new subscription price.
-     * @param {number} newPrice The new price to set.
-     */
     const handleSaveSubscriptionPrice = async (newPrice) => {
-        // Clear messages using ViewModel methods
         adminStatViewModel.setSuccess('');
         adminStatViewModel.setError('');
-
         try {
             const response = await adminStatViewModel.updatePremiumSubscriptionPrice(newPrice);
             if (response.success) {
-                // ViewModel already updated the price and set success message
                 setIsEditPriceModalOpen(false);
-                // handleLoadDashboardData is not strictly necessary here unless other parts
-                // of the dashboard need a full refresh from this action. ViewModel handles its state.
-            } else {
-                // ViewModel already set the error message
             }
         } catch (e) {
             console.error("[AdminStatDashboard] Error saving subscription price:", e);
@@ -126,23 +124,14 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-    /**
-     * ⭐ NEW: Handles saving the new premium features.
-     * @param {string[]} newFeatures The new array of features to set.
-     */
     const handleSavePremiumFeatures = async (newFeatures) => {
         adminStatViewModel.setSuccess('');
         adminStatViewModel.setError('');
-
         try {
             const response = await adminStatViewModel.updatePremiumFeatures(newFeatures);
             if (response.success) {
-                setIsEditFeaturesModalOpen(false);
-                // ViewModel has already updated 'premiumFeatures' observable and set success message
-                // A full reload via handleLoadDashboardData() is not strictly necessary but ensures consistency
-                handleLoadDashboardData();
-            } else {
-                // ViewModel already set the error message
+                setIsEditFeaturesModal(false);
+                handleLoadDashboardData(); // Refresh to ensure UI reflects changes
             }
         } catch (e) {
             console.error("[AdminStatDashboard] Error saving premium features:", e);
@@ -150,48 +139,8 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-
-    /**
-     * Handles suspending a user account.
-     * @param {object} user The user object to suspend.
-     */
-    const handleSuspendUser = async (user) => {
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
-        if (window.confirm(`Are you sure you want to suspend ${userName}'s account?`)) {
-            try {
-                // Call the ViewModel's unified suspend/unsuspend method
-                const response = await adminStatViewModel.suspendUserAccount(user._id, true); // true for suspend
-                if (response.success) {
-                    // ViewModel has already set the success message and updated local state
-                    handleLoadDashboardData(); // Refresh data to ensure all counts/tables are consistent
-                }
-            } catch (err) {
-                // ViewModel's error handler will catch and display the error
-            }
-        }
-    };
-
-    /**
-     * Handles unsuspending a user account.
-     * @param {object} user The user object to unsuspend.
-     */
-    const handleUnsuspendUser = async (user) => {
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
-        if (window.confirm(`Are you sure you want to unsuspend ${userName}'s account?`)) {
-            try {
-                // Call the ViewModel's unified suspend/unsuspend method
-                const response = await adminStatViewModel.suspendUserAccount(user._id, false); // false for unsuspend
-                if (response.success) {
-                    // ViewModel has already set the success message and updated local state
-                    handleLoadDashboardData(); // Refresh data to ensure all counts/tables are consistent
-                }
-            } catch (err) {
-                // ViewModel's error handler will catch and display the error
-            }
-        }
-    };
-
-    // Filter user accounts based on search term
+    // Filter user accounts based on search term.
+    // userAccounts already contains premium users from the ViewModel with correct status/endDate.
     const filteredUserAccounts = userAccounts.filter(user => {
         const searchTermLower = searchTerm.toLowerCase();
         const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
@@ -199,46 +148,42 @@ const AdminStatDashboard = observer(() => {
         return (
             fullName.includes(searchTermLower) ||
             (user.email && user.email.toLowerCase().includes(searchTermLower)) ||
-            (user.role && user.role.toLowerCase().includes(searchTermLower)) ||
-            (user.status && user.status.toLowerCase().includes(searchTermLower)) // Check user status
+            (user.status && user.status.toLowerCase().includes(searchTermLower))
         );
     });
 
-    // Process daily signups data for the chart
+    // --- Chart Data Processing (Keeping as is, no changes requested) ---
     const chartDataArray = dailySignupsData
         ? Object.entries(dailySignupsData)
             .map(([date, count]) => ({
                 date,
                 value: count,
-                month: moment(date).format('MMM') // Format for X-axis labels
+                month: moment(date).format('MMM')
             }))
-            .sort((a, b) => new Date(a.date) - new Date(b.date)) // Ensure chronological order
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
         : [];
 
-    // Chart dimensions and scaling factors
     const chartPadding = { top: 20, right: 30, bottom: 30, left: 35 };
     const chartWidth = 240 - chartPadding.left - chartPadding.right;
     const chartHeight = 150 - chartPadding.top - chartPadding.bottom;
 
     const maxValue = chartDataArray.length > 0 ? Math.max(...chartDataArray.map(d => d.value)) : 10;
-    const yScaleFactor = chartHeight / (maxValue > 0 ? maxValue : 1); // Avoid division by zero
+    const yScaleFactor = chartHeight / (maxValue > 0 ? maxValue : 1);
     const xScale = chartDataArray.length > 1 ? chartWidth / (chartDataArray.length - 1) : 0;
 
-    // SVG path points for the line and area
     const linePoints = chartDataArray.map((d, i) =>
         `${chartPadding.left + i * xScale},${chartPadding.top + (chartHeight - d.value * yScaleFactor)}`
     ).join(' ');
 
     const areaPoints = [
-        `${chartPadding.left},${chartPadding.top + chartHeight}`, // Start from bottom-left
+        `${chartPadding.left},${chartPadding.top + chartHeight}`,
         ...chartDataArray.map((d, i) =>
             `${chartPadding.left + i * xScale},${chartPadding.top + (chartHeight - d.value * yScaleFactor)}`
         ),
-        `${chartPadding.left + (chartDataArray.length > 0 ? (chartDataArray.length - 1) * xScale : 0)},${chartPadding.top + chartHeight}`, // End at bottom-right
-        `${chartPadding.left},${chartPadding.top + chartHeight}` // Close path back to bottom-left
+        `${chartPadding.left + (chartDataArray.length > 0 ? (chartDataArray.length - 1) * xScale : 0)},${chartPadding.top + chartHeight}`,
+        `${chartPadding.left},${chartPadding.top + chartHeight}`
     ].join(' ');
 
-    // Effect for chart tooltip dynamic positioning and content
     useEffect(() => {
         const tooltip = document.getElementById('chart-tooltip');
         const svgElement = document.querySelector('.daily-signups-chart-section svg');
@@ -260,21 +205,17 @@ const AdminStatDashboard = observer(() => {
             const pointRect = point.getBoundingClientRect();
             const sectionRect = document.querySelector('.daily-signups-chart-section').getBoundingClientRect();
 
-            // Calculate tooltip position relative to the chart section
             let tooltipX = (pointRect.left - sectionRect.left) + (pointRect.width / 2);
-            let tooltipY = (pointRect.top - sectionRect.top) - 10; // 10px buffer above point
+            let tooltipY = (pointRect.top - sectionRect.top) - 10;
 
-            // Adjust for tooltip width to center it
             tooltip.style.left = `${tooltipX - (tooltip.offsetWidth / 2)}px`;
-            // Position above the point, considering tooltip's own height
             tooltip.style.top = `${tooltipY - tooltip.offsetHeight}px`;
 
-            // Prevent tooltip from going off-screen left/right
             if (tooltipX - (tooltip.offsetWidth / 2) < 0) {
-                tooltip.style.left = '5px'; // Small padding from left edge
+                tooltip.style.left = '5px';
             }
             if (tooltipX + (tooltip.offsetWidth / 2) > sectionRect.width) {
-                tooltip.style.left = `${sectionRect.width - tooltip.offsetWidth - 5}px`; // Small padding from right edge
+                tooltip.style.left = `${sectionRect.width - tooltip.offsetWidth - 5}px`;
             }
         };
 
@@ -287,16 +228,15 @@ const AdminStatDashboard = observer(() => {
             point.addEventListener('mouseleave', handleMouseLeave);
         });
 
-        // Cleanup event listeners on component unmount or dependencies change
         return () => {
             chartPoints.forEach(point => {
                 point.removeEventListener('mouseenter', handleMouseEnter);
                 point.removeEventListener('mouseleave', handleMouseLeave);
             });
         };
-    }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScaleFactor]); // Dependencies for useEffect
+    }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScaleFactor]);
 
-    // Data for AdminInsights component
+    // Data for AdminInsights component (static/mock values for some)
     const insightsData = [
         { value: `${((totalSubscriptions / (totalUsers || 1)) * 100 || 0).toFixed(0)}%`, label: 'Subscription Rate', change: 0, type: 'neutral', period: 'overall' },
         { value: '$4.5K', label: 'Monthly Revenue', change: 12, type: 'increase', period: 'last month' }, // Static mock data
@@ -310,30 +250,26 @@ const AdminStatDashboard = observer(() => {
         { value: totalApprovedMealPlans + totalPendingMealPlans, label: 'Total Meal Plans', change: 0, type: 'neutral', period: 'all time' },
     ];
 
-    // Display loading state
     if (loading) {
         return (
             <div className="admin-dashboard-main-content-area loading-state">
                 <p>Loading dashboard data...</p>
-                <div className="spinner"></div> {/* Basic spinner animation assumed via CSS */}
+                <div className="spinner"></div>
             </div>
         );
     }
 
-    // Helper function to render error/success messages
     const renderMessages = () => (
         <>
             {error && (
                 <div className="admin-dashboard-message error-message" role="alert">
                     <i className="fas fa-exclamation-circle"></i> {error}
-                    {/* Call ViewModel's setError method directly */}
                     <button onClick={() => adminStatViewModel.setError('')} className="close-message-button" aria-label="Close error message">&times;</button>
                 </div>
             )}
             {success && (
                 <div className="admin-dashboard-message success-message" role="status">
                     <i className="fas fa-check-circle"></i> {success}
-                    {/* Call ViewModel's setSuccess method directly */}
                     <button onClick={() => adminStatViewModel.setSuccess('')} className="close-message-button" aria-label="Close success message">&times;</button>
                 </div>
             )}
@@ -436,7 +372,7 @@ const AdminStatDashboard = observer(() => {
                                             stroke="#eee"
                                             strokeDasharray="2 2"
                                         />
-                                        {value > 0 && ( // Only show label if value is greater than 0
+                                        {value > 0 && (
                                             <text
                                                 x={chartPadding.left - 5}
                                                 y={y + 4}
@@ -538,7 +474,6 @@ const AdminStatDashboard = observer(() => {
 
             <AdminInsights data={insightsData} />
 
-            {/* Premium Plan Features Section */}
             <section className="premium-features-section">
                 <h2 className="section-title">PREMIUM PLAN FEATURES MANAGEMENT</h2>
                 <div className="premium-features-card">
@@ -564,7 +499,6 @@ const AdminStatDashboard = observer(() => {
                 <h2 className="section-title">SUBSCRIPTION PRICE MANAGEMENT</h2>
                 <div className="premium-plan-card">
                     <span className="plan-name">Premium Plan</span>
-                    {/* Use premiumSubscriptionPrice from ViewModel */}
                     <span className="plan-price">${premiumSubscriptionPrice.toFixed(2)}<span className="per-month"> /month</span></span>
                     <button className="manage-subscription-button" onClick={handleOpenEditPriceModal}>
                         MANAGE SUBSCRIPTION PRICE
@@ -573,15 +507,15 @@ const AdminStatDashboard = observer(() => {
             </section>
 
             <section className="user-accounts-section">
-                <h2 className="section-title">USER ACCOUNTS</h2>
+                <h2 className="section-title">PREMIUM USER ACCOUNTS</h2>
                 <div className="user-accounts-header">
                     <div className="search-bar">
                         <input
                             type="text"
-                            placeholder="Search by name, email, role, or status"
+                            placeholder="Search by name, email, or status"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            aria-label="Search user accounts"
+                            aria-label="Search premium user accounts"
                         />
                         <i className="fas fa-search" aria-hidden="true"></i>
                     </div>
@@ -592,125 +526,124 @@ const AdminStatDashboard = observer(() => {
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Sign-up Date</th>
-                                <th>Actions</th>
+                                <th>Status</th> {/* This will now correctly show Subscription Status */}
+                                <th>Renewal Date</th> {/* This will now correctly show Subscription End Date */}
+                                <th>Details</th>
+                                <th>History</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {/* Conditional rendering if filteredUserAccounts is empty */}
                             {filteredUserAccounts.length > 0 ? (
                                 filteredUserAccounts.map(user => (
-                                    // *** CRITICAL FIX HERE FOR THE MAP LOOP'S TR ***
-                                    <tr key={user._id}><td> 
-                                        <div className="tooltip-container">
-                                            <Tooltip content={
-                                                <>
-                                                    <p><strong>Name:</strong> {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : 'N/A'}</p>
-                                                    <p><strong>Email:</strong> {user.email || 'N/A'}</p>
-                                                    <p><strong>Phone:</strong> {user.phone || 'N/A'}</p>
-                                                    <p><strong>Address:</strong> {user.address || 'N/A'}</p>
-                                                    <p><strong>Role:</strong> {user.role || 'N/A'}</p>
-                                                    <p><strong>Status:</strong> {user.status || 'N/A'}</p>
-                                                </>
-                                            }>
-                                                <div
-                                                    className="user-name-clickable"
-                                                    onClick={() => handleOpenUserModal(user)}
-                                                    role="button"
-                                                    tabIndex="0"
-                                                    aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
-                                                >
-                                                    <i className="fas fa-user-circle table-user-icon" aria-hidden="true"></i>
-                                                    {user.firstName && user.lastName
-                                                        ? `${user.firstName} ${user.lastName}`.trim()
-                                                        : user.email || 'N/A'
-                                                    }
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                    </td>
-                                    <td>{user.email || 'N/A'}</td>
-                                    <td>{user.role || 'N/A'}</td>
-                                    <td>
-                                        <span className={`status-dot status-${user.status ? user.status.toLowerCase() : 'unknown'}`}></span>
-                                        {user.status || 'N/A'}
-                                    </td>
-                                    <td>{formatDate(user.createdAt)}</td>
-                                    <td className="user-actions">
-                                        <button
-                                            className="deets-action-button view-button"
-                                            onClick={() => handleOpenUserModal(user)}
-                                            aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
-                                        >
-                                            VIEW
-                                        </button>
-                                        {user.status && user.status.toLowerCase() === 'active' ? (
+                                    <tr key={user._id}>
+                                        <td>
+                                            <div className="tooltip-container">
+                                                <Tooltip content={
+                                                    <>
+                                                        <p><strong>Name:</strong> {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : 'N/A'}</p>
+                                                        <p><strong>Email:</strong> {user.email || 'N/A'}</p>
+                                                        <p><strong>Phone:</strong> {user.phone || 'N/A'}</p>
+                                                        <p><strong>Address:</strong> {user.address || 'N/A'}</p>
+                                                        <p><strong>Role:</strong> {user.role || 'N/A'}</p>
+                                                        {/* Displaying the user account status (active/suspended) */}
+                                                        <p><strong>Account Status:</strong> {user.status || 'N/A'}</p>
+                                                        {/* Displaying the SUBSCRIPTION status */}
+                                                        <p><strong>Subscription Status:</strong> {user.subscriptionStatus || 'N/A'}</p>
+                                                        {/* Displaying the SUBSCRIPTION end date */}
+                                                        <p><strong>Subscription End:</strong> {formatDate(user.subscriptionEndDate)}</p>
+                                                    </>
+                                                }>
+                                                    <div
+                                                        className="user-name-clickable"
+                                                        onClick={() => handleOpenUserModal(user)}
+                                                        role="button"
+                                                        tabIndex="0"
+                                                        aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
+                                                    >
+                                                        <i className="fas fa-user-circle table-user-icon" aria-hidden="true"></i>
+                                                        {user.firstName && user.lastName
+                                                            ? `${user.firstName} ${user.lastName}`.trim()
+                                                            : user.email || 'N/A'
+                                                        }
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        </td>
+                                        <td>{user.email || 'N/A'}</td>
+                                        <td>
+                                            {/* Displaying the SUBSCRIPTION status in the table cell */}
+                                            <span className={`status-dot status-${user.subscriptionStatus ? user.subscriptionStatus.toLowerCase() : 'unknown'}`}></span>
+                                            {user.subscriptionStatus || 'N/A'}
+                                        </td>
+                                        <td>{formatRenewalDate(user.subscriptionEndDate)}</td> {/* Renewal Date from the enriched user object */}
+                                        <td>
                                             <button
-                                                className="action-button suspend-button"
-                                                onClick={() => handleSuspendUser(user)}
-                                                aria-label={`Suspend account for ${user.firstName || ''} ${user.lastName || ''}`}
+                                                className="deets-action-button view-button"
+                                                onClick={() => handleOpenUserModal(user)}
+                                                aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
                                             >
-                                                SUSPEND
+                                                View Details
                                             </button>
-                                        ) : (user.status && user.status.toLowerCase() === 'suspended') ? (
+                                        </td>
+                                        <td>
                                             <button
-                                                className="action-button unsuspend-button"
-                                                onClick={() => handleUnsuspendUser(user)}
-                                                aria-label={`Unsuspend account for ${user.firstName || ''} ${user.lastName || ''}`}
+                                                className="deets-action-button history-button"
+                                                // THIS IS THE CRUCIAL CHANGE:
+                                                // Calls the handler that updates the ViewModel's selected user for history
+                                                onClick={() => handleOpenHistoryModal(user)}
+                                                aria-label={`View history for ${user.firstName || ''} ${user.lastName || ''}`}
                                             >
-                                                UNSUSPEND
+                                                View History
                                             </button>
-                                        ) : (
-                                            <button
-                                                className="action-button default-action-button"
-                                                onClick={() => alert(`Cannot determine action for user status: ${user.status || 'N/A'}`)}
-                                                aria-label={`Action for user ${user.firstName || ''} ${user.lastName || ''}`}
-                                            >
-                                                MANAGE
-                                            </button>
-                                        )}
-                                    </td></tr> // *** CRITICAL FIX: </tr> directly after last </td> ***
+                                        </td>
+                                    </tr>
                                 ))
                             ) : (
-                                // *** CRITICAL FIX HERE FOR THE NO DATA TR ***
-                                <tr><td colSpan="6" className="no-data-message">No user accounts found matching your search.</td></tr> // Ensure no whitespace here
+                                <tr>
+                                    <td colSpan="6" className="no-data-message">No premium user accounts found.</td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            {isUserModalOpen && (
+            {/* Modals */}
+            {/* User Detail Modal */}
+            {isUserModalOpen && selectedUserForManagement && (
                 <UserDetailModal
                     user={selectedUserForManagement}
                     onClose={handleCloseUserModal}
                     updateUserRole={(uid, role) => adminStatViewModel.updateUserRole(uid, role)}
-                    updateNutritionistStatus={(uid, status) => adminStatViewModel.updateNutritionistStatus(uid, status)}
+                    // updateNutritionistStatus={(uid, status) => adminStatViewModel.updateNutritionistStatus(uid, status)} // Assuming this might be handled by updateUserRole or separate
                     deleteUserAccount={(uid) => adminStatViewModel.deleteUserAccount(uid)}
-                    suspendUserAccount={(uid, suspend) => adminStatViewModel.suspendUserAccount(uid, suspend)}
-                    onUserActionSuccess={(msg) => {
-                        adminStatViewModel.setSuccess(msg);
-                        handleLoadDashboardData();
-                    }}
+                    suspendUserAccount={(uid) => adminStatViewModel.suspendUserAccount(uid, true)}
+                    unsuspendUserAccount={(uid) => adminStatViewModel.suspendUserAccount(uid, false)}
+                    onUserActionSuccess={(msg) => adminStatViewModel.setSuccess(msg)}
                     onUserActionError={(msg) => adminStatViewModel.setError(`User action failed: ${msg}`)}
                 />
+            )}
+            {/* User History Modal - Now conditionally rendered based on adminStatViewModel.selectedUserForHistory */}
+            {selectedUserForHistory && ( // Renders only if a user is set for history viewing
+                <UserHistoryModal />
+                // Note: UserHistoryModal itself should observe adminStatViewModel.selectedUserForHistory
+                // and call adminStatViewModel.clearSelectedUserForHistory() when it closes.
             )}
             {isEditPriceModalOpen && (
                 <EditSubscriptionModal
                     isOpen={isEditPriceModalOpen}
                     onClose={handleCloseEditPriceModal}
-                    initialPrice={premiumSubscriptionPrice} // Get initial price from ViewModel
+                    initialPrice={premiumSubscriptionPrice}
                     onSave={handleSaveSubscriptionPrice}
                 />
             )}
 
-            {/* Render the EditPremiumFeaturesModal */}
-            {isEditFeaturesModalOpen && (
+            {isEditFeaturesModal && (
                 <EditPremiumFeaturesModal
-                    isOpen={isEditFeaturesModalOpen}
+                    isOpen={isEditFeaturesModal}
                     onClose={handleCloseEditFeaturesModal}
-                    initialFeatures={premiumFeatures} // Pass current features from ViewModel
+                    initialFeatures={premiumFeatures}
                     onSave={handleSavePremiumFeatures}
                 />
             )}
