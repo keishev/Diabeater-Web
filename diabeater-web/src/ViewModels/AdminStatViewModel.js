@@ -1,14 +1,10 @@
 // src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService';
-import SubscriptionService from '../Services/SubscriptionService';
+import SubscriptionRepository from '../Repositories/SubscriptionRepository';
 import moment from 'moment';
 
 class AdminStatViewModel {
-    loading = false;
-    error = null;
-    success = null;
-
     // Dashboard Stats
     totalUsers = 0;
     totalNutritionists = 0;
@@ -18,12 +14,13 @@ class AdminStatViewModel {
     dailySignupsData = {}; // { 'YYYY-MM-DD': count }
     weeklyTopMealPlans = [];
     userAccounts = [];
-    allSubscriptions = [];
+    allSubscriptions = []; // Consider if this is strictly needed as observable state
     selectedUserForManagement = null;
 
     // Observable for Premium Subscription Price and Features
+    // IMPORTANT: Initialize these *before* makeAutoObservable is called implicitly by the constructor
     premiumSubscriptionPrice = 0;
-    premiumFeatures = [];
+    premiumFeatures = []; // This remains an array of strings
 
     // For Nutritionist Application Modals
     showRejectionReasonModal = false;
@@ -35,26 +32,36 @@ class AdminStatViewModel {
     loadingHistory = false;
     historyError = null;
 
+    // Status messages
+    loading = false;
+    error = null;
+    success = null;
+
 
     constructor() {
-        makeAutoObservable(this);
+        // Initialize properties here if they depend on constructor arguments,
+        // otherwise, direct class property initialization is fine.
+        makeAutoObservable(this); // Make all defined properties observable
+
+        // Now call methods that depend on observable properties being set up
         this.loadDashboardData();
     }
 
-    // --- State Management Actions (unchanged) ---
-    setLoading(status) {
+    // --- State Management Actions (UNCHANGED - these are already arrow-like or bound by makeAutoObservable) ---
+    // Methods declared as class properties are automatically bound (arrow-like)
+    setLoading = (status) => { // Changed to arrow function for consistency, though makeAutoObservable typically handles simple setters.
         runInAction(() => {
             this.loading = status;
         });
     }
 
-    setError(message) {
+    setError = (message) => { // Changed to arrow function
         runInAction(() => {
             this.error = message;
             if (message) {
                 this.success = null;
                 setTimeout(() => {
-                    if (this.error === message) {
+                    if (this.error === message) { // Only clear if it's the same message
                         this.error = null;
                     }
                 }, 5000);
@@ -62,13 +69,13 @@ class AdminStatViewModel {
         });
     }
 
-    setSuccess(message) {
+    setSuccess = (message) => { // Changed to arrow function
         runInAction(() => {
             this.success = message;
             if (message) {
                 this.error = null;
                 setTimeout(() => {
-                    if (this.success === message) {
+                    if (this.success === message) { // Only clear if it's the same message
                         this.success = null;
                     }
                 }, 5000);
@@ -76,33 +83,31 @@ class AdminStatViewModel {
         });
     }
 
-    setSelectedUserForManagement(user) {
+    setSelectedUserForManagement = (user) => {
         runInAction(() => {
             this.selectedUserForManagement = user;
         });
     }
 
-    // Change to arrow function
-    clearSelectedUserForManagement = () => { // <--- CHANGE IS HERE
+    clearSelectedUserForManagement = () => {
         runInAction(() => {
             this.selectedUserForManagement = null;
         });
     }
 
-    setShowRejectionReasonModal(status) {
+    setShowRejectionReasonModal = (status) => {
         runInAction(() => {
             this.showRejectionReasonModal = status;
         });
     }
 
-    setRejectionReason(reason) {
+    setRejectionReason = (reason) => {
         runInAction(() => {
             this.rejectionReason = reason;
         });
     }
 
-    // NEW: User History Modal Actions
-    setSelectedUserForHistory = (user) => { // <--- ALSO CHANGE THIS TO ARROW FUNCTION FOR CONSISTENCY
+    setSelectedUserForHistory = (user) => {
         runInAction(() => {
             this.selectedUserForHistory = user;
             if (user) {
@@ -115,8 +120,7 @@ class AdminStatViewModel {
         });
     }
 
-    // Change to arrow function
-    clearSelectedUserForHistory = () => { // <--- CHANGE IS HERE (already done in your code, but re-confirm)
+    clearSelectedUserForHistory = () => {
         runInAction(() => {
             this.selectedUserForHistory = null;
             this.userSubscriptionHistory = [];
@@ -125,8 +129,7 @@ class AdminStatViewModel {
         });
     }
 
-    // This was already an arrow function, which is good.
-    loadUserSubscriptionHistory = async (userId) => {
+    loadUserSubscriptionHistory = async (userId) => { // Converted to arrow function
         runInAction(() => {
             this.loadingHistory = true;
             this.historyError = null;
@@ -154,11 +157,12 @@ class AdminStatViewModel {
         }
     }
 
-    async loadDashboardData() {
+    // THE KEY CHANGE: Convert this method to an arrow function
+    loadDashboardData = async () => {
         console.log("[ViewModel] Starting loadDashboardData...");
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
+        // this.setError(null); // REMOVED: Let setError/setSuccess manage clearing
+        // this.setSuccess(null); // REMOVED: Let setError/setSuccess manage clearing
 
         try {
             const [
@@ -171,7 +175,7 @@ class AdminStatViewModel {
                 weeklyTopMealPlans,
                 allSubscriptionsData,
                 premiumPrice,
-                premiumFeatures
+                premiumFeaturesData
             ] = await Promise.all([
                 AdminStatService.getDocumentCount('user_accounts'),
                 AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
@@ -181,8 +185,8 @@ class AdminStatViewModel {
                 AdminStatService.getDailySignups(7),
                 AdminStatService.getWeeklyTopMealPlans(3),
                 AdminStatService.getAllSubscriptions(),
-                SubscriptionService.getSubscriptionPrice('premium'),
-                SubscriptionService.getPremiumFeatures('premium')
+                SubscriptionRepository.getSubscriptionPrice(),
+                SubscriptionRepository.getPremiumFeatures()
             ]);
 
             // Format signups
@@ -240,10 +244,10 @@ class AdminStatViewModel {
                 this.totalSubscriptions = totalSubscriptions;
                 this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
-                this.allSubscriptions = allSubscriptionsData;
+                this.allSubscriptions = allSubscriptionsData; // Kept for now, consider if needed as state
                 this.userAccounts = enrichedUsers;
                 this.premiumSubscriptionPrice = premiumPrice || 0;
-                this.premiumFeatures = premiumFeatures || [];
+                this.premiumFeatures = premiumFeaturesData || [];
             });
 
             console.log("[ViewModel] Dashboard data loaded successfully.");
@@ -258,19 +262,11 @@ class AdminStatViewModel {
     }
 
 
-    // ... rest of your AdminStatViewModel methods (updatePremiumSubscriptionPrice, updatePremiumFeatures, suspendUserAccount, etc.)
-    // Ensure any methods that are passed as callbacks or event handlers are also arrow functions.
-    // For instance, consider making `setLoading`, `setError`, `setSuccess` also arrow functions
-    // if they are used as callbacks to other components, although `runInAction` itself provides some binding.
-    // Making all methods that mutate state arrow functions is a safe and common MobX practice.
-
-    async updatePremiumSubscriptionPrice(newPrice) {
+    updatePremiumSubscriptionPrice = async (newPrice) => { // Converted to arrow function
         console.log(`[ViewModel] Attempting to update premium subscription price to: ${newPrice}`);
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
-            const response = await SubscriptionService.updateSubscriptionPrice('premium', newPrice);
+            const response = await SubscriptionRepository.updateSubscriptionPrice(newPrice);
 
             if (response.success) {
                 runInAction(() => {
@@ -292,38 +288,76 @@ class AdminStatViewModel {
         }
     }
 
-    async updatePremiumFeatures(newFeatures) {
-        console.log(`[ViewModel] Attempting to update premium features to:`, newFeatures);
+    // NEW: CRUD functions for individual premium features (array-based)
+    createPremiumFeature = async (featureName) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
-            const response = await SubscriptionService.updatePremiumFeatures('premium', newFeatures);
-
-            if (response.success) {
+            const result = await SubscriptionRepository.addPremiumFeature(featureName);
+            if (result.success) {
                 runInAction(() => {
-                    this.premiumFeatures = newFeatures;
-                    this.setSuccess(`Premium features updated successfully.`);
+                    this.setSuccess(`Feature "${featureName}" added successfully.`);
                 });
-                console.log(`[ViewModel] Premium features successfully updated.`);
+                await this.loadDashboardData(); // REFRESH ALL DATA AFTER SUCCESSFUL ADD
                 return { success: true };
             } else {
-                this.setError(response.message || 'Failed to update premium features.');
-                return { success: false, message: response.message };
+                throw new Error(result.message || "Failed to add feature.");
             }
         } catch (error) {
-            console.error("[ViewModel] Error updating premium features:", error);
-            this.setError(`Failed to update premium features: ${error.message}`);
+            console.error("[ViewModel] Error creating premium feature:", error);
+            this.setError(`Failed to add feature: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
             this.setLoading(false);
         }
     }
 
-    async suspendUserAccount(userId, suspend) {
+    editPremiumFeature = async (oldFeatureName, newFeatureName) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
+        try {
+            const result = await SubscriptionRepository.updatePremiumFeature(oldFeatureName, newFeatureName);
+            if (result.success) {
+                runInAction(() => {
+                    this.setSuccess(`Feature updated to "${newFeatureName}" successfully.`);
+                });
+                await this.loadDashboardData(); // REFRESH ALL DATA AFTER SUCCESSFUL EDIT
+                return { success: true };
+            } else {
+                throw new Error(result.message || 'Failed to update feature.');
+            }
+        } catch (error) {
+            console.error("[ViewModel] Error updating premium feature:", error);
+            this.setError(`Failed to update feature: ${error.message}`);
+            return { success: false, message: error.message };
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    removePremiumFeature = async (featureName) => { // Converted to arrow function
+        this.setLoading(true);
+        try {
+            const result = await SubscriptionRepository.deletePremiumFeature(featureName);
+            if (result.success) {
+                runInAction(() => {
+                    this.setSuccess('Feature deleted successfully.');
+                });
+                await this.loadDashboardData(); // REFRESH ALL DATA AFTER SUCCESSFUL DELETE
+                return { success: true };
+            } else {
+                throw new Error(result.message || 'Failed to delete feature.');
+            }
+        } catch (error) {
+            console.error("[ViewModel] Error deleting premium feature:", error);
+            this.setError(`Failed to delete feature: ${error.message}`);
+            return { success: false, message: error.message };
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+
+    suspendUserAccount = async (userId, suspend) => { // Converted to arrow function
+        this.setLoading(true);
         try {
             const newStatus = suspend ? 'suspended' : 'active';
             const response = await AdminStatService.updateUserStatus(userId, newStatus);
@@ -349,10 +383,8 @@ class AdminStatViewModel {
         }
     }
 
-    async updateUserRole(userId, newRole) {
+    updateUserRole = async (userId, newRole) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
             const response = await AdminStatService.updateUserRole(userId, newRole);
             if (response.success) {
@@ -376,10 +408,8 @@ class AdminStatViewModel {
         }
     }
 
-    async deleteUserAccount(userId) {
+    deleteUserAccount = async (userId) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
             const response = await AdminStatService.deleteUserAccount(userId);
             if (response.success) {
@@ -400,10 +430,8 @@ class AdminStatViewModel {
         }
     }
 
-    async updateNutritionistStatus(userId, newStatus) {
+    updateNutritionistStatus = async (userId, newStatus) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
             const response = await AdminStatService.updateNutritionistStatus(userId, newStatus);
             if (response.success) {
@@ -427,10 +455,8 @@ class AdminStatViewModel {
         }
     }
 
-    async approveNutritionist(userId) {
+    approveNutritionist = async (userId) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
             const response = await AdminStatService.updateUserStatus(userId, 'Active');
             if (response.success) {
@@ -458,10 +484,8 @@ class AdminStatViewModel {
         }
     }
 
-    async rejectNutritionist(userId) {
+    rejectNutritionist = async (userId) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
-        this.setSuccess(null);
         try {
             const response = await AdminStatService.updateUserStatus(userId, 'rejected', this.rejectionReason);
             if (response.success) {
@@ -488,9 +512,8 @@ class AdminStatViewModel {
         }
     }
 
-    async viewCertificate(userId) {
+    viewCertificate = async (userId) => { // Converted to arrow function
         this.setLoading(true);
-        this.setError(null);
         try {
             const user = this.userAccounts.find(u => u._id === userId);
             if (user && user.certificateUrl) {
