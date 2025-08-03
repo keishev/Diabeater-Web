@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Ensure this path is correct
-// Keep this import if NutritionistApplicationViewModel is still directly used or needed by other components
-// import NutritionistApplicationViewModel from '../ViewModels/NutritionistApplicationViewModel'; // Removed if not directly used
 import AdminViewModel from '../ViewModels/AdminViewModel'; // Ensure this path is correct
 import UserDetailModal from './UserDetailModal'; // Ensure this path is correct
 import RejectionReasonModal from './RejectionReasonModal'; // Ensure this path is correct
@@ -15,10 +13,8 @@ import AdminExportReport from './AdminExportReport';
 import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
 import AdminRewards from './AdminRewards';
-// Import adminStatViewModel ONLY if its methods are called directly in UserAccountsContent,
-// otherwise, pass them as callbacks to UserDetailModal.
-// For now, we'll keep it as the action provider
-import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // Make sure this path is correct
+import adminStatViewModel from '../ViewModels/AdminStatViewModel';
+import PremiumAccountsContent from './PremiumAccountsContent'; // <--- NEW IMPORT
 
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
@@ -57,6 +53,13 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                 >
                     <i className="fas fa-users"></i>
                     <span>User Accounts</span>
+                </div>
+                <div
+                    className={`nav-item ${currentView === 'premiumAccounts' ? 'active' : ''}`} // <--- NEW NAV ITEM
+                    onClick={() => onNavigate('premiumAccounts')}
+                >
+                    <i className="fas fa-star"></i> {/* You can choose an appropriate icon */}
+                    <span>Premium</span>
                 </div>
                 <div
                     className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`}
@@ -99,7 +102,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
     );
 });
 
-// User Account Table Row Component (no changes needed)
+// User Account Table Row Component (no changes needed for this specific task)
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
@@ -170,9 +173,8 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
 });
 
 
-// User Accounts Content Component (now correctly using AdminDashboardViewModel for modal and passing actions)
+// User Accounts Content Component (no changes for this specific task)
 const UserAccountsContent = observer(() => {
-    // Access properties directly from the AdminDashboardViewModel singleton instance
     const {
         activeTab,
         filteredPendingAccounts,
@@ -180,22 +182,15 @@ const UserAccountsContent = observer(() => {
         error,
         showRejectionReasonModal,
         rejectionReason,
-        // States for the UserDetailModal, managed by AdminDashboardViewModel
         selectedUser,
         showUserDetailModal,
-        // Methods called directly on the singleton
-        approveNutritionist,
-        rejectNutritionist,
-        viewCertificate,
-        userAccountsVM, // Direct access to the UserAccountsViewModel instance
-        // Setters from AdminDashboardViewModel
+        userAccountsVM,
         setSelectedUser,
         setShowUserDetailModal,
         setShowRejectionReasonModal,
         setRejectionReason,
     } = AdminDashboardViewModel;
 
-    // Destructure specific states and methods from userAccountsVM
     const {
         searchTerm,
         filteredAllAccounts,
@@ -207,38 +202,32 @@ const UserAccountsContent = observer(() => {
         AdminDashboardViewModel.fetchAccounts();
     }, [activeTab]);
 
-    // Handle opening the UserDetailModal
     const handleOpenModal = (user) => {
-        setSelectedUser(user); // Set the user in AdminDashboardViewModel
-        setShowUserDetailModal(true); // Show modal via AdminDashboardViewModel
+        setSelectedUser(user);
+        setShowUserDetailModal(true);
     };
 
-    // Handle closing the UserDetailModal
     const handleCloseModal = () => {
-        setShowUserDetailModal(false); // Hide modal via AdminDashboardViewModel
-        setSelectedUser(null); // Clear the selected user
-        AdminDashboardViewModel.fetchAccounts(); // Refresh accounts after modal closes
+        setShowUserDetailModal(false);
+        setSelectedUser(null);
+        AdminDashboardViewModel.fetchAccounts();
     };
 
-    // Action handlers for UserDetailModal, calling methods on adminStatViewModel
     const handleApproveFromModal = async (userId) => {
         await adminStatViewModel.approveNutritionist(userId);
-        handleCloseModal(); // Close modal after action
+        handleCloseModal();
     };
 
     const handleRejectFromModal = async (userId) => {
-        // This will open the rejection reason modal, which AdminDashboardViewModel already handles
-        // And then the confirm reject action from that modal will handle the actual rejection via adminStatViewModel
-        setSelectedUser(adminStatViewModel.selectedUserForManagement); // Ensure AdminDashboardViewModel.selectedUser is correctly set for the rejection modal
+        setSelectedUser(adminStatViewModel.selectedUserForManagement);
         setShowRejectionReasonModal(true);
     };
 
     const handleConfirmRejectFromModal = async (userId, reason) => {
         await adminStatViewModel.rejectNutritionist(userId, reason);
-        setShowRejectionReasonModal(false); // Close rejection reason modal
-        handleCloseModal(); // Close main detail modal
+        setShowRejectionReasonModal(false);
+        handleCloseModal();
     };
-
 
     const handleViewDocumentFromModal = async (userId) => {
         await adminStatViewModel.viewCertificate(userId);
@@ -246,19 +235,18 @@ const UserAccountsContent = observer(() => {
 
     const handleSuspendFromModal = async (userId, isSuspended) => {
         await adminStatViewModel.suspendUserAccount(userId, isSuspended);
-        handleCloseModal(); // Close modal after action
+        handleCloseModal();
     };
 
     const handleChangeRoleFromModal = async (userId, newRole) => {
         await adminStatViewModel.updateUserRole(userId, newRole);
-        handleCloseModal(); // Close modal after action
+        handleCloseModal();
     };
 
     const handleDeleteAccountFromModal = async (userId) => {
         await adminStatViewModel.deleteUserAccount(userId);
-        handleCloseModal(); // Close modal after action
+        handleCloseModal();
     };
-
 
     const handleSuspendUnsuspend = async (userId, currentStatus) => {
         console.log(`Attempting to change status for User ${userId} from ${currentStatus}`);
@@ -334,7 +322,7 @@ const UserAccountsContent = observer(() => {
                                     key={user.id}
                                     user={user}
                                     onAction={handleSuspendUnsuspend}
-                                    onNameClick={handleOpenModal} // <-- This calls the updated handleOpenModal
+                                    onNameClick={handleOpenModal}
                                     type="all"
                                 />
                             ))
@@ -344,7 +332,7 @@ const UserAccountsContent = observer(() => {
                                     key={user.id}
                                     user={user}
                                     onAction={() => { }}
-                                    onNameClick={handleOpenModal} // <-- This calls the updated handleOpenModal
+                                    onNameClick={handleOpenModal}
                                     type="pending"
                                 />
                             ))
@@ -367,25 +355,22 @@ const UserAccountsContent = observer(() => {
             {/* Render UserDetailModal using states from AdminDashboardViewModel */}
             {showUserDetailModal && selectedUser && (
                 <UserDetailModal
-                    user={selectedUser} // <-- Pass the selected user as a prop
+                    user={selectedUser}
                     onClose={handleCloseModal}
-                    // Pass down action handlers, which will call adminStatViewModel methods
                     onApprove={handleApproveFromModal}
                     onReject={handleRejectFromModal}
                     onViewDocument={handleViewDocumentFromModal}
                     onSuspend={handleSuspendFromModal}
-                    onUnsuspend={handleSuspendFromModal} // Use the same suspend method with a flag
+                    onUnsuspend={handleSuspendFromModal}
                     onChangeRole={handleChangeRoleFromModal}
                     onDeleteAccount={handleDeleteAccountFromModal}
-                    // Pass loading, error, success states from adminStatViewModel for actions
                     loading={adminStatViewModel.loading}
                     error={adminStatViewModel.error}
                     success={adminStatViewModel.success}
-                    // Pass rejection reason modal states
-                    showRejectionReasonModal={showRejectionReasonModal} // This one from AdminDashboardVM
-                    rejectionReason={rejectionReason}                   // This one from AdminDashboardVM
-                    setRejectionReason={setRejectionReason}             // This one from AdminDashboardVM
-                    onConfirmReject={handleConfirmRejectFromModal}      // New prop for confirming rejection
+                    showRejectionReasonModal={showRejectionReasonModal}
+                    rejectionReason={rejectionReason}
+                    setRejectionReason={setRejectionReason}
+                    onConfirmReject={handleConfirmRejectFromModal}
                 />
             )}
 
@@ -394,7 +379,7 @@ const UserAccountsContent = observer(() => {
                 <RejectionReasonModal
                     reason={rejectionReason}
                     setReason={(value) => setRejectionReason(value)}
-                    onConfirm={() => handleConfirmRejectFromModal(selectedUser.id, rejectionReason)} // Use new handler
+                    onConfirm={() => handleConfirmRejectFromModal(selectedUser.id, rejectionReason)}
                     onClose={() => setShowRejectionReasonModal(false)}
                 />
             )}
@@ -431,6 +416,7 @@ const AdminDashboard = observer(({ onLogout }) => {
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
                 {currentView === 'userAccounts' && <UserAccountsContent />}
+                {currentView === 'premiumAccounts' && <PremiumAccountsContent />} {/* <--- NEW CONTENT COMPONENT */}
                 {currentView === 'mealPlans' && <AdminMealPlans />}
                 {currentView === 'exportReport' && <AdminExportReport />}
                 {currentView === 'rewards' && <AdminRewards />}
