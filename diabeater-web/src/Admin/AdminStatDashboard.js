@@ -1,19 +1,16 @@
 // src/Admin/AdminStatDashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
 import './AdminStatDashboard.css'; // Ensure your CSS is correctly linked
-import UserDetailModal from './UserDetailModal'; // Ensure this component exists
-import EditSubscriptionModal from './EditSubscriptionModal'; // Ensure this component exists
-import EditPremiumFeaturesModal from './EditPremiumFeaturesModal'; // Ensure this component exists
+import UserDetailModal from './UserDetailModal'; // Keep if UserDetailModal is used elsewhere or for general user view
+import UserHistoryModal from './UserHistoryModal'; // Keep if UserHistoryModal is used elsewhere or for general user history
 import AdminInsights from './AdminInsights'; // Ensure this component exists
 import Tooltip from './Tooltip'; // Ensure this component exists
-import UserHistoryModal from './UserHistoryModal'; // Import the new UserHistoryModal
 import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // Import the singleton instance
-import { observer } from 'mobx-react-lite'; // Corrected import from 'mobobx-react-lite' to 'mobx-react-lite'
+import { observer } from 'mobx-react-lite';
 import moment from 'moment';
 
 const AdminStatDashboard = observer(() => {
     // Destructure directly from the singleton ViewModel instance
-    // This makes the component reactively observe changes in these properties
     const {
         loading,
         error,
@@ -25,32 +22,29 @@ const AdminStatDashboard = observer(() => {
         totalSubscriptions,
         dailySignupsData,
         weeklyTopMealPlans,
-        userAccounts, // This array now contains ONLY premium users with correct status/endDate
-        selectedUserForManagement, // Controlled by ViewModel, used for UserDetailModal
-        selectedUserForHistory,    // Controlled by ViewModel, used for UserHistoryModal visibility
-        premiumSubscriptionPrice,
-        premiumFeatures,
-        // Also destructure actions from the ViewModel if they are to be called directly
+        userAccounts, // Keeping userAccounts, but the table using it will be removed.
+        selectedUserForManagement, // Keeping, in case UserDetailModal is still desired for basic user info
+        selectedUserForHistory,
+        // Removed premiumSubscriptionPrice and premiumFeatures as their sections are gone
         setError,
         setSuccess,
         setSelectedUserForManagement,
         clearSelectedUserForManagement,
         setSelectedUserForHistory,
-        clearSelectedUserForHistory, // Ensure this is also available from ViewModel
-        loadDashboardData, // Direct access to the data loading method
+        clearSelectedUserForHistory,
+        loadDashboardData,
     } = adminStatViewModel;
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(''); // Keeping searchTerm state, but the search bar will be removed
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    // isHistoryModalOpen is now controlled by selectedUserForHistory being truthy
-    const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
-    const [isEditFeaturesModal, setIsEditFeaturesModal] = useState(false);
+    // Removed isEditPriceModalOpen and isEditFeaturesModal as their sections are gone
+
+    // Removed displayPremiumPrice as the section is gone
 
     // Helper function to format any date value (Firestore Timestamp or JS Date)
-    // Used for general date display like in tooltips
     const formatDate = (dateValue) => {
         if (!dateValue) return 'N/A';
-        const date = dateValue.toDate ? dateValue.toDate() : dateValue; // Convert Firestore Timestamp to Date
+        const date = dateValue.toDate ? dateValue.toDate() : dateValue;
         try {
             return moment(date).format('DD/MM/YYYY');
         } catch (e) {
@@ -60,9 +54,10 @@ const AdminStatDashboard = observer(() => {
     };
 
     // New helper function to calculate and format the renewal date (endDate + 1 day)
+    // Keeping this even if premium user table is removed, in case it's useful for UserDetailModal context.
     const formatRenewalDate = (endDateValue) => {
         if (!endDateValue) return 'N/A';
-        const endDate = endDateValue.toDate ? endDateValue.toDate() : endDateValue; // Convert Firestore Timestamp to Date
+        const endDate = endDateValue.toDate ? endDateValue.toDate() : endDateValue;
         try {
             return moment(endDate).add(1, 'days').format('DD/MM/YYYY');
         } catch (e) {
@@ -73,90 +68,40 @@ const AdminStatDashboard = observer(() => {
 
     // Use useCallback for memoizing the data loading function
     const handleLoadDashboardData = useCallback(async () => {
-        await loadDashboardData(); // Call the ViewModel's method
-    }, [loadDashboardData]); // Dependency on loadDashboardData (from ViewModel)
+        await loadDashboardData();
+    }, [loadDashboardData]);
 
     // Initial data load on component mount
     useEffect(() => {
         handleLoadDashboardData();
-    }, [handleLoadDashboardData]); // Depend on memoized handler
+    }, [handleLoadDashboardData]);
+
+    // Removed useEffect for displayPremiumPrice
 
     const handleOpenUserModal = (user) => {
-        setSelectedUserForManagement(user); // Set in ViewModel
+        setSelectedUserForManagement(user);
         setIsUserModalOpen(true);
     };
 
     const handleCloseUserModal = () => {
         setIsUserModalOpen(false);
-        clearSelectedUserForManagement(); // Clear in ViewModel
+        clearSelectedUserForManagement();
         handleLoadDashboardData(); // Reload data after user modal closes
     };
 
-    // UPDATED: This now triggers the ViewModel to set the user for history,
-    // which in turn will cause UserHistoryModal to open.
     const handleOpenHistoryModal = (user) => {
-        setSelectedUserForHistory(user); // Set in ViewModel
+        setSelectedUserForHistory(user);
     };
 
-    // No explicit handleCloseHistoryModal needed here in parent
-    // The UserHistoryModal itself should call adminStatViewModel.clearSelectedUserForHistory()
-    // when it closes internally.
+    // Removed handleOpenEditPriceModal, handleCloseEditPriceModal,
+    // handleOpenEditFeaturesModal, handleCloseEditFeaturesModal
+    // as their sections are removed.
 
-    const handleOpenEditPriceModal = () => {
-        setIsEditPriceModalOpen(true);
-    };
-
-    const handleCloseEditPriceModal = () => {
-        setIsEditPriceModalOpen(false);
-    };
-
-    const handleOpenEditFeaturesModal = () => {
-        setIsEditFeaturesModal(true);
-    };
-
-    const handleCloseEditFeaturesModal = () => {
-        setIsEditFeaturesModal(false);
-        handleLoadDashboardData(); // Refresh to ensure UI reflects changes from feature update
-    };
-
-    const handleSaveSubscriptionPrice = async (newPrice) => {
-        setSuccess(''); // Clear previous messages
-        setError('');   // Clear previous messages
-        try {
-            const response = await adminStatViewModel.updatePremiumSubscriptionPrice(newPrice);
-            if (response.success) {
-                setIsEditPriceModalOpen(false);
-                setSuccess(response.message || "Subscription price updated successfully!");
-                // No need to load dashboard data here explicitly if ViewModel updates premiumSubscriptionPrice directly
-            } else {
-                setError(response.message || "Failed to update subscription price.");
-            }
-        } catch (e) {
-            console.error("[AdminStatDashboard] Error saving subscription price:", e);
-            setError(`Failed to update subscription price: ${e.message}`);
-        }
-    };
-
-    const handleSavePremiumFeatures = async (newFeatures) => {
-        setSuccess(''); // Clear previous messages
-        setError('');   // Clear previous messages
-        try {
-            const response = await adminStatViewModel.updatePremiumFeatures(newFeatures);
-            if (response.success) {
-                setIsEditFeaturesModal(false);
-                setSuccess(response.message || "Premium features updated successfully!");
-                handleLoadDashboardData(); // Refresh to ensure UI reflects changes
-            } else {
-                setError(response.message || "Failed to update premium features.");
-            }
-        } catch (e) {
-            console.error("[AdminStatDashboard] Error saving premium features:", e);
-            setError(`Failed to update premium features: ${e.message}`);
-        }
-    };
+    // Removed handleSaveSubscriptionPrice and handleSavePremiumFeatures
+    // as their functionality is no longer needed in this component.
 
     // Filter user accounts based on search term.
-    // userAccounts already contains premium users from the ViewModel with correct status/endDate.
+    // Keeping this, although the table using it is removed. It's benign.
     const filteredUserAccounts = userAccounts.filter(user => {
         const searchTermLower = searchTerm.toLowerCase();
         const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
@@ -168,7 +113,7 @@ const AdminStatDashboard = observer(() => {
         );
     });
 
-    // --- Chart Data Processing (Keeping as is, no changes requested) ---
+    // --- Chart Data Processing (Keeping as is) ---
     const chartDataArray = dailySignupsData
         ? Object.entries(dailySignupsData)
             .map(([date, count]) => ({
@@ -490,178 +435,27 @@ const AdminStatDashboard = observer(() => {
 
             <AdminInsights data={insightsData} />
 
-            <section className="premium-features-section">
-                <h2 className="section-title">PREMIUM PLAN FEATURES MANAGEMENT</h2>
-                <div className="premium-features-card">
-                    <div className="feature-list-display">
-                        <h3>Current Premium Features:</h3>
-                        {premiumFeatures && premiumFeatures.length > 0 ? (
-                            <ul>
-                                {premiumFeatures.map((feature, index) => (
-                                    <li key={index}>{feature}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No premium features defined yet.</p>
-                        )}
-                    </div>
-                    <button className="manage-features-button" onClick={handleOpenEditFeaturesModal}>
-                        MANAGE FEATURES
-                    </button>
-                </div>
-            </section>
+            {/* Removed Premium Features Management Section */}
+            {/* Removed Subscription Price Management Section */}
+            {/* Removed Premium User Accounts Section */}
 
-            <section className="premium-plan-section">
-                <h2 className="section-title">SUBSCRIPTION PRICE MANAGEMENT</h2>
-                <div className="premium-plan-card">
-                    <span className="plan-name">Premium Plan</span>
-                    <span className="plan-price">${premiumSubscriptionPrice.toFixed(2)}<span className="per-month"> /month</span></span>
-                    <button className="manage-subscription-button" onClick={handleOpenEditPriceModal}>
-                        MANAGE SUBSCRIPTION PRICE
-                    </button>
-                </div>
-            </section>
-
-            <section className="user-accounts-section">
-                <h2 className="section-title">PREMIUM USER ACCOUNTS</h2>
-                <div className="user-accounts-header">
-                    <div className="search-bar">
-                        <input
-                            type="text"
-                            placeholder="Search by name, email, or status"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            aria-label="Search premium user accounts"
-                        />
-                        <i className="fas fa-search" aria-hidden="true"></i>
-                    </div>
-                </div>
-                <div className="stat-table-container">
-                    <table className="user-accounts-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Status</th> {/* This will now correctly show Subscription Status */}
-                                <th>Renewal Date</th> {/* This will now correctly show Subscription End Date */}
-                                <th>Details</th>
-                                <th>History</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {/* Conditional rendering if filteredUserAccounts is empty */}
-                            {filteredUserAccounts.length > 0 ? (
-                                filteredUserAccounts.map(user => (
-                                    <tr key={user._id}>
-                                        <td>
-                                            <div className="tooltip-container">
-                                                <Tooltip content={
-                                                    <>
-                                                        <p><strong>Name:</strong> {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : 'N/A'}</p>
-                                                        <p><strong>Email:</strong> {user.email || 'N/A'}</p>
-                                                        <p><strong>Phone:</strong> {user.phone || 'N/A'}</p>
-                                                        <p><strong>Address:</strong> {user.address || 'N/A'}</p>
-                                                        <p><strong>Role:</strong> {user.role || 'N/A'}</p>
-                                                        {/* Displaying the user account status (active/suspended) */}
-                                                        <p><strong>Account Status:</strong> {user.status || 'N/A'}</p>
-                                                        {/* Displaying the SUBSCRIPTION status */}
-                                                        <p><strong>Subscription Status:</strong> {user.subscriptionStatus || 'N/A'}</p>
-                                                        {/* Displaying the SUBSCRIPTION end date */}
-                                                        <p><strong>Subscription End:</strong> {formatDate(user.subscriptionEndDate)}</p>
-                                                    </>
-                                                }>
-                                                    <div
-                                                        className="user-name-clickable"
-                                                        onClick={() => handleOpenUserModal(user)}
-                                                        role="button"
-                                                        tabIndex="0"
-                                                        aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
-                                                    >
-                                                        <i className="fas fa-user-circle table-user-icon" aria-hidden="true"></i>
-                                                        {user.firstName && user.lastName
-                                                            ? `${user.firstName} ${user.lastName}`.trim()
-                                                            : user.email || 'N/A'
-                                                        }
-                                                    </div>
-                                                </Tooltip>
-                                            </div>
-                                        </td>
-                                        <td>{user.email || 'N/A'}</td>
-                                        <td>
-                                            {/* Displaying the SUBSCRIPTION status in the table cell */}
-                                            <span className={`status-dot status-${user.subscriptionStatus ? user.subscriptionStatus.toLowerCase() : 'unknown'}`}></span>
-                                            {user.subscriptionStatus || 'N/A'}
-                                        </td>
-                                        <td>{formatRenewalDate(user.subscriptionEndDate)}</td> {/* Renewal Date from the enriched user object */}
-                                        <td>
-                                            <button
-                                                className="deets-action-button view-button"
-                                                onClick={() => handleOpenUserModal(user)}
-                                                aria-label={`View details for ${user.firstName || ''} ${user.lastName || ''}`}
-                                            >
-                                                View Details
-                                            </button>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="deets-action-button history-button"
-                                                onClick={() => handleOpenHistoryModal(user)} // Calls ViewModel setter
-                                                aria-label={`View history for ${user.firstName || ''} ${user.lastName || ''}`}
-                                            >
-                                                View History
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="no-data-message">No premium user accounts found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* Modals */}
+            {/* Modals (kept for potential general user management if desired later) */}
             {isUserModalOpen && selectedUserForManagement && (
                 <UserDetailModal
-                    isOpen={isUserModalOpen}
+                    user={selectedUserForManagement}
                     onClose={handleCloseUserModal}
-                    user={selectedUserForManagement} // Pass the selected user directly
-                    adminStatViewModel={adminStatViewModel} // Pass the entire ViewModel for actions
+                    setError={setError}
+                    setSuccess={setSuccess}
+                    refreshUsers={handleLoadDashboardData}
                 />
             )}
 
-            {isEditPriceModalOpen && (
-                <EditSubscriptionModal
-                    isOpen={isEditPriceModalOpen}
-                    onClose={handleCloseEditPriceModal}
-                    currentPrice={premiumSubscriptionPrice}
-                    onSave={handleSaveSubscriptionPrice} // Pass the saving handler
-                    // You might also pass setError/setSuccess if the modal itself needs to display messages
-                    // Or, the modal could call a ViewModel method that handles messages
-                    errorMessage={error} // Pass existing error for context
-                    successMessage={success} // Pass existing success for context
-                />
-            )}
+            {/* Removed EditSubscriptionModal and EditPremiumFeaturesModal as their sections are gone */}
+            {/* isEditPriceModalOpen and isEditFeaturesModal states are also removed */}
 
-            {isEditFeaturesModal && (
-                <EditPremiumFeaturesModal
-                    isOpen={isEditFeaturesModal}
-                    onClose={handleCloseEditFeaturesModal}
-                    adminStatViewModel={adminStatViewModel} // Pass the entire ViewModel
-                />
-            )}
-
-            {/* UserHistoryModal controlled by ViewModel's selectedUserForHistory */}
             {selectedUserForHistory && (
                 <UserHistoryModal
-                    isOpen={!!selectedUserForHistory} // isOpen is true if selectedUserForHistory is set
-                    // The modal itself should call adminStatViewModel.clearSelectedUserForHistory() on close
-                    // so you don't need a direct onClose prop here from the parent.
-                    // Instead, the modal's internal close button will trigger the ViewModel clear.
-                    adminStatViewModel={adminStatViewModel} // Pass the ViewModel to the modal
+                    user={selectedUserForHistory}
                 />
             )}
         </div>

@@ -1,5 +1,4 @@
 // src/AdminDashboard.js
-
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Ensure this path is correct
@@ -14,7 +13,7 @@ import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
 import AdminRewards from './AdminRewards';
 import adminStatViewModel from '../ViewModels/AdminStatViewModel';
-import PremiumAccountsContent from './PremiumAccountsContent'; // <--- NEW IMPORT
+import PremiumPage from './PremiumPage'; // Corrected import to use the actual component name
 
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
@@ -55,7 +54,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                     <span>User Accounts</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'premiumAccounts' ? 'active' : ''}`} // <--- NEW NAV ITEM
+                    className={`nav-item ${currentView === 'premiumAccounts' ? 'active' : ''}`}
                     onClick={() => onNavigate('premiumAccounts')}
                 >
                     <i className="fas fa-star"></i> {/* You can choose an appropriate icon */}
@@ -388,7 +387,7 @@ const UserAccountsContent = observer(() => {
 });
 
 
-// AdminDashboard Main Component (no changes needed)
+// AdminDashboard Main Component
 const AdminDashboard = observer(({ onLogout }) => {
     const { currentView } = AdminDashboardViewModel;
 
@@ -416,7 +415,7 @@ const AdminDashboard = observer(({ onLogout }) => {
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
                 {currentView === 'userAccounts' && <UserAccountsContent />}
-                {currentView === 'premiumAccounts' && <PremiumAccountsContent />} {/* <--- NEW CONTENT COMPONENT */}
+                {currentView === 'premiumAccounts' && <PremiumPage />} {/* RENDER NEW PREMIUM PAGE */}
                 {currentView === 'mealPlans' && <AdminMealPlans />}
                 {currentView === 'exportReport' && <AdminExportReport />}
                 {currentView === 'rewards' && <AdminRewards />}

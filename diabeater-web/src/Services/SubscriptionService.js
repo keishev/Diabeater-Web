@@ -1,4 +1,6 @@
 // src/Services/SubscriptionService.js
+// This file remains unchanged from your provided code,
+// as it provides generic subscription plan operations.
 import app from '../firebase'; // Assuming your firebase config is here
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 

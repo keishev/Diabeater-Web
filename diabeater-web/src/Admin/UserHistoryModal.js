@@ -1,32 +1,30 @@
 // src/Components/Modals/UserHistoryModal.js
-import React, { useEffect } from 'react';
+import React from 'react';
 import { observer } from 'mobx-react-lite';
-import adminStatViewModel from '../ViewModels/AdminStatViewModel';
+// Removed: import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // NO LONGER DIRECTLY IMPORT VIEWMODEL
 import moment from 'moment';
 import './UserHistoryModal.css';
 
-const UserHistoryModal = observer(() => {
-    const {
-        selectedUserForHistory: user,
-        userSubscriptionHistory: userHistory,
-        loadingHistory,
-        historyError,
-        clearSelectedUserForHistory,
-        loadUserSubscriptionHistory
-    } = adminStatViewModel;
+// Props received from parent (e.g., PremiumPage) which gets them from PremiumStatViewModel
+const UserHistoryModal = observer(({
+    user, // The selected user object
+    history, // The array of subscription history records
+    loading, // Loading state for history
+    error, // Error message for history loading
+    onClose // Callback to close the modal
+}) => {
 
-    useEffect(() => {
-        if (user) {
-            loadUserSubscriptionHistory(user._id);
-        }
-    }, [user, loadUserSubscriptionHistory]);
-
-    // IMPORTANT: Remove 'if (!user) return null;' here.
-    // We always render the overlay, but control its visibility with the 'show' class.
+    if (!user) {
+        // This case should ideally not happen if parent manages state well,
+        // but it's a defensive check.
+        console.warn("[UserHistoryModal] User prop is null or undefined. Not rendering modal content.");
+        return null;
+    }
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
-        const date = timestamp.toDate ? timestamp.toDate() : timestamp;
+        // Ensure it's a JS Date object before formatting
+        const date = timestamp.toDate && typeof timestamp.toDate === 'function' ? timestamp.toDate() : timestamp;
         return moment(date).format('DD/MM/YYYY hh:mm A');
     };
 
@@ -34,28 +32,29 @@ const UserHistoryModal = observer(() => {
         return user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
     };
 
-    const userName = user ? getUserDisplayName(user) : ''; // Handle case where user might be null initially
+    const userName = getUserDisplayName(user); // Now 'user' is guaranteed to be present if we reach here
 
     return (
-        // Add the .show class conditionally to the modal-overlay
-        <div className={`modal-overlay ${user ? 'show' : ''}`} onClick={clearSelectedUserForHistory}>
-            <div className="modal-content user-history-modal" onClick={(e) => e.stopPropagation()}>
-                <button className="close-button" onClick={clearSelectedUserForHistory}>&times;</button>
+        // The modal-overlay should be conditionally rendered by the parent component
+        // or controlled by a CSS class applied based on a prop from the parent.
+        // For simplicity with this file, it's assumed to be rendered only when needed.
+        <div className="modal-overlay" onClick={onClose}> {/* Clicking overlay closes modal */}
+            <div className="modal-content user-history-modal" onClick={(e) => e.stopPropagation()}> {/* Stop propagation to prevent closing on content click */}
+                <button className="close-button" onClick={onClose}>&times;</button>
                 <h2>Subscription History for {userName}</h2>
 
-                {/* Conditional rendering for content *inside* the modal body */}
-                {loadingHistory && <p className="loading-message">Loading history...</p>}
-                {historyError && <p className="error-message">{historyError}</p>}
+                {loading && <p className="loading-message">Loading history...</p>}
+                {error && <p className="error-message">{error}</p>}
 
-                {userHistory.length === 0 && !loadingHistory && !historyError && (
+                {!loading && !error && history.length === 0 && (
                     <p>No subscription history found for this user.</p>
                 )}
 
-                {userHistory.length > 0 && (
+                {!loading && !error && history.length > 0 && (
                     <div className="history-list">
-                        {userHistory.map((sub, index) => (
+                        {history.map((sub, index) => (
                             <div key={sub._id || index} className="history-item">
-                                <h4>Subscription {userHistory.length - index}</h4>
+                                <h4>Subscription {history.length - index}</h4> {/* Display in descending order by index for simpler numbering */}
                                 <p><strong>Plan:</strong> {sub.plan || 'N/A'}</p>
                                 <p><strong>Status:</strong> <span className={`status-dot status-${sub.status ? sub.status.toLowerCase() : 'unknown'}`}></span> {sub.status || 'N/A'}</p>
                                 <p><strong>Price:</strong> ${sub.price ? sub.price.toFixed(2) : 'N/A'}</p>
