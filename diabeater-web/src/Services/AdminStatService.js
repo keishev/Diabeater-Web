@@ -10,8 +10,8 @@ import {
     orderBy,
     limit,
     getCountFromServer,
-    doc,     // Import doc for single document reference
-    getDoc,  // Import getDoc for fetching single documents
+    doc,
+    getDoc,
     updateDoc,
     deleteDoc
 } from 'firebase/firestore';
@@ -44,7 +44,7 @@ const AdminStatService = {
             }
             const querySnapshot = await getDocs(q);
             const data = querySnapshot.docs.map(doc => ({
-                _id: doc.id, // Ensure this maps to the document ID in Firestore
+                _id: doc.id,
                 ...doc.data()
             }));
             console.log(`[Service] getAllUserAccounts (role: ${role || 'all'}): Found ${data.length} users. Sample:`, data.slice(0, 2));
@@ -71,7 +71,6 @@ const AdminStatService = {
         }
     },
 
-    // --- NEW FUNCTION: Get all subscriptions grouped by user ID ---
     async getAllSubscriptionsGroupedByUser() {
         try {
             console.log("[Service] Fetching all subscriptions grouped by user...");
@@ -100,12 +99,11 @@ const AdminStatService = {
         }
     },
 
-    // --- NEW FUNCTION: Get user account by ID ---
     async getUserAccountById(userId) {
         try {
             console.log(`[Service] Fetching user account for ID: ${userId}`);
             const docRef = doc(db, 'user_accounts', userId);
-            const docSnap = await getDoc(docRef); // Use getDoc for a single document
+            const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 console.log(`[Service] Found user account for ID: ${userId}`);
@@ -123,14 +121,13 @@ const AdminStatService = {
         }
     },
 
-    // --- NEW FUNCTION: Get subscriptions for a specific user ID ---
     async getUserSubscriptions(userId) {
         try {
             console.log(`[Service] Fetching subscriptions for user ID: ${userId}`);
             const q = query(
                 collection(db, 'subscriptions'),
                 where('userId', '==', userId),
-                orderBy('createdAt', 'desc') // Assuming you want to sort by creation date
+                orderBy('createdAt', 'desc')
             );
             const querySnapshot = await getDocs(q);
             const data = querySnapshot.docs.map(doc => ({
@@ -145,27 +142,7 @@ const AdminStatService = {
         }
     },
 
-    // --- EXISTING FUNCTIONS BELOW (with minor fixes for getDocs -> getDoc) ---
-
-    async getPremiumUserAccounts() {
-        try {
-            console.log("[Service] Fetching premium user accounts...");
-            const q = query(
-                collection(db, 'user_accounts'),
-                where('isPremium', '==', true) // Query for accounts where isPremium is true
-            );
-            const querySnapshot = await getDocs(q);
-            const premiumUsers = querySnapshot.docs.map(doc => ({
-                _id: doc.id,
-                ...doc.data()
-            }));
-            console.log(`[Service] getPremiumUserAccounts: Found ${premiumUsers.length} premium users.`);
-            return premiumUsers;
-        } catch (error) {
-            console.error('[Service] ERROR fetching premium user accounts:', error);
-            throw new Error('Failed to fetch premium user accounts.');
-        }
-    },
+    // getPremiumUserAccounts method removed from here
 
     async getDailySignups(days = 7) {
         try {
@@ -219,7 +196,7 @@ const AdminStatService = {
 
             const q = query(
                 collection(db, 'meal_plans'),
-                where('__name__', 'in', topMealPlanIds), // '__name__' refers to the document ID
+                where('__name__', 'in', topMealPlanIds),
                 where('status', '==', 'APPROVED')
             );
 
@@ -229,7 +206,6 @@ const AdminStatService = {
                 ...doc.data()
             }));
 
-            // Ensure the data is returned in the order of most saves
             const orderedData = topMealPlanIds.map(id => data.find(plan => plan._id === id)).filter(Boolean);
 
             console.log(`[Service] getWeeklyTopMealPlans (top ${count}): Found ${orderedData.length} plans. Sample:`, orderedData.slice(0, 2));
@@ -294,63 +270,12 @@ const AdminStatService = {
     async updateUserStatus(userId, newStatus) {
         try {
             const userRef = doc(db, 'user_accounts', userId);
-            await updateDoc(userRef, { status: newStatus }); // Update the 'status' field
+            await updateDoc(userRef, { status: newStatus });
             console.log(`[Service] User ${userId} status updated to ${newStatus}`);
             return { success: true, message: `User status updated to ${newStatus}.` };
         } catch (error) {
             console.error("[AdminStatService] Error updating user status:", error);
             throw new Error(`Failed to update user status in Firebase: ${error.message}`);
-        }
-    },
-
-    // Methods for premium plan configuration
-    async getSubscriptionPrice() {
-        try {
-            const docRef = doc(db, 'config', 'premiumPlan'); // Assuming path 'config/premiumPlan'
-            const docSnap = await getDoc(docRef); // Use getDoc for single document
-            if (docSnap.exists()) {
-                return docSnap.data().price || 0;
-            }
-            return 0;
-        } catch (error) {
-            console.error('[Service] ERROR fetching subscription price:', error);
-            throw new Error('Failed to fetch subscription price.');
-        }
-    },
-
-    async updateSubscriptionPrice(newPrice) {
-        try {
-            const docRef = doc(db, 'config', 'premiumPlan');
-            await updateDoc(docRef, { price: newPrice });
-            return { success: true, message: 'Subscription price updated.' };
-        } catch (error) {
-            console.error('[Service] ERROR updating subscription price:', error);
-            throw new Error('Failed to update subscription price.');
-        }
-    },
-
-    async getPremiumFeatures() {
-        try {
-            const docRef = doc(db, 'config', 'premiumPlan');
-            const docSnap = await getDoc(docRef); // Use getDoc for single document
-            if (docSnap.exists()) {
-                return docSnap.data().features || [];
-            }
-            return [];
-        } catch (error) {
-            console.error('[Service] ERROR fetching premium features:', error);
-            throw new Error('Failed to fetch premium features.');
-        }
-    },
-
-    async updatePremiumFeatures(newFeatures) {
-        try {
-            const docRef = doc(db, 'config', 'premiumPlan');
-            await updateDoc(docRef, { features: newFeatures });
-            return { success: true, message: 'Premium features updated.' };
-        } catch (error) {
-            console.error('[Service] ERROR updating premium features:', error);
-            throw new Error('Failed to update premium features.');
         }
     },
 };

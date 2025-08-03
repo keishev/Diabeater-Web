@@ -1,7 +1,6 @@
 // src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService';
-import SubscriptionRepository from '../Repositories/SubscriptionRepository';
 import moment from 'moment';
 
 class AdminStatViewModel {
@@ -13,14 +12,9 @@ class AdminStatViewModel {
     totalSubscriptions = 0;
     dailySignupsData = {}; // { 'YYYY-MM-DD': count }
     weeklyTopMealPlans = [];
-    userAccounts = [];
+    userAccounts = []; // All user accounts for general management
     allSubscriptions = []; // Consider if this is strictly needed as observable state
     selectedUserForManagement = null;
-
-    // Observable for Premium Subscription Price and Features
-    // IMPORTANT: Initialize these *before* makeAutoObservable is called implicitly by the constructor
-    premiumSubscriptionPrice = 0;
-    premiumFeatures = []; // This remains an array of strings
 
     // For Nutritionist Application Modals
     showRejectionReasonModal = false;
@@ -39,29 +33,24 @@ class AdminStatViewModel {
 
 
     constructor() {
-        // Initialize properties here if they depend on constructor arguments,
-        // otherwise, direct class property initialization is fine.
-        makeAutoObservable(this); // Make all defined properties observable
-
-        // Now call methods that depend on observable properties being set up
+        makeAutoObservable(this);
         this.loadDashboardData();
     }
 
-    // --- State Management Actions (UNCHANGED - these are already arrow-like or bound by makeAutoObservable) ---
-    // Methods declared as class properties are automatically bound (arrow-like)
-    setLoading = (status) => { // Changed to arrow function for consistency, though makeAutoObservable typically handles simple setters.
+    // --- State Management Actions ---
+    setLoading = (status) => {
         runInAction(() => {
             this.loading = status;
         });
     }
 
-    setError = (message) => { // Changed to arrow function
+    setError = (message) => {
         runInAction(() => {
             this.error = message;
             if (message) {
                 this.success = null;
                 setTimeout(() => {
-                    if (this.error === message) { // Only clear if it's the same message
+                    if (this.error === message) {
                         this.error = null;
                     }
                 }, 5000);
@@ -69,13 +58,13 @@ class AdminStatViewModel {
         });
     }
 
-    setSuccess = (message) => { // Changed to arrow function
+    setSuccess = (message) => {
         runInAction(() => {
             this.success = message;
             if (message) {
                 this.error = null;
                 setTimeout(() => {
-                    if (this.success === message) { // Only clear if it's the same message
+                    if (this.success === message) {
                         this.success = null;
                     }
                 }, 5000);
@@ -129,11 +118,11 @@ class AdminStatViewModel {
         });
     }
 
-    loadUserSubscriptionHistory = async (userId) => { // Converted to arrow function
+    loadUserSubscriptionHistory = async (userId) => {
         runInAction(() => {
             this.loadingHistory = true;
             this.historyError = null;
-            this.userSubscriptionHistory = []; // Clear previous history
+            this.userSubscriptionHistory = [];
         });
         try {
             const history = await AdminStatService.getUserSubscriptions(userId);
@@ -157,12 +146,9 @@ class AdminStatViewModel {
         }
     }
 
-    // THE KEY CHANGE: Convert this method to an arrow function
     loadDashboardData = async () => {
-        console.log("[ViewModel] Starting loadDashboardData...");
+        console.log("[AdminStatViewModel] Starting loadDashboardData...");
         this.setLoading(true);
-        // this.setError(null); // REMOVED: Let setError/setSuccess manage clearing
-        // this.setSuccess(null); // REMOVED: Let setError/setSuccess manage clearing
 
         try {
             const [
@@ -174,8 +160,6 @@ class AdminStatViewModel {
                 dailySignupsRawData,
                 weeklyTopMealPlans,
                 allSubscriptionsData,
-                premiumPrice,
-                premiumFeaturesData
             ] = await Promise.all([
                 AdminStatService.getDocumentCount('user_accounts'),
                 AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
@@ -185,8 +169,6 @@ class AdminStatViewModel {
                 AdminStatService.getDailySignups(7),
                 AdminStatService.getWeeklyTopMealPlans(3),
                 AdminStatService.getAllSubscriptions(),
-                SubscriptionRepository.getSubscriptionPrice(),
-                SubscriptionRepository.getPremiumFeatures()
             ]);
 
             // Format signups
@@ -215,6 +197,7 @@ class AdminStatViewModel {
 
             // Fetch user accounts for those subscriptions
             const userIds = Object.keys(subsByUser);
+            // Fetch users in batches if userIds is very large to avoid Firestore query limits
             const userFetches = await Promise.all(userIds.map(uid => AdminStatService.getUserAccountById(uid)));
             const users = userFetches.filter(Boolean); // remove nulls if any
 
@@ -245,118 +228,21 @@ class AdminStatViewModel {
                 this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
                 this.allSubscriptions = allSubscriptionsData; // Kept for now, consider if needed as state
-                this.userAccounts = enrichedUsers;
-                this.premiumSubscriptionPrice = premiumPrice || 0;
-                this.premiumFeatures = premiumFeaturesData || [];
+                this.userAccounts = enrichedUsers; // This now only contains users with subscriptions, might need adjustment if you want ALL users. If all users, fetch `getAllUserAccounts()` instead of `userIds.map...`
             });
 
-            console.log("[ViewModel] Dashboard data loaded successfully.");
+            console.log("[AdminStatViewModel] Dashboard data loaded successfully.");
             this.setSuccess('Dashboard data refreshed.');
 
         } catch (error) {
-            console.error("[ViewModel] Error in loadDashboardData:", error);
+            console.error("[AdminStatViewModel] Error in loadDashboardData:", error);
             this.setError(`Failed to load dashboard data: ${error.message}`);
         } finally {
             this.setLoading(false);
         }
     }
 
-
-    updatePremiumSubscriptionPrice = async (newPrice) => { // Converted to arrow function
-        console.log(`[ViewModel] Attempting to update premium subscription price to: ${newPrice}`);
-        this.setLoading(true);
-        try {
-            const response = await SubscriptionRepository.updateSubscriptionPrice(newPrice);
-
-            if (response.success) {
-                runInAction(() => {
-                    this.premiumSubscriptionPrice = newPrice;
-                    this.setSuccess(`Premium subscription price updated to $${newPrice.toFixed(2)}.`);
-                });
-                console.log(`[ViewModel] Premium subscription price successfully updated to: ${newPrice}`);
-                return { success: true };
-            } else {
-                this.setError(response.message || 'Failed to update subscription price.');
-                return { success: false, message: response.message };
-            }
-        } catch (error) {
-            console.error("[ViewModel] Error updating premium subscription price:", error);
-            this.setError(`Failed to update premium subscription price: ${error.message}`);
-            return { success: false, message: error.message };
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    // NEW: CRUD functions for individual premium features (array-based)
-    createPremiumFeature = async (featureName) => { // Converted to arrow function
-        this.setLoading(true);
-        try {
-            const result = await SubscriptionRepository.addPremiumFeature(featureName);
-            if (result.success) {
-                runInAction(() => {
-                    this.setSuccess(`Feature "${featureName}" added successfully.`);
-                });
-                await this.loadDashboardData(); // REFRESH ALL DATA AFTER SUCCESSFUL ADD
-                return { success: true };
-            } else {
-                throw new Error(result.message || "Failed to add feature.");
-            }
-        } catch (error) {
-            console.error("[ViewModel] Error creating premium feature:", error);
-            this.setError(`Failed to add feature: ${error.message}`);
-            return { success: false, message: error.message };
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    editPremiumFeature = async (oldFeatureName, newFeatureName) => { // Converted to arrow function
-        this.setLoading(true);
-        try {
-            const result = await SubscriptionRepository.updatePremiumFeature(oldFeatureName, newFeatureName);
-            if (result.success) {
-                runInAction(() => {
-                    this.setSuccess(`Feature updated to "${newFeatureName}" successfully.`);
-                });
-                await this.loadDashboardData(); // REFRESH ALL DATA AFTER SUCCESSFUL EDIT
-                return { success: true };
-            } else {
-                throw new Error(result.message || 'Failed to update feature.');
-            }
-        } catch (error) {
-            console.error("[ViewModel] Error updating premium feature:", error);
-            this.setError(`Failed to update feature: ${error.message}`);
-            return { success: false, message: error.message };
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    removePremiumFeature = async (featureName) => { // Converted to arrow function
-        this.setLoading(true);
-        try {
-            const result = await SubscriptionRepository.deletePremiumFeature(featureName);
-            if (result.success) {
-                runInAction(() => {
-                    this.setSuccess('Feature deleted successfully.');
-                });
-                await this.loadDashboardData(); // REFRESH ALL DATA AFTER SUCCESSFUL DELETE
-                return { success: true };
-            } else {
-                throw new Error(result.message || 'Failed to delete feature.');
-            }
-        } catch (error) {
-            console.error("[ViewModel] Error deleting premium feature:", error);
-            this.setError(`Failed to delete feature: ${error.message}`);
-            return { success: false, message: error.message };
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-
-    suspendUserAccount = async (userId, suspend) => { // Converted to arrow function
+    suspendUserAccount = async (userId, suspend) => {
         this.setLoading(true);
         try {
             const newStatus = suspend ? 'suspended' : 'active';
@@ -375,7 +261,7 @@ class AdminStatViewModel {
                 throw new Error(response.message || 'Operation failed.');
             }
         } catch (error) {
-            console.error(`[ViewModel] Error ${suspend ? 'suspending' : 'unsuspending'} user:`, error);
+            console.error(`[AdminStatViewModel] Error ${suspend ? 'suspending' : 'unsuspending'} user:`, error);
             this.setError(`Failed to ${suspend ? 'suspend' : 'unsuspend'} user: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
@@ -383,7 +269,7 @@ class AdminStatViewModel {
         }
     }
 
-    updateUserRole = async (userId, newRole) => { // Converted to arrow function
+    updateUserRole = async (userId, newRole) => {
         this.setLoading(true);
         try {
             const response = await AdminStatService.updateUserRole(userId, newRole);
@@ -400,7 +286,7 @@ class AdminStatViewModel {
                 throw new Error(response.message || 'Failed to update user role.');
             }
         } catch (error) {
-            console.error("[ViewModel] Error updating user role:", error);
+            console.error("[AdminStatViewModel] Error updating user role:", error);
             this.setError(`Failed to update user role: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
@@ -408,7 +294,7 @@ class AdminStatViewModel {
         }
     }
 
-    deleteUserAccount = async (userId) => { // Converted to arrow function
+    deleteUserAccount = async (userId) => {
         this.setLoading(true);
         try {
             const response = await AdminStatService.deleteUserAccount(userId);
@@ -422,7 +308,7 @@ class AdminStatViewModel {
                 throw new Error(response.message || 'Failed to delete user account.');
             }
         } catch (error) {
-            console.error("[ViewModel] Error deleting user account:", error);
+            console.error("[AdminStatViewModel] Error deleting user account:", error);
             this.setError(`Failed to delete user account: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
@@ -430,7 +316,7 @@ class AdminStatViewModel {
         }
     }
 
-    updateNutritionistStatus = async (userId, newStatus) => { // Converted to arrow function
+    updateNutritionistStatus = async (userId, newStatus) => {
         this.setLoading(true);
         try {
             const response = await AdminStatService.updateNutritionistStatus(userId, newStatus);
@@ -447,7 +333,7 @@ class AdminStatViewModel {
                 throw new Error(response.message || 'Failed to update nutritionist status.');
             }
         } catch (error) {
-            console.error("[ViewModel] Error updating nutritionist status:", error);
+            console.error("[AdminStatViewModel] Error updating nutritionist status:", error);
             this.setError(`Failed to update nutritionist status: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
@@ -455,7 +341,7 @@ class AdminStatViewModel {
         }
     }
 
-    approveNutritionist = async (userId) => { // Converted to arrow function
+    approveNutritionist = async (userId) => {
         this.setLoading(true);
         try {
             const response = await AdminStatService.updateUserStatus(userId, 'Active');
@@ -476,7 +362,7 @@ class AdminStatViewModel {
                 throw new Error(response.message || 'Failed to approve nutritionist.');
             }
         } catch (error) {
-            console.error("[ViewModel] Error approving nutritionist:", error);
+            console.error("[AdminStatViewModel] Error approving nutritionist:", error);
             this.setError(`Failed to approve nutritionist: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
@@ -484,7 +370,7 @@ class AdminStatViewModel {
         }
     }
 
-    rejectNutritionist = async (userId) => { // Converted to arrow function
+    rejectNutritionist = async (userId) => {
         this.setLoading(true);
         try {
             const response = await AdminStatService.updateUserStatus(userId, 'rejected', this.rejectionReason);
@@ -504,7 +390,7 @@ class AdminStatViewModel {
                 throw new Error(response.message || 'Failed to reject nutritionist.');
             }
         } catch (error) {
-            console.error("[ViewModel] Error rejecting nutritionist:", error);
+            console.error("[AdminStatViewModel] Error rejecting nutritionist:", error);
             this.setError(`Failed to reject nutritionist: ${error.message}`);
             return { success: false, message: error.message };
         } finally {
@@ -512,7 +398,7 @@ class AdminStatViewModel {
         }
     }
 
-    viewCertificate = async (userId) => { // Converted to arrow function
+    viewCertificate = async (userId) => {
         this.setLoading(true);
         try {
             const user = this.userAccounts.find(u => u._id === userId);
@@ -523,7 +409,7 @@ class AdminStatViewModel {
                 this.setError('No certificate URL found for this nutritionist.');
             }
         } catch (error) {
-            console.error("[ViewModel] Error viewing certificate:", error);
+            console.error("[AdminStatViewModel] Error viewing certificate:", error);
             this.setError(`Failed to view certificate: ${error.message}`);
         } finally {
             this.setLoading(false);

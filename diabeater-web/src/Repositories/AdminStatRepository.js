@@ -1,10 +1,11 @@
+// src/Repositories/AdminStatRepository.js
 import AdminStatService from '../Services/AdminStatService';
-import SubscriptionService from '../Services/SubscriptionService';
+import SubscriptionService from '../Services/SubscriptionService'; // Still needed if AdminStatService doesn't completely replace its functions
 
 class AdminStatRepository {
     constructor() {
         this.adminStatService = AdminStatService;
-        this.subscriptionService = SubscriptionService;
+        this.subscriptionService = SubscriptionService; // Keep if other parts use it
     }
 
     async getAllUserAccounts() {
@@ -39,13 +40,8 @@ class AdminStatRepository {
         return this.adminStatService.getWeeklyTopMealPlans();
     }
 
-    async getSubscriptionPrice() {
-        return this.adminStatService.getSubscriptionPrice();
-    }
-
-    async getPremiumFeatures() {
-        return this.adminStatService.getPremiumFeatures();
-    }
+    // Removed getSubscriptionPrice from here as it's now in PremiumRepository
+    // Removed getPremiumFeatures from here as it's now in PremiumRepository
 
     async updateUserRole(userId, role) {
         return this.adminStatService.updateUserRole(userId, role);
@@ -63,13 +59,8 @@ class AdminStatRepository {
         return this.adminStatService.updateUserStatus(userId, suspend ? 'suspended' : 'active');
     }
 
-    async updateSubscriptionPrice(newPrice) {
-        return this.adminStatService.updateSubscriptionPrice(newPrice);
-    }
-
-    async updatePremiumFeatures(features) {
-        return this.adminStatService.updatePremiumFeatures(features);
-    }
+    // Removed updateSubscriptionPrice from here as it's now in PremiumRepository
+    // Removed updatePremiumFeatures from here as it's now in PremiumRepository
 }
 
 export default new AdminStatRepository();
