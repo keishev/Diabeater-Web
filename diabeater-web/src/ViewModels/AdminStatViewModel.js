@@ -1,6 +1,7 @@
 // src/ViewModels/AdminStatViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminStatService from '../Services/AdminStatService';
+import AdminStatRepository from '../Repositories/AdminStatRepository';
 import moment from 'moment';
 
 class AdminStatViewModel {
@@ -12,15 +13,19 @@ class AdminStatViewModel {
     totalSubscriptions = 0;
     dailySignupsData = {}; // { 'YYYY-MM-DD': count }
     weeklyTopMealPlans = [];
-    userAccounts = []; // All user accounts for general management
-    allSubscriptions = []; // Consider if this is strictly needed as observable state
+    userAccounts = [];
+    allSubscriptions = [];
     selectedUserForManagement = null;
+
+    // Corrected: New states for Monthly Revenue and Cancelled Subscriptions
+    monthlyRevenue = 0;
+    cancelledSubscriptionsCount = 0;
 
     // For Nutritionist Application Modals
     showRejectionReasonModal = false;
     rejectionReason = '';
 
-    // NEW: For User History Modal
+    // For User History Modal
     selectedUserForHistory = null;
     userSubscriptionHistory = [];
     loadingHistory = false;
@@ -129,7 +134,7 @@ class AdminStatViewModel {
             const sortedHistory = history.sort((a, b) => {
                 const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
                 const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-                return dateB - dateA; // Sort descending
+                return dateB - dateA; // Sort descending (latest first)
             });
             runInAction(() => {
                 this.userSubscriptionHistory = sortedHistory;
@@ -171,6 +176,48 @@ class AdminStatViewModel {
                 AdminStatService.getAllSubscriptions(),
             ]);
 
+            console.log("[AdminStatViewModel] Raw data fetched successfully.");
+            console.log("-> allSubscriptionsData:", allSubscriptionsData);
+
+            let calculatedMonthlyRevenue = 0;
+            let calculatedCancelledSubscriptionsCount = 0;
+
+            if (Array.isArray(allSubscriptionsData)) {
+                allSubscriptionsData.forEach(sub => {
+                    console.log("--- Processing Subscription Document ---");
+                    console.log("Subscription ID:", sub._id || 'N/A');
+                    console.log("  Status:", sub.status);
+                    console.log("  Type:", sub.type);
+                    console.log("  Price:", sub.price, " (Type:", typeof sub.price, ")");
+
+                    // For Monthly Revenue: Now includes all 'monthly' type subs with a valid price, regardless of status
+                    const isMonthly = sub.type && sub.type.toLowerCase() === 'monthly';
+                    const isPriceValidNumber = typeof sub.price === 'number' && !isNaN(sub.price);
+
+                    if (isMonthly && isPriceValidNumber) {
+                        calculatedMonthlyRevenue += sub.price;
+                        console.log(`  MATCH: Monthly & Valid Price. Adding ${sub.price}. Current monthlyRevenue: ${calculatedMonthlyRevenue}`);
+                    } else {
+                        console.log(`  SKIP: Not (Monthly & Valid Price). Conditions: isMonthly=${isMonthly}, isPriceValidNumber=${isPriceValidNumber}`);
+                    }
+
+                    // For Cancelled Subscriptions: FIXING TYPO 'canceled' vs 'cancelled'
+                    const isCancelled = sub.status && sub.status.toLowerCase() === 'canceled'; // <--- FIX: Changed 'cancelled' to 'canceled'
+                    if (isCancelled) {
+                        calculatedCancelledSubscriptionsCount++;
+                        console.log(`  MATCH: Cancelled Status. Current cancelledSubscriptionsCount: ${calculatedCancelledSubscriptionsCount}`);
+                    } else {
+                        console.log(`  SKIP: Not Cancelled. Condition: isCancelled=${isCancelled}`);
+                    }
+                });
+            } else {
+                console.warn("[AdminStatViewModel] allSubscriptionsData is not an array, cannot process subscriptions for calculations.");
+            }
+
+            console.log("--- Calculation Summary ---");
+            console.log("Final calculatedMonthlyRevenue:", calculatedMonthlyRevenue);
+            console.log("Final calculatedCancelledSubscriptionsCount:", calculatedCancelledSubscriptionsCount);
+
             // Format signups
             const processedDailySignups = {};
             const today = moment().startOf('day');
@@ -187,7 +234,7 @@ class AdminStatViewModel {
                 }
             });
 
-            // Group subscriptions by user
+            // Group subscriptions by user for `userAccounts` enrichment
             const subsByUser = {};
             for (const sub of allSubscriptionsData) {
                 const userId = sub.userId;
@@ -197,7 +244,6 @@ class AdminStatViewModel {
 
             // Fetch user accounts for those subscriptions
             const userIds = Object.keys(subsByUser);
-            // Fetch users in batches if userIds is very large to avoid Firestore query limits
             const userFetches = await Promise.all(userIds.map(uid => AdminStatService.getUserAccountById(uid)));
             const users = userFetches.filter(Boolean); // remove nulls if any
 
@@ -207,7 +253,7 @@ class AdminStatViewModel {
                 userSubs.sort((a, b) => {
                     const dateA = a.endDate?.toDate?.() || new Date(0);
                     const dateB = b.endDate?.toDate?.() || new Date(0);
-                    return dateB - dateA;
+                    return dateB - dateA; // Latest end date first
                 });
                 const latestSub = userSubs[0];
 
@@ -227,8 +273,13 @@ class AdminStatViewModel {
                 this.totalSubscriptions = totalSubscriptions;
                 this.dailySignupsData = processedDailySignups;
                 this.weeklyTopMealPlans = weeklyTopMealPlans;
-                this.allSubscriptions = allSubscriptionsData; // Kept for now, consider if needed as state
-                this.userAccounts = enrichedUsers; // This now only contains users with subscriptions, might need adjustment if you want ALL users. If all users, fetch `getAllUserAccounts()` instead of `userIds.map...`
+                this.allSubscriptions = allSubscriptionsData;
+                this.userAccounts = enrichedUsers;
+
+                // Set the newly calculated values
+                this.monthlyRevenue = calculatedMonthlyRevenue;
+                this.cancelledSubscriptionsCount = calculatedCancelledSubscriptionsCount;
+                console.log("[AdminStatViewModel] State updated. monthlyRevenue:", this.monthlyRevenue, "cancelledSubscriptionsCount:", this.cancelledSubscriptionsCount);
             });
 
             console.log("[AdminStatViewModel] Dashboard data loaded successfully.");
@@ -237,11 +288,17 @@ class AdminStatViewModel {
         } catch (error) {
             console.error("[AdminStatViewModel] Error in loadDashboardData:", error);
             this.setError(`Failed to load dashboard data: ${error.message}`);
+            // Reset calculated values on error
+            runInAction(() => {
+                this.monthlyRevenue = 0;
+                this.cancelledSubscriptionsCount = 0;
+            });
         } finally {
             this.setLoading(false);
         }
     }
 
+    // ... (rest of your methods unchanged)
     suspendUserAccount = async (userId, suspend) => {
         this.setLoading(true);
         try {
@@ -350,7 +407,7 @@ class AdminStatViewModel {
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);
                     if (userIndex > -1) {
                         this.userAccounts[userIndex].status = 'Active';
-                        this.userAccounts[userIndex].role = 'nutritionist';
+                        this.userAccounts[userIndex].role = 'nutritionist'; // Assuming approval sets role to nutritionist
                     }
                     this.setSuccess(`Nutritionist ${userId} approved successfully.`);
                 });
@@ -373,7 +430,7 @@ class AdminStatViewModel {
     rejectNutritionist = async (userId) => {
         this.setLoading(true);
         try {
-            const response = await AdminStatService.updateUserStatus(userId, 'rejected', this.rejectionReason);
+            const response = await AdminStatService.updateUserStatus(userId, 'rejected'); // Reason not passed here
             if (response.success) {
                 runInAction(() => {
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);
