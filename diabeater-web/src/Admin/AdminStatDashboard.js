@@ -1,11 +1,10 @@
-// src/Admin/AdminStatDashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
-import './AdminStatDashboard.css'; // Ensure your CSS is correctly linked
-import UserDetailModal from './UserDetailModal'; // Keep if UserDetailModal is used elsewhere or for general user view
-import UserHistoryModal from './UserHistoryModal'; // Keep if UserHistoryModal is used elsewhere or for general user history
-import AdminInsights from './AdminInsights'; // Ensure this component exists
-import Tooltip from './Tooltip'; // Ensure this component exists
-import adminStatViewModel from '../ViewModels/AdminStatViewModel'; // Import the singleton instance
+import './AdminStatDashboard.css';
+import UserDetailModal from './UserDetailModal';
+import UserHistoryModal from './UserHistoryModal';
+import AdminInsights from './AdminInsights';
+import Tooltip from './Tooltip';
+import adminStatViewModel from '../ViewModels/AdminStatViewModel';
 import { observer } from 'mobx-react-lite';
 import moment from 'moment';
 
@@ -22,10 +21,10 @@ const AdminStatDashboard = observer(() => {
         totalSubscriptions,
         dailySignupsData,
         weeklyTopMealPlans,
-        userAccounts, // Keeping userAccounts, but the table using it will be removed.
-        selectedUserForManagement, // Keeping, in case UserDetailModal is still desired for basic user info
+        monthlyRevenue,
+        cancelledSubscriptionsCount, // <--- This is correctly observed now
+        selectedUserForManagement,
         selectedUserForHistory,
-        // Removed premiumSubscriptionPrice and premiumFeatures as their sections are gone
         setError,
         setSuccess,
         setSelectedUserForManagement,
@@ -35,11 +34,7 @@ const AdminStatDashboard = observer(() => {
         loadDashboardData,
     } = adminStatViewModel;
 
-    const [searchTerm, setSearchTerm] = useState(''); // Keeping searchTerm state, but the search bar will be removed
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    // Removed isEditPriceModalOpen and isEditFeaturesModal as their sections are gone
-
-    // Removed displayPremiumPrice as the section is gone
 
     // Helper function to format any date value (Firestore Timestamp or JS Date)
     const formatDate = (dateValue) => {
@@ -53,8 +48,7 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-    // New helper function to calculate and format the renewal date (endDate + 1 day)
-    // Keeping this even if premium user table is removed, in case it's useful for UserDetailModal context.
+    // Helper function to calculate and format the renewal date (endDate + 1 day)
     const formatRenewalDate = (endDateValue) => {
         if (!endDateValue) return 'N/A';
         const endDate = endDateValue.toDate ? endDateValue.toDate() : endDateValue;
@@ -76,8 +70,6 @@ const AdminStatDashboard = observer(() => {
         handleLoadDashboardData();
     }, [handleLoadDashboardData]);
 
-    // Removed useEffect for displayPremiumPrice
-
     const handleOpenUserModal = (user) => {
         setSelectedUserForManagement(user);
         setIsUserModalOpen(true);
@@ -93,35 +85,15 @@ const AdminStatDashboard = observer(() => {
         setSelectedUserForHistory(user);
     };
 
-    // Removed handleOpenEditPriceModal, handleCloseEditPriceModal,
-    // handleOpenEditFeaturesModal, handleCloseEditFeaturesModal
-    // as their sections are removed.
-
-    // Removed handleSaveSubscriptionPrice and handleSavePremiumFeatures
-    // as their functionality is no longer needed in this component.
-
-    // Filter user accounts based on search term.
-    // Keeping this, although the table using it is removed. It's benign.
-    const filteredUserAccounts = userAccounts.filter(user => {
-        const searchTermLower = searchTerm.toLowerCase();
-        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
-
-        return (
-            fullName.includes(searchTermLower) ||
-            (user.email && user.email.toLowerCase().includes(searchTermLower)) ||
-            (user.subscriptionStatus && user.subscriptionStatus.toLowerCase().includes(searchTermLower))
-        );
-    });
-
     // --- Chart Data Processing (Keeping as is) ---
     const chartDataArray = dailySignupsData
         ? Object.entries(dailySignupsData)
-            .map(([date, count]) => ({
-                date,
-                value: count,
-                month: moment(date).format('MMM')
-            }))
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
+              .map(([date, count]) => ({
+                  date,
+                  value: count,
+                  month: moment(date).format('MMM')
+              }))
+              .sort((a, b) => new Date(a.date) - new Date(b.date))
         : [];
 
     const chartPadding = { top: 20, right: 30, bottom: 30, left: 35 };
@@ -197,16 +169,34 @@ const AdminStatDashboard = observer(() => {
         };
     }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScaleFactor]);
 
-    // Data for AdminInsights component (static/mock values for some)
+    // Data for AdminInsights component
     const insightsData = [
         { value: `${((totalSubscriptions / (totalUsers || 1)) * 100 || 0).toFixed(0)}%`, label: 'Subscription Rate', change: 0, type: 'neutral', period: 'overall' },
-        { value: '$4.5K', label: 'Monthly Revenue', change: 12, type: 'increase', period: 'last month' }, // Static mock data
+        {
+            // --- MODIFIED THIS BLOCK FOR MONTHLY REVENUE DISPLAY ---
+            value: typeof monthlyRevenue === 'number' && !isNaN(monthlyRevenue)
+                ? (monthlyRevenue >= 1000
+                    ? `$${(monthlyRevenue / 1000).toFixed(1)}K` // For thousands, use one decimal place and 'K'
+                    : `$${monthlyRevenue.toFixed(2)}`)          // For less than thousands, show exact value with two decimal places
+                : 'N/A', // If monthlyRevenue is not a valid number
+            // --- END MODIFIED BLOCK ---
+            label: 'Monthly Revenue',
+            change: 0, // Placeholder, actual change calculation would require historical data
+            type: 'neutral', // Placeholder
+            period: 'last month'
+        },
         {
             value: dailySignupsData ? Object.values(dailySignupsData).reduce((sum, val) => sum + val, 0) : '0',
             label: 'New Signups (7 Days)',
             change: 0, type: 'neutral', period: 'last week'
         },
-        { value: '15', label: 'Cancelled Subscriptions', change: 2, type: 'decrease', period: 'last month' }, // Static mock data
+        {
+            value: cancelledSubscriptionsCount, // This correctly uses the value from ViewModel
+            label: 'Cancelled Subscriptions',
+            change: 0, // You can add logic for change if you track previous month's cancellations
+            type: 'neutral', // Adjust type based on change if implemented
+            period: 'last month'
+        },
         { value: `${((totalApprovedMealPlans / ((totalApprovedMealPlans + totalPendingMealPlans) || 1)) * 100 || 0).toFixed(0)}%`, label: 'Meal Plan Approval Rate', change: 0, type: 'neutral', period: 'overall' },
         { value: totalApprovedMealPlans + totalPendingMealPlans, label: 'Total Meal Plans', change: 0, type: 'neutral', period: 'all time' },
     ];
@@ -435,10 +425,6 @@ const AdminStatDashboard = observer(() => {
 
             <AdminInsights data={insightsData} />
 
-            {/* Removed Premium Features Management Section */}
-            {/* Removed Subscription Price Management Section */}
-            {/* Removed Premium User Accounts Section */}
-
             {/* Modals (kept for potential general user management if desired later) */}
             {isUserModalOpen && selectedUserForManagement && (
                 <UserDetailModal
@@ -449,9 +435,6 @@ const AdminStatDashboard = observer(() => {
                     refreshUsers={handleLoadDashboardData}
                 />
             )}
-
-            {/* Removed EditSubscriptionModal and EditPremiumFeaturesModal as their sections are gone */}
-            {/* isEditPriceModalOpen and isEditFeaturesModal states are also removed */}
 
             {selectedUserForHistory && (
                 <UserHistoryModal

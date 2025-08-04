@@ -1,4 +1,3 @@
-// src/Services/AdminStatService.js
 import app from '../firebase'; // Assuming your firebase config is here
 import {
     getFirestore,
@@ -142,7 +141,34 @@ const AdminStatService = {
         }
     },
 
-    // getPremiumUserAccounts method removed from here
+    // This method is available for fetching subscriptions by month (e.g., for charting)
+    // but the main dashboard's monthly revenue and cancelled count now use getAllSubscriptions for aggregation in ViewModel.
+    async getSubscriptionsByMonth(year, month) {
+        try {
+            // Create start and end dates for the month
+            const startDate = new Date(year, month - 1, 1); // Month is 0-indexed in Date object
+            const endDate = new Date(year, month, 0); // Last day of the month (e.g., new Date(2025, 8, 0) is July 31, 2025)
+
+            const subscriptionsRef = collection(db, 'subscriptions');
+            const q = query(
+                subscriptionsRef,
+                where('createdAt', '>=', Timestamp.fromDate(startDate)),
+                where('createdAt', '<=', Timestamp.fromDate(endDate))
+            );
+
+            const querySnapshot = await getDocs(q);
+            const subscriptions = querySnapshot.docs.map(doc => ({
+                id: doc.id, // Using 'id' for doc ID consistency
+                ...doc.data()
+            }));
+
+            console.log(`[AdminStatService] Fetched ${subscriptions.length} subscriptions for ${month}/${year}`);
+            return { success: true, subscriptions: subscriptions };
+        } catch (error) {
+            console.error("[AdminStatService] Error fetching subscriptions by month:", error);
+            return { success: false, error: error.message, subscriptions: [] };
+        }
+    },
 
     async getDailySignups(days = 7) {
         try {

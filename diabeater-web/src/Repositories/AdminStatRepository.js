@@ -1,4 +1,3 @@
-// src/Repositories/AdminStatRepository.js
 import AdminStatService from '../Services/AdminStatService';
 import SubscriptionService from '../Services/SubscriptionService'; // Still needed if AdminStatService doesn't completely replace its functions
 
@@ -17,6 +16,7 @@ class AdminStatRepository {
     }
 
     async getAllSubscriptions() {
+        // This is the method that provides the raw data for monthlyRevenue and cancelledSubscriptionsCount
         return this.adminStatService.getAllSubscriptions();
     }
 
@@ -40,8 +40,36 @@ class AdminStatRepository {
         return this.adminStatService.getWeeklyTopMealPlans();
     }
 
-    // Removed getSubscriptionPrice from here as it's now in PremiumRepository
-    // Removed getPremiumFeatures from here as it's now in PremiumRepository
+    // This method is for specific monthly breakdowns, not currently used by the
+    // main dashboard's monthlyRevenue/cancelledSubscriptionsCount directly,
+    // as those are aggregated from getAllSubscriptions in the ViewModel.
+    async getMonthlySubscriptionStats(year, month) {
+        try {
+            const result = await this.adminStatService.getSubscriptionsByMonth(year, month);
+            if (result.success) {
+                // Calculate total new subscriptions and revenue
+                const newSubscriptionsCount = result.subscriptions.length;
+                // Ensure 'price' field exists and is a number, default to 0 if not
+                const totalRevenue = result.subscriptions.reduce((sum, sub) => sum + (typeof sub.price === 'number' ? sub.price : 0), 0);
+
+                return {
+                    success: true,
+                    month: month,
+                    year: year,
+                    newSubscriptionsCount: newSubscriptionsCount,
+                    totalRevenue: totalRevenue,
+                    subscriptions: result.subscriptions // Optionally return subs for more detailed view later
+                };
+            } else {
+                // Propagate error from service
+                throw new Error(result.error || 'Failed to fetch monthly subscriptions.');
+            }
+        } catch (error) {
+            console.error("[AdminStatRepository] Error getting monthly subscription stats:", error);
+            // Return a consistent error structure
+            return { success: false, error: error.message, newSubscriptionsCount: 0, totalRevenue: 0 };
+        }
+    }
 
     async updateUserRole(userId, role) {
         return this.adminStatService.updateUserRole(userId, role);
@@ -58,9 +86,6 @@ class AdminStatRepository {
     async suspendUserAccount(userId, suspend) {
         return this.adminStatService.updateUserStatus(userId, suspend ? 'suspended' : 'active');
     }
-
-    // Removed updateSubscriptionPrice from here as it's now in PremiumRepository
-    // Removed updatePremiumFeatures from here as it's now in PremiumRepository
 }
 
 export default new AdminStatRepository();
