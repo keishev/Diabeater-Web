@@ -25,7 +25,7 @@ const AdminMealPlans = observer(() => {
     const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
 
     // Destructure the computed counts from MealPlanViewModel
-    const { searchTerm, selectedCategory, error, pendingCount, approvedCount, rejectedCount } = MealPlanViewModel;
+    const { searchTerm, selectedCategory, error, pendingCount, approvedCount, rejectedCount, popularCount } = MealPlanViewModel;
 
     const rejectionReasons = [
         'Incomplete information provided',
@@ -186,9 +186,16 @@ const AdminMealPlans = observer(() => {
     return (
         <div className="admin-meal-plans-container">
             <div className="admin-meal-plans-header">
-                <h1 className="admin-meal-plans-title">VERIFY MEAL PLANS</h1>
+                <h1 className="admin-meal-plans-title">MEAL PLANS</h1>
                 {/* Admin Tab Navigation */}
                 <div className="admin-status-tabs">
+                    {/* NEW Popular Tab */}
+                    <button
+                        className={`tab-button ${MealPlanViewModel.adminActiveTab === 'POPULAR' ? 'active' : ''}`}
+                        onClick={() => MealPlanViewModel.setAdminActiveTab('POPULAR')}
+                    >
+                        Popular 
+                    </button>
                     <button
                         className={`tab-button ${MealPlanViewModel.adminActiveTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
                         onClick={() => MealPlanViewModel.setAdminActiveTab('PENDING_APPROVAL')}
@@ -207,6 +214,7 @@ const AdminMealPlans = observer(() => {
                     >
                         Rejected ({rejectedCount})
                     </button>
+                    
                 </div>
                 <div className="search-controls">
                     <input
@@ -270,7 +278,13 @@ const AdminMealPlans = observer(() => {
                                 <div className="meal-plan-card-info">
                                     <h3 className="meal-plan-card-name">{plan.name}</h3>
                                     <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
-                                    <p className="meal-plan-card-status">Status: {plan.status}</p>
+                                    <p className="meal-plan-card-status">
+                                        Status: {plan.status}
+                                        {/* NEW: Display saveCount for all plans */}
+                                        {plan.saveCount && plan.saveCount > 0 && (
+                                            <span className="meal-plan-save-count"> | Saves: {plan.saveCount}</span>
+                                        )}
+                                    </p>
                                 </div>
                                 <div className="meal-plan-card-actions">
                                     {plan.status === 'PENDING_APPROVAL' && (
