@@ -81,6 +81,9 @@ function MarketingWebsiteEditorPage() {
                 <MarketingEditorSection title="Hero Subtitle" initialContent={websiteContent?.heroSubtitle} onSave={handleSaveContent} contentKey="heroSubtitle" contentType="textarea" />
                 <MarketingEditorSection title="Hero CTA Text" initialContent={websiteContent?.heroCtaText} onSave={handleSaveContent} contentKey="heroCtaText" />
 
+                {/* New Marketing Editor Section for YouTube Video Link */}
+                <MarketingEditorSection title="YouTube Video Link" initialContent={websiteContent?.youtubeVideoLink} onSave={handleSaveContent} contentKey="youtubeVideoLink" />
+                
                 <MarketingEditorSection title="Features Section Title" initialContent={websiteContent?.featuresSectionTitle} onSave={handleSaveContent} contentKey="featuresSectionTitle" />
                 <MarketingEditorSection title="Feature 1 Title" initialContent={websiteContent?.feature1Title} onSave={handleSaveContent} contentKey="feature1Title" />
                 <MarketingEditorSection title="Feature 1 Description" initialContent={websiteContent?.feature1Description} onSave={handleSaveContent} contentKey="feature1Description" contentType="textarea" />
