@@ -1,3 +1,4 @@
+// src/ViewModels/UserFeedbackViewModel.js
 import { useState, useEffect, useCallback } from 'react';
 import FeedbackRepository from '../Repositories/FeedbackRepository';
 
@@ -50,6 +51,26 @@ const useUserFeedbackViewModel = () => {
         }
     };
 
+    const retrackFeedback = async (feedbackId) => {
+        try {
+            // Updated status to 'Inbox'
+            await FeedbackRepository.updateFeedbackStatus(feedbackId, "Inbox");
+            await FeedbackRepository.updateDisplayOnMarketing(feedbackId, false);
+            setFeedbacks(prevFeedbacks => 
+                // Updated status to 'Inbox'
+                prevFeedbacks.map(fb => 
+                    fb.id === feedbackId ? { ...fb, status: "Inbox", displayOnMarketing: false } : fb
+                )
+            );
+            await fetchMarketingFeedbacks();
+            return true;
+        } catch (err) {
+            setError(err);
+            return false;
+        }
+    };
+
+
     const toggleDisplayOnMarketing = async (feedbackId, currentDisplayStatus) => {
         try {
             await FeedbackRepository.setDisplayOnMarketing(feedbackId, !currentDisplayStatus);
@@ -68,15 +89,12 @@ const useUserFeedbackViewModel = () => {
 
     const automateMarketingFeedbacks = async () => {
         try {
-            // Step 1: Fetch all feedbacks to find all potential candidates
             const allFeedbacks = await FeedbackRepository.getFeedbacks();
 
-            // Step 2: Get all 5-star feedbacks that are "Approved"
             const approvedFiveStarFeedbacks = allFeedbacks.filter(fb => 
                 fb.rating === 5 && fb.status === "Approved"
             );
             
-            // Step 3: Deselect any feedbacks that are currently marked for marketing but are not in the new selection
             const newMarketingFeedbackIds = new Set();
             const selectedUserIds = new Set();
             for (const feedback of approvedFiveStarFeedbacks) {
@@ -89,7 +107,6 @@ const useUserFeedbackViewModel = () => {
                 }
             }
             
-            // Step 4: Go through all feedbacks and update their display status
             for (const feedback of allFeedbacks) {
                 const shouldDisplay = newMarketingFeedbackIds.has(feedback.id);
                 if (feedback.displayOnMarketing !== shouldDisplay) {
@@ -97,7 +114,6 @@ const useUserFeedbackViewModel = () => {
                 }
             }
 
-            // Step 5: Refresh the UI to show the changes
             await fetchFeedbacks(); 
             await fetchMarketingFeedbacks(); 
             
@@ -115,6 +131,7 @@ const useUserFeedbackViewModel = () => {
         loading,
         error,
         approveFeedback,
+        retrackFeedback,
         toggleDisplayOnMarketing,
         automateMarketingFeedbacks,
         fetchFeedbacks

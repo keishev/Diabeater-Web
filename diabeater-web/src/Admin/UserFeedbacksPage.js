@@ -27,7 +27,8 @@ function UserFeedbacksPage() {
         approveFeedback,
         toggleDisplayOnMarketing,
         automateMarketingFeedbacks,
-        fetchFeedbacks // Added to allow manual refresh
+        fetchFeedbacks,
+        retrackFeedback // Added to allow manual refresh
     } = useUserFeedbackViewModel();
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -46,6 +47,21 @@ function UserFeedbacksPage() {
                 setModalMessage("Feedback has been published.");
             } else {
                 alert("Failed to publish feedback."); // Basic error handling
+            }
+        });
+        setShowConfirmModal(true);
+    };
+
+    const handleRetrackClick = (id) => {
+        setSelectedFeedbackId(id);
+        setModalMessage("Are you sure you want to revert this feedback to an 'Inbox' status? This will also remove it from the marketing website.");
+        setConfirmAction(() => async () => {
+            const success = await retrackFeedback(id);
+            if (success) {
+                setShowSuccessModal(true);
+                setModalMessage("Feedback status has been changed to 'Inbox' and removed from marketing.");
+            } else {
+                alert("Failed to retrack feedback.");
             }
         });
         setShowConfirmModal(true);
@@ -163,7 +179,12 @@ function UserFeedbacksPage() {
                                 </td>
                                 <td className="action-cell">
                                     {feedback.status === "Approved" ? (
-                                        <span className="feedback-action approved">Approved</span>
+                                        <button 
+                                            className="retrack-button"
+                                            onClick={() => handleRetrackClick(feedback.id)}
+                                        >
+                                            Retrack
+                                        </button>
                                     ) : (
                                         <button
                                             className="approve-button"
