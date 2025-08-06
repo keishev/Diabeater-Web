@@ -4,12 +4,19 @@ import './ConfirmationModal.css'; // Create this CSS file next
 
 function ConfirmationModal({ message, onConfirm, onCancel, isVisible }) {
     if (!isVisible) {
-        return null; // Don't render anything if the modal is not visible
+        return null;
     }
 
+    // Add click outside to close
+    const handleOverlayClick = (e) => {
+        if (e.target.classList.contains('confirmation-modal-overlay')) {
+            onCancel();
+        }
+    };
+
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
+        <div className="confirmation-modal-overlay" onClick={handleOverlayClick}>
+            <div className="confirmation-modal-content">
                 <p className="modal-message">{message}</p>
                 <div className="modal-actions">
                     <button onClick={onConfirm} className="modal-button confirm">Yes</button>
