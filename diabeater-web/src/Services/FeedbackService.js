@@ -1,18 +1,15 @@
-// src/services/FeedbackService.js (for your marketing website project)
+// src/services/FeedbackService.js
 import { collection, getDocs, updateDoc, doc, query, where, limit } from "firebase/firestore";
-import { db } from "../firebase"; // Adjust path as per your firebase-config.js
+import { db } from "../firebase";
 
 class FeedbackService {
     constructor() {
-        // This collection will contain the *curated* 5-star, clean feedbacks
         this.feedbackCollectionRef = collection(db, "feedbacks");
-        // Ensure your main app submits to 'user_feedbacks' for the Cloud Function to process.
     }
 
-    async getAllFeedbacks() {
+    // Method for the Admin Website
+    async getFeedbacks() {
         try {
-            // This method would typically be used by an admin panel to see ALL feedbacks (raw and processed)
-            // For a public marketing site, it's generally not needed.
             const querySnapshot = await getDocs(this.feedbackCollectionRef);
             return querySnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -24,8 +21,7 @@ class FeedbackService {
         }
     }
 
-    // These update methods would typically be used by an admin panel
-    // to manually override or manage feedback status/display status if needed.
+    // Method for the Admin Website
     async updateFeedbackStatus(feedbackId, newStatus) {
         try {
             const feedbackDocRef = doc(db, "feedbacks", feedbackId);
@@ -37,6 +33,7 @@ class FeedbackService {
         }
     }
 
+    // Method for the Admin Website
     async updateDisplayOnMarketing(feedbackId, displayStatus) {
         try {
             const feedbackDocRef = doc(db, "feedbacks", feedbackId);
@@ -48,19 +45,14 @@ class FeedbackService {
         }
     }
 
-    /**
-     * Fetches up to 3 feedbacks that are marked for marketing display
-     * by the Cloud Function (5-star and clean).
-     * This query now relies on the Cloud Function to set 'displayOnMarketing' and 'status'.
-     * @returns {Array} An array of feedback objects.
-     */
-    async getMarketingFeedbacks() {
+    // Method for the Marketing Website
+    async getPublicFeaturedMarketingFeedbacks() {
         try {
             const q = query(
                 this.feedbackCollectionRef,
+                where("displayOnMarketing", "==", true),
                 where("rating", "==", 5),
-                where("status", "==", "Approved"),        // Expected status after Cloud Function processing
-                where("displayOnMarketing", "==", true),  // Expected status after Cloud Function processing
+                where("status", "==", "Approved"),
                 limit(3)
             );
             const querySnapshot = await getDocs(q);
@@ -69,10 +61,9 @@ class FeedbackService {
                 ...doc.data()
             }));
         } catch (error) {
-            console.error("Error fetching marketing feedbacks:", error);
+            console.error("Error fetching public featured marketing feedbacks:", error);
             throw error;
         }
     }
 }
-
 export default new FeedbackService();

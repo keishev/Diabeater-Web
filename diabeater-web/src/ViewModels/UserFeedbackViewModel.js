@@ -1,4 +1,3 @@
-// src/viewmodels/UserFeedbackViewModel.js
 import { useState, useEffect, useCallback } from 'react';
 import FeedbackRepository from '../Repositories/FeedbackRepository';
 
@@ -27,13 +26,12 @@ const useUserFeedbackViewModel = () => {
             setMarketingFeedbacks(data);
         } catch (err) {
             console.error("Error fetching marketing feedbacks:", err);
-            // Handle error for marketing feedbacks if needed
         }
     }, []);
 
     useEffect(() => {
         fetchFeedbacks();
-        fetchMarketingFeedbacks(); // Fetch marketing feedbacks on initial load
+        fetchMarketingFeedbacks();
     }, [fetchFeedbacks, fetchMarketingFeedbacks]);
 
     const approveFeedback = async (feedbackId) => {
@@ -44,7 +42,6 @@ const useUserFeedbackViewModel = () => {
                     fb.id === feedbackId ? { ...fb, status: "Approved" } : fb
                 )
             );
-            // After approving, re-fetch marketing feedbacks to see if it qualifies
             await fetchMarketingFeedbacks();
             return true;
         } catch (err) {
@@ -61,7 +58,7 @@ const useUserFeedbackViewModel = () => {
                     fb.id === feedbackId ? { ...fb, displayOnMarketing: !currentDisplayStatus } : fb
                 )
             );
-            await fetchMarketingFeedbacks(); // Re-fetch marketing feedbacks after change
+            await fetchMarketingFeedbacks();
             return true;
         } catch (err) {
             setError(err);
@@ -69,35 +66,44 @@ const useUserFeedbackViewModel = () => {
         }
     };
 
-    // This function will automatically select up to 3 feedbacks with rating 5 for marketing
     const automateMarketingFeedbacks = async () => {
         try {
-            // Fetch all 5-star feedbacks
-            const fiveStarFeedbacks = await FeedbackRepository.getFeaturedMarketingFeedbacks();
+            // Step 1: Fetch all feedbacks to find all potential candidates
+            const allFeedbacks = await FeedbackRepository.getFeedbacks();
 
-            // Deselect any currently featured feedbacks that are not 5-star or exceed the limit
-            const feedbacksToDeselect = feedbacks.filter(fb =>
-                fb.displayOnMarketing &&
-                (fb.rating !== 5 || !fiveStarFeedbacks.some(f => f.id === fb.id))
+            // Step 2: Get all 5-star feedbacks that are "Approved"
+            const approvedFiveStarFeedbacks = allFeedbacks.filter(fb => 
+                fb.rating === 5 && fb.status === "Approved"
             );
-
-            for (const fb of feedbacksToDeselect) {
-                await FeedbackRepository.setDisplayOnMarketing(fb.id, false);
+            
+            // Step 3: Deselect any feedbacks that are currently marked for marketing but are not in the new selection
+            const newMarketingFeedbackIds = new Set();
+            const selectedUserIds = new Set();
+            for (const feedback of approvedFiveStarFeedbacks) {
+                if (newMarketingFeedbackIds.size >= 3) {
+                    break;
+                }
+                if (!selectedUserIds.has(feedback.userId)) {
+                    newMarketingFeedbackIds.add(feedback.id);
+                    selectedUserIds.add(feedback.userId);
+                }
+            }
+            
+            // Step 4: Go through all feedbacks and update their display status
+            for (const feedback of allFeedbacks) {
+                const shouldDisplay = newMarketingFeedbackIds.has(feedback.id);
+                if (feedback.displayOnMarketing !== shouldDisplay) {
+                    await FeedbackRepository.updateDisplayOnMarketing(feedback.id, shouldDisplay);
+                }
             }
 
-            // Select up to 3 five-star feedbacks that are not yet marked for marketing
-            const feedbacksToSelect = fiveStarFeedbacks
-                .filter(fb => !fb.displayOnMarketing)
-                .slice(0, 3 - marketingFeedbacks.length); // Ensure we don't exceed 3 total
-
-            for (const fb of feedbacksToSelect) {
-                await FeedbackRepository.setDisplayOnMarketing(fb.id, true);
-            }
-
-            await fetchFeedbacks(); // Refresh all feedbacks to reflect changes
-            await fetchMarketingFeedbacks(); // Refresh marketing feedbacks
+            // Step 5: Refresh the UI to show the changes
+            await fetchFeedbacks(); 
+            await fetchMarketingFeedbacks(); 
+            
             return true;
         } catch (err) {
+            console.error("Error automating marketing feedbacks:", err);
             setError(err);
             return false;
         }
@@ -111,7 +117,7 @@ const useUserFeedbackViewModel = () => {
         approveFeedback,
         toggleDisplayOnMarketing,
         automateMarketingFeedbacks,
-        fetchFeedbacks // Expose fetchFeedbacks to allow manual refresh if needed
+        fetchFeedbacks
     };
 };
 
