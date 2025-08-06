@@ -1,39 +1,49 @@
 // src/RewardModal.js
-import React, { useState, useEffect } from 'react'; // Destructure useState and useEffect for cleaner code
+import React, { useState, useEffect } from 'react';
 import './RewardModal.css';
 
 const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditing }) => {
-    // --- Move ALL React Hooks to the top level, BEFORE any conditional returns ---
-
     // Determine what text to show for the "Reward" field and whether it's editable
     const rewardNameDisplay = rewardData?.name || rewardData?.reward || '';
 
     // Determine the label for the quantity/discount field
     const quantityLabel = rewardType === 'premium' ? 'Discount (%)' : 'Quantity';
 
-    // Initialize state with props values.
-    // These calls must always happen regardless of 'show' prop.
     const [currentQuantity, setCurrentQuantity] = useState(
-        rewardType === 'premium' ? rewardData?.discount : rewardData?.quantity
+        rewardType === 'premium'
+            ? rewardData?.discount ?? ''
+            : rewardData?.quantity ?? ''
     );
-    const [currentPointsNeeded, setCurrentPointsNeeded] = useState(rewardData?.pointsNeeded);
+
+    const [currentPointsNeeded, setCurrentPointsNeeded] = useState(
+        rewardData?.pointsNeeded ?? ''
+    );
 
     // useEffect to reset internal state when the modal is shown with new data (e.g., editing a different reward)
     // or when switching between add/edit modes.
     useEffect(() => {
-        // Only update if the modal is actually going to be displayed OR if the rewardData changes
-        // This ensures the internal state syncs with external props when the modal opens or content changes
-        setCurrentQuantity(rewardType === 'premium' ? rewardData?.discount : rewardData?.quantity);
-        setCurrentPointsNeeded(rewardData?.pointsNeeded);
-    }, [rewardData, rewardType]); // Dependencies include rewardData and rewardType
+        setCurrentQuantity(
+            rewardType === 'premium'
+                ? rewardData?.discount ?? ''
+                : rewardData?.quantity ?? ''
+        );
+        setCurrentPointsNeeded(rewardData?.pointsNeeded ?? '');
+    }, [rewardData, rewardType]);
 
 
     // --- Now, the conditional return can safely go here ---
     if (!show) {
         return null;
     }
+    console.log('RewardModal rendered');
 
-    // Rest of your logic that depends on the modal being visible
+    // Handler for clicking outside the modal to close
+    const handleOverlayClick = (e) => {
+        if (e.target.classList.contains('reward-modal-overlay')) {
+            onClose();
+        }
+    };
+
     const modalTitle = isEditing ? 'Edit Reward' : 'Add Reward';
     const confirmButtonText = isEditing ? 'Update Reward' : 'Add Reward';
 
@@ -61,42 +71,42 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
+        <div className="reward-modal-overlay" onClick={handleOverlayClick}>
+            <div className="reward-modal-content">
                 <div className="modal-header">
-                    <h2>{modalTitle}</h2>
-                    <button className="close-button" onClick={onClose}>&times;</button>
+                    <h2 className="modal-title">{modalTitle}</h2>
+                    <button className="close-button" onClick={onClose} aria-label="Close">&times;</button>
                 </div>
                 <div className="modal-body">
-                    <div className="form-group">
-                        <label htmlFor="rewardName">Reward:</label>
+                    <div className="form-group modal-row">
+                        <label htmlFor="rewardName" className="modal-label">Selected Reward:</label>
                         <input
                             id="rewardName"
                             type="text"
-                            className="modal-input read-only"
+                            className="modal-input read-only modal-input-right"
                             value={rewardNameDisplay}
                             readOnly
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="quantity">{quantityLabel}:</label>
+                    <div className="form-group modal-row">
+                        <label htmlFor="quantity" className="modal-label">{quantityLabel}:</label>
                         <input
                             id="quantity"
                             type="number"
-                            className="modal-input"
-                            value={currentQuantity !== null ? currentQuantity : ''} // Handle null for initial empty state
+                            className="modal-input modal-input-right"
+                            value={currentQuantity !== null ? currentQuantity : ''}
                             onChange={(e) => setCurrentQuantity(e.target.value)}
                             placeholder={`Enter ${quantityLabel.toLowerCase()}`}
                             required
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="pointsNeeded">Points Needed:</label>
+                    <div className="form-group modal-row">
+                        <label htmlFor="pointsNeeded" className="modal-label">Points Needed:</label>
                         <input
                             id="pointsNeeded"
                             type="number"
-                            className="modal-input"
-                            value={currentPointsNeeded !== null ? currentPointsNeeded : ''} // Handle null for initial empty state
+                            className="modal-input modal-input-right"
+                            value={currentPointsNeeded !== null ? currentPointsNeeded : ''}
                             onChange={(e) => setCurrentPointsNeeded(e.target.value)}
                             placeholder="Enter points needed"
                             required
