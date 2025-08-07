@@ -1,40 +1,23 @@
-import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom'; // REMOVE THIS LINE
+// src/ResetPasswordPage.js
+import React from 'react';
+import { observer } from 'mobx-react-lite';
+import ResetPasswordViewModel from './ViewModels/ResetPasswordViewModel';
 import bloodDropLogo from './assets/blood_drop_logo.png';
 import './ResetPasswordPage.css';
 
-function ResetPasswordPage() {
-    const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
-    // const navigate = useNavigate(); // REMOVE THIS LINE
+// The 'observer' HOC makes the component reactive to MobX state changes.
+const ResetPasswordPage = observer(() => {
+    // Get the singleton instance of the ViewModel
+    const viewModel = ResetPasswordViewModel;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage('');
-        setError('');
-
-        if (!email) {
-            setError('Please enter your email address.');
-            return;
-        }
-
-        console.log('Sending password reset request for:', email);
-
-        setTimeout(() => {
-            if (email.includes('@')) {
-                setMessage('If an account with that email exists, a password reset link has been sent to your email.');
-                setEmail('');
-                // To go back to login, use window.location.href, which causes a full refresh
-                // window.location.href = '/login';
-            } else {
-                setError('Please enter a valid email address.');
-            }
-        }, 1000);
+        await viewModel.handleSubmit();
     };
 
     const handleBackToLoginClick = () => {
-        window.location.href = '/login'; // Direct browser navigation
+        // Direct browser navigation is okay here as it causes a full page refresh
+        window.location.href = '/login';
     };
 
     return (
@@ -56,26 +39,30 @@ function ResetPasswordPage() {
                         id="email-reset-input"
                         type="email"
                         placeholder="Enter your email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={viewModel.email}
+                        onChange={(e) => viewModel.setEmail(e.target.value)}
                         className="input-field"
                         required
+                        disabled={viewModel.isLoading} // Disable input while request is in progress
                     />
 
-                    {message && <p className="success-message">{message}</p>}
-                    {error && <p className="error-message">{error}</p>}
+                    {viewModel.message && <p className="success-message">{viewModel.message}</p>}
+                    {viewModel.error && <p className="error-message">{viewModel.error}</p>}
 
-                    <button type="submit" className="reset-button">
-                        Send Reset Link
+                    <button type="submit" className="reset-button" disabled={viewModel.isLoading}>
+                        {viewModel.isLoading ? 'Sending...' : 'Send Reset Link'}
                     </button>
                 </form>
 
-                <button className="back-to-login-link" onClick={handleBackToLoginClick}>
+                <button 
+                    className="back-to-login-link" 
+                    onClick={handleBackToLoginClick} 
+                    disabled={viewModel.isLoading}>
                     Back to Login
                 </button>
             </div>
         </div>
     );
-}
+});
 
 export default ResetPasswordPage;
