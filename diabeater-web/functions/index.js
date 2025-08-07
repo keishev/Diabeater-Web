@@ -2,7 +2,8 @@
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const Filter = require('bad-words'); // Import the bad-words library
+const Filter = require('bad-words');
+const nodemailer = require('nodemailer');
 
 // Ensure Firebase Admin SDK is initialized only once
 if (!admin.apps.length) {
@@ -11,7 +12,16 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const storage = admin.storage();
-const filter = new Filter(); // Initialize the profanity filter
+const filter = new Filter();
+
+// Configure nodemailer with your email service
+const transporter = nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+        user: functions.config().gmail.email,
+        pass: functions.config().gmail.password
+    }
+});
 
 // Helper to check if a user has the 'admin' custom claim
 const isAdmin = async (context) => {
@@ -34,76 +44,58 @@ const isAdmin = async (context) => {
 };
 
 /**
- * NEW: Cloud Function to process new user feedback.
- * It checks if the feedback is 5-star and free of profanity.
- * If so, it copies the feedback to the 'feedbacks' collection for marketing display.
- * Otherwise, it updates the status in the 'user_feedbacks' collection.
- * This function listens to the 'user_feedbacks' collection, where users initially submit their feedback.
+ * Cloud Function to process new user feedback.
  */
 exports.processNewFeedback = functions.firestore
-    .document("user_feedbacks/{feedbackId}") // Listen to creation of new documents in 'user_feedbacks'
+    .document("user_feedbacks/{feedbackId}")
     .onCreate(async (snap, context) => {
         const feedbackData = snap.data();
-        const feedbackId = context.params.feedbackId; // Get the ID of the new document
+        const feedbackId = context.params.feedbackId;
 
         console.log(`Processing new feedback: ${feedbackId} with data:`, feedbackData);
 
-        // 1. Check if it's a 5-star review
         if (feedbackData.rating !== 5) {
             console.log(`Feedback ${feedbackId} is not 5-star (rating: ${feedbackData.rating}). Setting status to 'NotApprovedForMarketing'.`);
-            // Update the original document in user_feedbacks to reflect it won't be displayed
             await db.collection("user_feedbacks").doc(feedbackId).update({
                 status: "NotApprovedForMarketing",
-                displayOnMarketing: false // Explicitly mark as not for marketing
+                displayOnMarketing: false
             });
-            return null; // Stop processing this feedback for marketing display
+            return null;
         }
 
-        // 2. Perform profanity filtering on the message
         let cleanedMessage = feedbackData.message;
         let containsProfanity = false;
 
         if (typeof feedbackData.message === 'string' && filter.isProfane(feedbackData.message)) {
             containsProfanity = true;
-            // Optionally clean the message for storage, or just flag it
             cleanedMessage = filter.clean(feedbackData.message);
             console.log(`Feedback ${feedbackId} contains profanity.`);
         }
 
         if (containsProfanity) {
-            // Mark as flagged for manual review if profanity is found
             console.log(`Feedback ${feedbackId} flagged due to profanity. Setting status to 'FlaggedForReview'.`);
             await db.collection("user_feedbacks").doc(feedbackId).update({
-                status: "FlaggedForReview", // Indicate it needs admin review
-                displayOnMarketing: false, // Do not display on marketing site
-                // You might store the original message and cleaned message here if needed
-                // originalMessage: feedbackData.message,
-                // cleanedMessage: cleanedMessage, // If you decide to store cleaned version
+                status: "FlaggedForReview",
+                displayOnMarketing: false,
             });
-            return null; // Stop processing this feedback for marketing display
+            return null;
         }
 
-        // 3. If it's 5-star AND clean, copy to the 'feedbacks' collection
-        // This is the collection your marketing website will read from
         try {
             await db.collection("feedbacks").doc(feedbackId).set({
-                ...feedbackData, // Copy all original data
-                message: cleanedMessage, // Use cleaned message (in case it was cleaned, otherwise it's original)
-                status: "Approved", // Mark as approved by the automated system
-                displayOnMarketing: true, // Mark for marketing display
-                processedAt: admin.firestore.FieldValue.serverTimestamp() // Add a timestamp for processing
+                ...feedbackData,
+                message: cleanedMessage,
+                status: "Approved",
+                displayOnMarketing: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp()
             });
             console.log(`Feedback ${feedbackId} (5-star, clean) copied to 'feedbacks' collection.`);
-
-            // Optionally, update the original user_feedbacks document to 'ApprovedAutomated'
             await db.collection("user_feedbacks").doc(feedbackId).update({
                 status: "ApprovedAutomated"
             });
-
             return null;
         } catch (error) {
             console.error(`Error copying feedback ${feedbackId} to 'feedbacks' collection:`, error);
-            // Optionally, mark original user_feedbacks as 'ErrorProcessing'
             await db.collection("user_feedbacks").doc(feedbackId).update({
                 status: "ErrorProcessing"
             });
@@ -113,12 +105,10 @@ exports.processNewFeedback = functions.firestore
 
 /**
  * Callable Cloud Function to get a signed URL for a nutritionist's certificate.
- * This URL allows temporary access to the file for viewing.
  */
 exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, context) => {
     try {
-        await isAdmin(context); // Security Check
-
+        await isAdmin(context);
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required.');
@@ -145,7 +135,7 @@ exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, cont
 
         const [url] = await fileRef.getSignedUrl({
             action: 'read',
-            expires: Date.now() + 15 * 60 * 1000, // URL valid for 15 minutes
+            expires: Date.now() + 15 * 60 * 1000,
         });
 
         return { success: true, certificateUrl: url };
@@ -165,12 +155,10 @@ exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, cont
 
 /**
  * Callable Cloud Function to approve a nutritionist account.
- * Sets custom claims and updates Firestore status.
  */
 exports.approveNutritionist = functions.https.onCall(async (data, context) => {
     try {
-        await isAdmin(context); // Security Check
-
+        await isAdmin(context);
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required for approval.');
@@ -180,12 +168,11 @@ exports.approveNutritionist = functions.https.onCall(async (data, context) => {
         const nutritionistDoc = await nutritionistRef.get();
 
         if (!nutritionistDoc.exists) {
-            throw new new functions.https.HttpsError('not-found', 'Nutritionist account not found in Firestore.'); // Corrected instance creation
+            throw new functions.https.HttpsError('not-found', 'Nutritionist account not found in Firestore.');
         }
 
         const currentData = nutritionistDoc.data();
         const existingClaims = currentData.customClaims || {};
-
         const updatedClaims = {
             ...existingClaims,
             nutritionist: true,
@@ -220,12 +207,10 @@ exports.approveNutritionist = functions.https.onCall(async (data, context) => {
 
 /**
  * Callable Cloud Function to reject a nutritionist account.
- * Updates Firestore status and modifies custom claims.
  */
 exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
     try {
-        await isAdmin(context); // Security Check
-
+        await isAdmin(context);
         const userId = data.userId;
         const rejectionReason = data.rejectionReason || 'No reason provided.';
         if (!userId) {
@@ -241,7 +226,6 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
 
         const currentData = nutritionistDoc.data();
         const existingClaims = currentData.customClaims || {};
-
         const updatedClaims = { ...existingClaims };
         delete updatedClaims.nutritionist;
         delete updatedClaims.approved;
@@ -273,15 +257,132 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
     }
 });
 
+/**
+ * Callable Cloud Function to send an approval email.
+ */
+exports.sendApprovalEmail = functions.https.onCall(async (data, context) => {
+    await isAdmin(context);
+
+    const { email, name } = data;
+    if (!email || !name) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email and name are required.');
+    }
+
+    const mailOptions = {
+        from: functions.config().gmail.email,
+        to: email,
+        subject: 'Nutritionist Application Approved - DiaBeater',
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="https://your-domain.com/assets/blood_drop_logo.png" alt="DiaBeater Logo" style="width: 60px; height: 60px;">
+            <h1 style="color: #d32f2f; margin: 10px 0;">DiaBeater</h1>
+          </div>
+          <h2 style="color: #4CAF50; text-align: center;">Congratulations! Your Application Has Been Approved</h2>
+          <p>Dear ${name},</p>
+          <p>We are pleased to inform you that your nutritionist application has been <strong>approved</strong>!</p>
+          <p>You can now log in to your DiaBeater nutritionist account using your registered email and password.</p>
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #333;">What's Next?</h3>
+            <ul style="margin-bottom: 0;">
+              <li>Log in to your account at <a href="https://your-domain.com/login">DiaBeater Login</a></li>
+              <li>Complete your profile setup</li>
+              <li>Start helping users with their nutritional goals</li>
+            </ul>
+          </div>
+          <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+          <p>Welcome to the DiaBeater community!</p>
+          <p style="margin-top: 30px;">
+            Best regards,<br>
+            <strong>The DiaBeater Team</strong>
+          </p>
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          <p style="font-size: 12px; color: #666; text-align: center;">
+            This is an automated message. Please do not reply to this email.
+          </p>
+        </div>
+      `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Approval email sent successfully to ${email}`);
+        return { success: true, message: 'Approval email sent successfully' };
+    } catch (error) {
+        console.error('Error sending approval email:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to send approval email');
+    }
+});
 
 /**
- * NEW: Callable Cloud Function to suspend a user.
- * Disables the user in Firebase Authentication and updates Firestore status.
+ * Callable Cloud Function to send a rejection email.
+ */
+exports.sendRejectionEmail = functions.https.onCall(async (data, context) => {
+    await isAdmin(context);
+
+    const { email, name, reason } = data;
+    if (!email || !name) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email and name are required.');
+    }
+
+    const mailOptions = {
+        from: functions.config().gmail.email,
+        to: email,
+        subject: 'Nutritionist Application Update - DiaBeater',
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="https://your-domain.com/assets/blood_drop_logo.png" alt="DiaBeater Logo" style="width: 60px; height: 60px;">
+            <h1 style="color: #d32f2f; margin: 10px 0;">DiaBeater</h1>
+          </div>
+          <h2 style="color: #f44336; text-align: center;">Application Status Update</h2>
+          <p>Dear ${name},</p>
+          <p>Thank you for your interest in becoming a nutritionist with DiaBeater.</p>
+          <p>After careful review of your application, we regret to inform you that we are unable to approve your nutritionist application at this time.</p>
+          ${reason ? `
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+              <h3 style="margin-top: 0; color: #856404;">Reason:</h3>
+              <p style="margin-bottom: 0; color: #856404;">${reason}</p>
+            </div>
+          ` : ''}
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #333;">What can you do?</h3>
+            <ul style="margin-bottom: 0;">
+              <li>Review the reason for rejection above</li>
+              <li>Address any issues with your credentials or application</li>
+              <li>You may reapply in the future once you meet all requirements</li>
+            </ul>
+          </div>
+          <p>If you believe this decision was made in error or have questions about the review process, please contact our support team.</p>
+          <p>Thank you for your understanding.</p>
+          <p style="margin-top: 30px;">
+            Best regards,<br>
+            <strong>The DiaBeater Team</strong>
+          </p>
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          <p style="font-size: 12px; color: #666; text-align: center;">
+            This is an automated message. Please do not reply to this email.
+          </p>
+        </div>
+      `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Rejection email sent successfully to ${email}`);
+        return { success: true, message: 'Rejection email sent successfully' };
+    } catch (error) {
+        console.error('Error sending rejection email:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to send rejection email');
+    }
+});
+
+/**
+ * Callable Cloud Function to suspend a user.
  */
 exports.suspendUser = functions.https.onCall(async (data, context) => {
     try {
-        await isAdmin(context); // Security Check
-
+        await isAdmin(context);
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required to suspend a user.');
@@ -319,13 +420,11 @@ exports.suspendUser = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * NEW: Callable Cloud Function to unsuspend a user.
- * Enables the user in Firebase Authentication and updates Firestore status.
+ * Callable Cloud Function to unsuspend a user.
  */
 exports.unsuspendUser = functions.https.onCall(async (data, context) => {
     try {
-        await isAdmin(context); // Security Check
-
+        await isAdmin(context);
         const userId = data.userId;
         if (!userId) {
             throw new functions.https.HttpsError('invalid-argument', 'User ID is required to unsuspend a user.');
@@ -362,11 +461,8 @@ exports.unsuspendUser = functions.https.onCall(async (data, context) => {
     }
 });
 
-
 // Your existing addAdminRole function
 exports.addAdminRole = functions.https.onCall(async (data, context) => {
-    // For consistency and robustness, it's recommended to use the `isAdmin` helper here too.
-    // The current `context.auth.token.admin !== true` check is also valid if you're sure claims are set.
     if (!context.auth || context.auth.token.admin !== true) {
         throw new functions.https.HttpsError(
             'permission-denied',

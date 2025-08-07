@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction, observable } from 'mobx';
-import UserAccountRepository from '../Repositories/UserAccountRepository'; 
+import UserAccountRepository from '../Repositories/UserAccountRepository';
 
 class UserAccountsViewModel {
     allAccounts = [];
@@ -21,7 +21,6 @@ class UserAccountsViewModel {
         this.allAccounts = accounts;
     }
 
-    // This method is called from your UI component
     setSearchTerm(term) {
         this.searchTerm = term;
     }
@@ -39,7 +38,7 @@ class UserAccountsViewModel {
         return this.allAccounts.filter(user =>
             (user.name?.toLowerCase().includes(lowerCaseSearchTerm) ||
              user.email.toLowerCase().includes(lowerCaseSearchTerm) ||
-             user.accountType?.toLowerCase().includes(lowerCaseSearchTerm) ||
+             user.role?.toLowerCase().includes(lowerCaseSearchTerm) ||
              user.status?.toLowerCase().includes(lowerCaseSearchTerm))
         );
     }
@@ -48,7 +47,7 @@ class UserAccountsViewModel {
         this.setLoading(true);
         this.setError('');
         try {
-            const users = await UserAccountRepository.getAllUsers(); 
+            const users = await UserAccountRepository.getAllUsers();
             runInAction(() => {
                 this.setAllAccounts(users);
             });
@@ -66,11 +65,11 @@ class UserAccountsViewModel {
         this.setLoading(true);
         this.setError('');
         try {
-            const result = await UserAccountRepository.suspendUser(userId); 
+            const result = await UserAccountRepository.suspendUser(userId);
             runInAction(() => {
                 const userIndex = this.allAccounts.findIndex(u => u.id === userId);
                 if (userIndex !== -1) {
-                    this.allAccounts[userIndex].status = 'Inactive'; 
+                    this.allAccounts[userIndex].status = 'Inactive';
                     this.allAccounts[userIndex].disabled = true;
                 }
                 alert(result.message || `User ${userId} suspended successfully.`);
@@ -78,8 +77,8 @@ class UserAccountsViewModel {
         } catch (error) {
             console.error("Error suspending user:", error);
             this.setError(`Failed to suspend user: ${error.message}`);
-            alert(`Failed to suspend user: ${error.message}`); 
-            throw error; 
+            alert(`Failed to suspend user: ${error.message}`);
+            throw error;
         } finally {
             runInAction(() => {
                 this.setLoading(false);
@@ -91,20 +90,20 @@ class UserAccountsViewModel {
         this.setLoading(true);
         this.setError('');
         try {
-            const result = await UserAccountRepository.unsuspendUser(userId); 
+            const result = await UserAccountRepository.unsuspendUser(userId);
             runInAction(() => {
                 const userIndex = this.allAccounts.findIndex(u => u.id === userId);
                 if (userIndex !== -1) {
-                    this.allAccounts[userIndex].status = 'Active'; 
-                    this.allAccounts[userIndex].disabled = false; 
+                    this.allAccounts[userIndex].status = 'Active';
+                    this.allAccounts[userIndex].disabled = false;
                 }
                 alert(result.message || `User ${userId} unsuspended successfully.`);
             });
         } catch (error) {
             console.error("Error unsuspending user:", error);
             this.setError(`Failed to unsuspend user: ${error.message}`);
-            alert(`Failed to unsuspend user: ${error.message}`); 
-            throw error; 
+            alert(`Failed to unsuspend user: ${error.message}`);
+            throw error;
         } finally {
             runInAction(() => {
                 this.setLoading(false);
@@ -145,8 +144,8 @@ class UserAccountsViewModel {
             }
 
             const finalData = Object.fromEntries(
-            Object.entries({ ...profileData, profileImageURL })
-                .filter(([_, value]) => value !== undefined)
+                Object.entries({ ...profileData, profileImageURL })
+                    .filter(([_, value]) => value !== undefined)
             );
 
             await UserAccountRepository.updateAdminProfile(userId, finalData);
@@ -233,5 +232,4 @@ class UserAccountsViewModel {
     }
 }
 
-// Export the class itself
 export default new UserAccountsViewModel();

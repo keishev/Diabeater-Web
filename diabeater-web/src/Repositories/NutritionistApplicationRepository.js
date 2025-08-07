@@ -4,6 +4,7 @@ import NutritionistService from '../Services/NutritionistService';
 import NutritionistApplicationService from '../Services/NutritionistApplicationService';
 import AdminService from '../Services/AdminService';
 import Nutritionist from '../Models/Nutritionist';
+import { getAuth } from 'firebase/auth';
 
 class NutritionistApplicationRepository {
     constructor(authService, storageService, nutritionistService, adminService, nutritionistApplicationService) {
@@ -14,29 +15,58 @@ class NutritionistApplicationRepository {
         this.nutritionistApplicationService = nutritionistApplicationService;
     }
 
-    async submitNutritionistApplication(userData, certificateFile) {
+    async submitNutritionistApplication(userData, certificateFile, userUid = null) {
         try {
-            // Upload the certificate and get the URL
-            const certificateUrl = await this.storageService.uploadCertificate(userData.email, certificateFile);
-
-            // Include the certificate filename
-            const newNutritionist = new Nutritionist(
-                null,
-                userData.firstName,
-                userData.lastName,
-                userData.email,
-                userData.dob,
-                certificateUrl,
-                'pending'
-            );
+            const auth = getAuth();
+            let currentUser = auth.currentUser;
+            let userId;
             
-            const nutritionistData = {
-                ...newNutritionist.toFirestore(),
-                certificateFileName: certificateFile.name 
+            console.log('Current user:', currentUser);
+            console.log('Provided userUid:', userUid);
+            
+            if (userUid) {
+                // Use provided userUid (this is the most reliable approach)
+                userId = userUid;
+                console.log('Using provided userUid:', userId);
+            } else if (currentUser) {
+                // Use currently signed-in user as fallback
+                userId = currentUser.uid;
+                console.log('Using current user ID:', userId);
+                
+                // Check email verification if user is logged in
+                if (!currentUser.emailVerified) {
+                    throw new Error('Email must be verified before submitting application');
+                }
+            } else {
+                // No user logged in and no userUid provided
+                console.error('Authentication state: No user signed in and no userUid provided');
+                throw new Error('User must be authenticated to submit application');
+            }
+
+            console.log('Proceeding with userId:', userId);
+
+            // Upload the certificate and get the URL
+            const certificateUrl = await this.storageService.uploadCertificate(userId, certificateFile);
+
+            // Create the application data
+            const applicationData = {
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email: userData.email,
+                password: userData.password, // This will be used during approval
+                dob: userData.dob,
+                certificateUrl: certificateUrl,
+                certificateFileName: certificateFile.name,
+                status: 'pending',
+                emailVerified: true // Mark as verified since we handled email verification separately
             };
 
-            await this.nutritionistApplicationService.saveNutritionistData(userData.email, nutritionistData);
-            return newNutritionist;
+            console.log('Saving application data for userId:', userId);
+
+            // Save to both collections using the userId
+            await this.nutritionistApplicationService.saveNutritionistData(userId, applicationData);
+            
+            return { success: true, message: 'Application submitted successfully' };
         } catch (error) {
             console.error("Error submitting nutritionist application:", error);
             throw error;

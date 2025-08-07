@@ -31,6 +31,18 @@ function CreateAccountPage({ onBackToLogin }) {
         }
     };
 
+    const handleSendVerification = (e) => {
+        e.preventDefault();
+        viewModel.sendEmailVerification();
+    };
+
+    const handleSubmitApplication = (e) => {
+        e.preventDefault();
+        // Application is now submitted automatically after email verification
+        // This handler is only used for the initial email verification
+        viewModel.sendEmailVerification();
+    };
+
     return (
         <div className="create-account-container">
             {/* NEW: Back Button */}
@@ -49,10 +61,7 @@ function CreateAccountPage({ onBackToLogin }) {
 
                 <h2 className="create-account-title">Create Nutritionist Account</h2>
 
-                <form onSubmit={(e) => {
-                    e.preventDefault();
-                    viewModel.submitApplication();
-                }} className="create-account-form">
+                <form onSubmit={handleSubmitApplication} className="create-account-form">
                     <div className="create-account-form-grid">
                         {/* Left Column Inputs */}
                         <div className="create-account-form-column">
@@ -61,10 +70,11 @@ function CreateAccountPage({ onBackToLogin }) {
                                 id="first-name-input"
                                 type="text"
                                 placeholder=""
-                                value={viewModel.firstName}
+                                value={viewModel.application.firstName}
                                 onChange={(e) => viewModel.setFirstName(e.target.value)}
                                 className="create-account-input-field"
                                 required
+                                disabled={viewModel.isEmailVerified}
                             />
 
                             <label htmlFor="email-input" className="create-account-input-label">Email</label>
@@ -72,10 +82,11 @@ function CreateAccountPage({ onBackToLogin }) {
                                 id="email-input"
                                 type="email"
                                 placeholder=""
-                                value={viewModel.email}
+                                value={viewModel.application.email}
                                 onChange={(e) => viewModel.setEmail(e.target.value)}
                                 className="create-account-input-field"
                                 required
+                                disabled={viewModel.isEmailVerified}
                             />
 
                             <label htmlFor="password-input" className="create-account-input-label">Password</label>
@@ -84,10 +95,11 @@ function CreateAccountPage({ onBackToLogin }) {
                                     id="password-input"
                                     type="password"
                                     placeholder=""
-                                    value={viewModel.password}
+                                    value={viewModel.application.password}
                                     onChange={(e) => viewModel.setPassword(e.target.value)}
                                     className="create-account-input-field"
                                     required
+                                    disabled={viewModel.isEmailVerified}
                                 />
                             </div>
 
@@ -97,10 +109,11 @@ function CreateAccountPage({ onBackToLogin }) {
                                     id="confirm-password-input"
                                     type="password"
                                     placeholder=""
-                                    value={viewModel.confirmPassword}
+                                    value={viewModel.application.confirmPassword}
                                     onChange={(e) => viewModel.setConfirmPassword(e.target.value)}
                                     className="create-account-input-field"
                                     required
+                                    disabled={viewModel.isEmailVerified}
                                 />
                             </div>
                         </div>
@@ -112,10 +125,11 @@ function CreateAccountPage({ onBackToLogin }) {
                                 id="last-name-input"
                                 type="text"
                                 placeholder=""
-                                value={viewModel.lastName}
+                                value={viewModel.application.lastName}
                                 onChange={(e) => viewModel.setLastName(e.target.value)}
                                 className="create-account-input-field"
                                 required
+                                disabled={viewModel.isEmailVerified}
                             />
 
                             {/* Date of Birth Input */}
@@ -123,10 +137,11 @@ function CreateAccountPage({ onBackToLogin }) {
                             <input
                                 id="dob-input"
                                 type="date"
-                                value={viewModel.dob}
+                                value={viewModel.application.dob}
                                 onChange={(e) => viewModel.setDob(e.target.value)}
                                 className="create-account-input-field"
                                 required
+                                disabled={viewModel.isEmailVerified}
                             />
 
                             <label htmlFor="certificate-upload" className="create-account-input-label">Upload Certificate (pdf)</label>
@@ -138,11 +153,13 @@ function CreateAccountPage({ onBackToLogin }) {
                                     onChange={handleFileChange}
                                     ref={fileInputRef}
                                     style={{ display: 'none' }}
+                                    disabled={viewModel.isEmailVerified}
                                 />
                                 <button
                                     type="button"
                                     className="create-account-upload-button"
                                     onClick={() => fileInputRef.current.click()}
+                                    disabled={viewModel.isEmailVerified}
                                 >
                                     Upload
                                 </button>
@@ -166,14 +183,31 @@ function CreateAccountPage({ onBackToLogin }) {
                             id="terms-checkbox"
                             checked={viewModel.agreedToTerms}
                             onChange={(e) => viewModel.setAgreedToTerms(e.target.checked)}
+                            disabled={viewModel.isEmailVerified}
                         />
                         <label htmlFor="terms-checkbox">I agree to the <span className="create-account-terms-link">Terms and Conditions</span></label>
                     </div>
 
+                    {viewModel.isEmailVerified && (
+                        <div className="create-account-verification-success">
+                            <i className="fas fa-check-circle"></i>
+                            Email verified successfully! Your application is being submitted...
+                        </div>
+                    )}
+
                     {viewModel.error && <p className="create-account-error-message">{viewModel.error}</p>}
 
-                    <button type="submit" className="create-account-submit-button" disabled={viewModel.isLoading}>
-                        {viewModel.isLoading ? 'SUBMITTING...' : 'SUBMIT'}
+                    <button 
+                        type="submit" 
+                        className="create-account-submit-button" 
+                        disabled={viewModel.isLoading || viewModel.isEmailVerified}
+                    >
+                        {viewModel.isLoading ? 
+                            'PROCESSING...' : 
+                            viewModel.isEmailVerified ? 
+                                'APPLICATION SUBMITTED' : 
+                                'SEND EMAIL VERIFICATION'
+                        }
                     </button>
                 </form>
 
@@ -190,11 +224,51 @@ function CreateAccountPage({ onBackToLogin }) {
                     </div>
                 )}
 
+                {viewModel.showEmailVerificationModal && (
+                    <div className="create-account-modal-overlay">
+                        <div className="create-account-modal-content">
+                            <h3>Verify Your Email</h3>
+                            <p>We've sent a verification email to <strong>{viewModel.application.email}</strong></p>
+                            <p>Please check your email and click the verification link, then click "Check Verification" below.</p>
+                            <p><small>After verification, your application will be submitted automatically.</small></p>
+                            
+                            {viewModel.error && <p className="create-account-error-message">{viewModel.error}</p>}
+                            
+                            <div className="create-account-modal-actions">
+                                <button 
+                                    className="create-account-modal-button"
+                                    onClick={() => viewModel.checkEmailVerification()}
+                                    disabled={viewModel.isLoading}
+                                >
+                                    {viewModel.isLoading ? 'CHECKING...' : 'CHECK VERIFICATION'}
+                                </button>
+                                <button 
+                                    className="create-account-modal-button-secondary"
+                                    onClick={() => viewModel.resendVerificationEmail()}
+                                    disabled={viewModel.isLoading}
+                                >
+                                    RESEND EMAIL
+                                </button>
+                                <button 
+                                    className="create-account-modal-button-secondary"
+                                    onClick={() => {
+                                        viewModel.setShowEmailVerificationModal(false);
+                                        viewModel.setError('');
+                                    }}
+                                >
+                                    CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {viewModel.showPendingApprovalModal && (
                     <div className="create-account-modal-overlay">
                         <div className="create-account-modal-content">
-                            <h3>Account Pending Approval</h3>
-                            <p>Your account has been submitted for review. You will receive an email notification once your application has been approved.</p>
+                            <h3>Application Submitted Successfully</h3>
+                            <p>Your nutritionist application has been submitted for admin review.</p>
+                            <p>You will receive an email notification once your application has been approved or if more information is needed.</p>
                             <button className="create-account-modal-button" onClick={handleBackToLoginFromModal}>
                                 OK
                             </button>

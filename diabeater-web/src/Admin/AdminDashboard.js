@@ -114,7 +114,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 </span>
             </td>
             <td>{user.email}</td>
-            {type === 'all' && <td>{user.accountType || 'N/A'}</td>}
+            {type === 'all' && <td>{user.role || 'N/A'}</td>}
             <td className={statusClass}>
                 <span className="status-dot"></span>{user.status === 'approved' ? 'Active' : user.status}
             </td>
