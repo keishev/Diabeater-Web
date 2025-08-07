@@ -11,7 +11,6 @@ const UserDetailModal = observer(({
     onApprove, // <-- Action callback props
     onReject, // This will now typically just trigger the rejection modal to open
     onViewDocument,
-    // Removed: onSuspend, onUnsuspend, onChangeRole, onDeleteAccount as they are not in the scope of premium users
     loading, // <-- Loading state for actions related to this specific modal
     error,   // <-- Error state for actions
     success, // <-- Success state for actions
@@ -23,47 +22,47 @@ const UserDetailModal = observer(({
     onConfirmReject,          // Callback for confirming rejection with reason
     onCancelReject            // Callback to close the rejection reason modal without confirming
 }) => {
-    console.log("[UserDetailModal] Received user prop:", user); //
+    console.log("[UserDetailModal] Received user prop:", user);
 
     if (!user) {
-        console.warn("[UserDetailModal] User prop is null or undefined. Not rendering modal content."); //
+        console.warn("[UserDetailModal] User prop is null or undefined. Not rendering modal content.");
         return null;
     }
 
-    const isNutritionistCandidate = user.role === 'pending_nutritionist' || (user.role === 'user' && user.nutritionistApplicationStatus === 'pending'); //
-    const isApprovedNutritionist = user.role === 'nutritionist'; //
+    const isNutritionistCandidate = user.role === 'pending_nutritionist' || (user.role === 'user' && user.nutritionistApplicationStatus === 'pending');
+    const isApprovedNutritionist = user.role === 'nutritionist';
 
-    const handleApproveClick = () => { //
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email; //
-        if (window.confirm(`Are you sure you want to APPROVE ${userName}'s nutritionist application?`)) { //
+    const handleApproveClick = () => {
+        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
+        if (window.confirm(`Are you sure you want to APPROVE ${userName}'s nutritionist application?`)) {
             // Note: user.id might be undefined if not explicitly set by the DB. user._id (document ID) is safer.
             onApprove(user._id);
         }
     };
 
-    const handleOpenRejectReasonClick = () => { //
+    const handleOpenRejectReasonClick = () => {
         // This action will trigger the parent to manage the state for the nested rejection modal
         onReject(); // Simplified, parent should handle opening its own rejection modal
     };
 
-    const handleConfirmRejectClick = () => { //
-        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email; //
-        if (window.confirm(`Are you sure you want to REJECT ${userName}'s nutritionist application? This action cannot be undone.`)) { //
+    const handleConfirmRejectClick = () => {
+        const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
+        if (window.confirm(`Are you sure you want to REJECT ${userName}'s nutritionist application? This action cannot be undone.`)) {
             // Pass the user's ID and the reason back to the parent ViewModel
-            onConfirmReject(user._id, rejectionReason); //
+            onConfirmReject(user._id, rejectionReason);
         }
     };
 
-    const handleViewDocumentClick = () => { //
+    const handleViewDocumentClick = () => {
         onViewDocument(user._id);
     };
 
-    const formatDate = (timestamp) => { //
-        if (!timestamp) return 'N/A'; //
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
         if (timestamp.toDate && typeof timestamp.toDate === 'function') { // Check if it's a Firebase Timestamp object
-            return moment(timestamp.toDate()).format('DD/MM/YYYY HH:mm'); //
+            return moment(timestamp.toDate()).format('DD/MM/YYYY HH:mm');
         }
-        return moment(timestamp).format('DD/MM/YYYY HH:mm'); //
+        return moment(timestamp).format('DD/MM/YYYY HH:mm');
     };
 
     return (
@@ -99,20 +98,21 @@ const UserDetailModal = observer(({
                         </div>
                     )}
 
-                    <h4>Subscription Details (Latest Premium):</h4>
+                    {/* Current Premium Status Only - No detailed subscription history */}
+                    <h4>Current Premium Status:</h4>
                     {user.currentSubscription ? (
                         <>
                             <p><strong>Plan:</strong> {user.currentSubscription.plan || 'N/A'}</p>
-                            <p><strong>Status:</strong> {user.currentSubscription.status || 'N/A'}</p>
-                            <p><strong>Start Date:</strong> {formatDate(user.currentSubscription.startDate)}</p>
-                            <p><strong>End Date:</strong> {formatDate(user.currentSubscription.endDate)}</p>
-                            <p><strong>Renewal Date:</strong> {user.displayRenewalDate || 'N/A'}</p> {/* Use pre-processed renewal date */}
+                            <p><strong>Status:</strong> 
+                                <span className={`status-dot status-${user.currentSubscription.status ? user.currentSubscription.status.toLowerCase() : 'unknown'}`}></span>
+                                {user.currentSubscription.status || 'N/A'}
+                            </p>
                             <p><strong>Price:</strong> ${user.currentSubscription.price?.toFixed(2) || 'N/A'}</p>
-                            <p><strong>Type:</strong> {user.currentSubscription.type || 'N/A'}</p>
-                            <p><strong>Subscription ID:</strong> {user.currentSubscription.subscriptionId || 'N/A'}</p>
+                            <p><strong>Current Period:</strong> {formatDate(user.currentSubscription.startDate)} - {formatDate(user.currentSubscription.endDate)}</p>
+                            <p><strong>Next Renewal:</strong> {user.displayRenewalDate || 'N/A'}</p>
                         </>
                     ) : (
-                        <p>No latest premium subscription found for this user.</p>
+                        <p>No active premium subscription found for this user.</p>
                     )}
 
                     <div className="user-detail-modal-actions">

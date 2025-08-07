@@ -86,17 +86,24 @@ class PremiumStatViewModel {
     }
 
     openUserHistoryModal = async (user) => {
+        console.log("[PremiumStatViewModel] Opening user history modal for:", user);
+        
+        // FIXED: Open the modal immediately and set loading state
         runInAction(() => {
             this.selectedUser = user;
-            this.isUserHistoryModalOpen = true;
+            this.isUserHistoryModalOpen = true; // Open modal immediately
             this.userSubscriptionHistory = []; // Clear previous history
             this.loadingHistory = true;
             this.historyError = null;
         });
+
         try {
+            console.log(`[PremiumStatViewModel] Fetching history for user ID: ${user._id}`);
             const history = await PremiumRepository.getUserSubscriptionHistory(user._id);
+            
             runInAction(() => {
                 this.userSubscriptionHistory = history;
+                console.log(`[PremiumStatViewModel] Successfully loaded ${history.length} history records`);
             });
         } catch (error) {
             console.error("[PremiumStatViewModel] Error loading user history:", error);
@@ -140,17 +147,35 @@ class PremiumStatViewModel {
                 this.premiumFeatures = premiumFeaturesData || [];
                 this.allPremiumUserAccounts = premiumUsers || [];
                 this.applySearchFilter(); // Apply initial filter
+                console.log("[PremiumStatViewModel] Premium data loaded successfully.");
+                this.success = 'Premium data refreshed.';
+                this.error = null;
+                // Auto-clear success message after 5 seconds
+                setTimeout(() => {
+                    runInAction(() => {
+                        if (this.success === 'Premium data refreshed.') {
+                            this.success = null;
+                        }
+                    });
+                }, 5000);
             });
-            console.log("[PremiumStatViewModel] Premium data loaded successfully.");
-            this.setSuccess('Premium data refreshed.');
         } catch (error) {
             console.error("[PremiumStatViewModel] Error in loadPremiumData:", error);
-            this.setError(`Failed to load premium data: ${error.message}`);
             runInAction(() => {
+                this.error = `Failed to load premium data: ${error.message}`;
+                this.success = null;
                 this.premiumSubscriptionPrice = 0;
                 this.premiumFeatures = [];
                 this.allPremiumUserAccounts = [];
                 this.filteredPremiumUserAccounts = [];
+                // Auto-clear error message after 5 seconds
+                setTimeout(() => {
+                    runInAction(() => {
+                        if (this.error === `Failed to load premium data: ${error.message}`) {
+                            this.error = null;
+                        }
+                    });
+                }, 5000);
             });
         } finally {
             this.setLoading(false);
@@ -172,8 +197,8 @@ class PremiumStatViewModel {
                 const status = user.currentSubscription?.status ? user.currentSubscription.status.toLowerCase() : '';
 
                 return name.includes(query) ||
-                       email.includes(query) ||
-                       status.includes(query);
+                    email.includes(query) ||
+                    status.includes(query);
             })
             .map(user => this.processUserData(user));
     }
@@ -200,7 +225,6 @@ class PremiumStatViewModel {
         const renewal = addDays(new Date(endDate), 1);
         return format(renewal, 'dd/MM/yyyy'); // Format as DD/MM/YYYY
     }
-
 
     // --- Premium Price Management ---
     updatePremiumSubscriptionPrice = async (newPrice) => {

@@ -117,20 +117,20 @@ class PremiumRepository {
             console.log("[PremiumRepository] Fetching premium user accounts...");
             const usersQuery = query(
                 collection(db, 'user_accounts'),
-                where('isPremium', '==', true) //
+                where('isPremium', '==', true)
             );
             const userSnapshot = await getDocs(usersQuery);
             const premiumUsers = userSnapshot.docs.map(doc => ({
-                _id: doc.id, //
+                _id: doc.id,
                 ...doc.data()
             }));
 
             const usersWithSubscriptions = await Promise.all(premiumUsers.map(async (user) => {
                 const subscriptionsQuery = query(
                     collection(db, 'subscriptions'),
-                    where('userId', '==', user._id), //
-                    where('plan', '==', this.FIRESTORE_SUBSCRIPTION_PLAN_VALUE), //
-                    orderBy('createdAt', 'desc'), //
+                    where('userId', '==', user._id),
+                    where('plan', '==', this.FIRESTORE_SUBSCRIPTION_PLAN_VALUE),
+                    orderBy('createdAt', 'desc'),
                     limit(1)
                 );
                 const subSnapshot = await getDocs(subscriptionsQuery);
@@ -172,7 +172,7 @@ class PremiumRepository {
                 _id: doc.id,
                 ...doc.data()
             }));
-            console(`[PremiumRepository] Found ${history.length} history records for user ${userId}.`);
+            console.log(`[PremiumRepository] Found ${history.length} history records for user ${userId}.`);
             return history;
         } catch (error) {
             console.error(`[PremiumRepository] ERROR fetching subscription history for user ${userId}:`, error);

@@ -1,63 +1,58 @@
 // src/Pages/PremiumPage.js
-import React, { useEffect, useState } from 'react'; // Import useState for local form management
+import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import premiumStatViewModel from '../ViewModels/PremiumStatViewModel';
 
 import UserDetailModal from './UserDetailModal';
-import UserHistoryModal from './UserHistoryModal';
+import UserHistoryModal from '../Admin/UserHistoryModal';
 
 const PremiumPage = observer(() => {
     // Local state for price update input
     const [newPriceInput, setNewPriceInput] = useState('');
     // Local state for feature management inputs
     const [newFeatureName, setNewFeatureName] = useState('');
-    const [editingFeature, setEditingFeature] = useState(null); // { oldName: '...', newName: '...' }
+    const [editingFeature, setEditingFeature] = useState(null);
 
     useEffect(() => {
         premiumStatViewModel.loadPremiumData();
     }, []);
 
-    // --- Handlers for Subscription Table (unchanged from last iteration) ---
+    // --- Handlers for Subscription Table ---
     const handleSearchChange = (e) => {
         premiumStatViewModel.setSearchQuery(e.target.value);
     };
 
     const handleViewDetails = (user) => {
+        console.log("[PremiumPage] Opening user detail modal for:", user);
         premiumStatViewModel.openUserDetailModal(user);
     };
 
-    const handleViewHistory = (user) => {
-        premiumStatViewModel.openUserHistoryModal(user);
+    const handleViewHistory = async (user) => {
+        console.log("[PremiumPage] Opening user history modal for:", user);
+        await premiumStatViewModel.openUserHistoryModal(user);
     };
 
-    // --- Placeholder/Dummy handlers for UserDetailModal actions (from previous response) ---
-    // You'll need to implement these in PremiumStatViewModel if they are relevant
-    // or ensure UserDetailModal doesn't call them if not needed for premium page.
+    // --- Placeholder handlers for UserDetailModal actions ---
     const handleApproveNutritionist = (userId) => {
         alert(`Approve Nutritionist with ID: ${userId}`);
-        // premiumStatViewModel.approveNutritionist(userId); // Example call
         premiumStatViewModel.closeUserDetailModal();
     };
 
     const handleOpenRejectReasonModal = () => {
         alert("Parent needs to open rejection reason modal. (Not implemented in VM for Premium page)");
-        // premiumStatViewModel.openRejectionReasonPrompt(); // Example call
     };
 
     const handleConfirmRejectNutritionist = (userId, reason) => {
         alert(`Reject Nutritionist with ID: ${userId} for reason: ${reason}`);
-        // premiumStatViewModel.rejectNutritionist(userId, reason); // Example call
         premiumStatViewModel.closeUserDetailModal();
     };
 
     const handleCancelRejectReasonModal = () => {
         alert("Parent needs to close rejection reason modal. (Not implemented in VM for Premium page)");
-        // premiumStatViewModel.closeRejectionReasonPrompt(); // Example call
     };
 
     const handleViewDocument = (userId) => {
         alert(`View Document for User ID: ${userId}`);
-        // premiumStatViewModel.viewUserDocument(userId); // Example call
     };
 
     // --- Handlers for Premium Price Management ---
@@ -73,7 +68,7 @@ const PremiumPage = observer(() => {
         }
         const result = await premiumStatViewModel.updatePremiumSubscriptionPrice(price);
         if (result.success) {
-            setNewPriceInput(''); // Clear input on success
+            setNewPriceInput('');
         }
     };
 
@@ -85,7 +80,7 @@ const PremiumPage = observer(() => {
         }
         const result = await premiumStatViewModel.createPremiumFeature(newFeatureName.trim());
         if (result.success) {
-            setNewFeatureName(''); // Clear input on success
+            setNewFeatureName('');
         }
     };
 
@@ -100,12 +95,12 @@ const PremiumPage = observer(() => {
         }
         const result = await premiumStatViewModel.editPremiumFeature(editingFeature.oldName, editingFeature.newName.trim());
         if (result.success) {
-            setEditingFeature(null); // Exit editing mode
+            setEditingFeature(null);
         }
     };
 
     const handleCancelEditFeature = () => {
-        setEditingFeature(null); // Exit editing mode
+        setEditingFeature(null);
     };
 
     const handleDeleteFeature = async (featureName) => {
@@ -114,7 +109,20 @@ const PremiumPage = observer(() => {
         }
     };
 
-    // --- Loading and Error States (combined for general page) ---
+    // Debug log to check modal states - fixed to show actual values
+    console.log("PremiumPage render - Modal states:", {
+        isUserDetailModalOpen: premiumStatViewModel.isUserDetailModalOpen,
+        isUserHistoryModalOpen: premiumStatViewModel.isUserHistoryModalOpen,
+        selectedUser: premiumStatViewModel.selectedUser ? {
+            _id: premiumStatViewModel.selectedUser._id,
+            email: premiumStatViewModel.selectedUser.email
+        } : null,
+        userSubscriptionHistoryLength: premiumStatViewModel.userSubscriptionHistory?.length || 0,
+        loadingHistory: premiumStatViewModel.loadingHistory,
+        historyError: premiumStatViewModel.historyError
+    });
+
+    // --- Loading and Error States ---
     if (premiumStatViewModel.loading && premiumStatViewModel.allPremiumUserAccounts.length === 0) {
         return <div style={{ textAlign: 'center', padding: '20px' }}>Loading Premium Admin Data...</div>;
     }
@@ -174,10 +182,35 @@ const PremiumPage = observer(() => {
                                     </td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.displayRenewalDate}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                        <button onClick={() => handleViewDetails(user)} style={{ padding: '5px 10px', cursor: 'pointer' }}>VIEW</button>
+                                        <button 
+                                            onClick={() => handleViewDetails(user)} 
+                                            style={{ 
+                                                padding: '5px 10px', 
+                                                cursor: 'pointer',
+                                                backgroundColor: '#007bff',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '3px'
+                                            }}
+                                        >
+                                            VIEW DETAILS
+                                        </button>
                                     </td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                        <button onClick={() => handleViewHistory(user)} style={{ padding: '5px 10px', cursor: 'pointer' }}>VIEW</button>
+                                        <button 
+                                            onClick={() => handleViewHistory(user)} 
+                                            style={{ 
+                                                padding: '5px 10px', 
+                                                cursor: 'pointer',
+                                                backgroundColor: '#28a745',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '3px'
+                                            }}
+                                            disabled={premiumStatViewModel.loadingHistory}
+                                        >
+                                            {premiumStatViewModel.loadingHistory ? 'Loading...' : 'VIEW HISTORY'}
+                                        </button>
                                     </td>
                                 </tr>
                             ))
@@ -296,31 +329,34 @@ const PremiumPage = observer(() => {
                 )}
             </section>
 
-
-            {/* --- Modals (positioned at the end for clean rendering logic) --- */}
-
-            {premiumStatViewModel.isUserDetailModalOpen && (
+            {/* --- Modals --- */}
+            {premiumStatViewModel.isUserDetailModalOpen && premiumStatViewModel.selectedUser && (
                 <UserDetailModal
                     user={premiumStatViewModel.selectedUser}
                     onClose={premiumStatViewModel.closeUserDetailModal}
-                    // These props are here to satisfy UserDetailModal's prop types.
-                    // If nutritionist actions are not part of PremiumPage's responsibility,
-                    // consider refining UserDetailModal or its usage.
                     onApprove={handleApproveNutritionist}
                     onReject={handleOpenRejectReasonModal}
                     onConfirmReject={handleConfirmRejectNutritionist}
                     onCancelReject={handleCancelRejectReasonModal}
                     onViewDocument={handleViewDocument}
-                    loading={premiumStatViewModel.loading} // Pass main loading state or specific modal loading
-                    error={premiumStatViewModel.error} // Pass main error or specific modal error
-                    success={premiumStatViewModel.success} // Pass main success or specific modal success
-                    showRejectionReasonModal={false} // Assuming no rejection reason modal needed here for now
+                    loading={premiumStatViewModel.loading}
+                    error={premiumStatViewModel.error}
+                    success={premiumStatViewModel.success}
+                    showRejectionReasonModal={false}
                     rejectionReason={''}
                     setRejectionReason={() => {}}
                 />
             )}
 
-            {premiumStatViewModel.isUserHistoryModalOpen && (
+            {/* Debug: Show what we're checking for UserHistoryModal - fixed to show actual values */}
+            {console.log("UserHistoryModal render check:", {
+                isOpen: premiumStatViewModel.isUserHistoryModalOpen,
+                hasUser: !!premiumStatViewModel.selectedUser,
+                userEmail: premiumStatViewModel.selectedUser?.email || 'no user',
+                shouldRender: premiumStatViewModel.isUserHistoryModalOpen && !!premiumStatViewModel.selectedUser
+            })}
+
+            {premiumStatViewModel.isUserHistoryModalOpen && premiumStatViewModel.selectedUser && (
                 <UserHistoryModal
                     user={premiumStatViewModel.selectedUser}
                     history={premiumStatViewModel.userSubscriptionHistory}
@@ -329,7 +365,6 @@ const PremiumPage = observer(() => {
                     onClose={premiumStatViewModel.closeUserHistoryModal}
                 />
             )}
-
         </div>
     );
 });
