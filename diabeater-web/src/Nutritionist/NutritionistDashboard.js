@@ -325,7 +325,7 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
 
 
 // --- NutritionistDashboard Main Component ---
-const NutritionistDashboard = observer(({ onLogout }) => { // Make the main component an observer
+const NutritionistDashboard = observer(({ onLogout }) => {
     const [currentView, setCurrentView] = useState('myMealPlans');
 
     // Destructure properties and actions from the MobX ViewModel
@@ -333,23 +333,22 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
         loading,
         error,
         success,
-        unreadNotificationCount, // Still good to have for direct use if needed
-        notifications,
-        selectedMealPlanForDetail, // Get the selected meal plan for detail view
-        selectedMealPlanForUpdate, // Get the selected meal plan for update view
+        unreadNotificationCount, // This will now properly reflect filtered notifications
+        filteredNotifications, // Use filtered notifications instead of all notifications
+        selectedMealPlanForDetail,
+        selectedMealPlanForUpdate,
         currentUserId,
         currentUserRole,
         // Actions from ViewModel
         loadMealPlanDetails,
-        selectMealPlanForUpdate, // This action sets selectedMealPlanForUpdate
+        selectMealPlanForUpdate,
         deleteMealPlan,
         approveOrRejectMealPlan,
         clearSelectedMealPlans,
         markNotificationAsRead,
-        fetchNutritionistMealPlans, // To re-fetch after a submit
-        fetchAdminMealPlans // To re-fetch after a submit
+        fetchNutritionistMealPlans,
+        fetchAdminMealPlans
     } = mealPlanViewModel;
-
     // Effect to initialize user and fetch initial data through the ViewModel
     useEffect(() => {
         mealPlanViewModel.initializeUser(); // This will trigger initial data fetching based on role
@@ -432,7 +431,7 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
         await markNotificationAsRead(notificationId);
     };
 
-    return (
+     return (
         <div className="nutritionist-dashboard-page">
             <Sidebar
                 currentView={currentView}
@@ -451,10 +450,10 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
                 {currentView === 'myMealPlans' && (
                     <MyMealPlansContent
                         onSelectMealPlan={handleSelectMealPlan}
-                        onUpdateMealPlan={handleUpdateMealPlan} // This handler is called by MealPlanCard
+                        onUpdateMealPlan={handleUpdateMealPlan}
                         onDeleteMealPlan={handleDeleteMealPlan}
                         onApproveMealPlan={handleApproveOrRejectMealPlan}
-                        onRejectMealPlan={handleApproveOrRejectMealPlan} // Use the same handler for reject
+                        onRejectMealPlan={handleApproveOrRejectMealPlan}
                         userRole={currentUserRole}
                     />
                 )}
@@ -464,31 +463,25 @@ const NutritionistDashboard = observer(({ onLogout }) => { // Make the main comp
                 )}
 
                 {currentView === 'mealPlanDetail' && (
-                    // MealPlanDetail now observes the ViewModel directly, no need to pass mealPlan prop
                     <MealPlanDetail
                         onBack={handleBack}
                         userRole={currentUserRole}
                         currentUserId={currentUserId}
-                        onDeleteMealPlan={handleDeleteMealPlan} // Pass to allow deletion from detail view
+                        onDeleteMealPlan={handleDeleteMealPlan}
                     />
                 )}
 
-                {/* This is the target component for the "UPDATE" button */}
                 {currentView === 'updateMealPlan' && selectedMealPlanForUpdate && (
                     <UpdateMealPlan
-                        mealPlan={selectedMealPlanForUpdate} // Pass the selected meal plan for update
+                        mealPlan={selectedMealPlanForUpdate}
                         onBack={handleBack}
-                        // onMealPlanUpdated is handled by UpdateMealPlan component itself,
-                        // it calls mealPlanViewModel.updateMealPlan, which in turn
-                        // sets success message and re-fetches data in ViewModel.
-                        // Then this parent component's useEffect reacting to selectedMealPlanForUpdate
-                        // being cleared, will navigate back to 'myMealPlans'.
                     />
                 )}
 
+                {/* Updated NotificationList to use filtered notifications */}
                 {currentView === 'notifications' && currentUserRole === 'nutritionist' && (
                     <NotificationList
-                        notifications={notifications}
+                        notifications={filteredNotifications} // Use filtered notifications
                         onMarkAsRead={handleMarkNotificationAsRead}
                     />
                 )}
