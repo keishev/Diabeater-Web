@@ -29,7 +29,7 @@
     overflow-x: hidden;
     height: 100vh;
     box-sizing: border-box;
-    background-color: #f7f3ed; /* Slightly different background for content */
+    background-color: #fffaf3; /* Slightly different background for content */
     flex: 1;
 }
 
@@ -106,7 +106,7 @@
     position: absolute;
     bottom: 60px;
     left: 20px;
-    margin-bottom: 20px;
+    margin-bottom:-30px;
     transition: background-color 0.2s ease;
 }
 

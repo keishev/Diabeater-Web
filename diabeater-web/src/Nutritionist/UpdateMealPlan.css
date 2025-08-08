@@ -1,506 +1,430 @@
-/* UpdateMealPlan.css */
-
 .update-meal-plan-container {
-    padding: 30px;
-    background-color: #fffaf3;
-    border-radius: 8px;
-    flex-grow: 1;
-    margin-right: 30px;
+  background: var(--background-cream);
+  min-height: 100vh;
+  font-family: var(--font-family);
 }
 
-.update-meal-plan-header {
-    margin-bottom: 25px;
+.header {
+  background: var(--surface-white);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
 }
 
-.update-meal-plan-title {
-    color: #ED873F;
-    font-size: 30px;
-    margin: 0;
+.page-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
 }
 
-.form-section {
-    margin-bottom: 20px;
+.update-meal-plan-form {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
 }
 
-.form-section label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #1E525C;
-    font-size: 18px;
+.form-sections-wrapper {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--spacing-xxl);
+  margin-bottom: var(--spacing-xl);
 }
 
-/* Specific style for Meal Name input */
-.meal-name-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1.5px solid #ED873F; /* No border for this one */
-    border-radius: 25px;
-    box-sizing: border-box;
-    font-size: 1em;
-    color: #333; /* White text color */
-    background-color: white; /* Solid orange background */
-    outline: none;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+.form-section-left,
+.form-section-right {
+  background: var(--surface-white);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
 }
 
-.meal-name-input::placeholder { /* Style placeholder text if needed */
-    color: rgba(255, 255, 255, 0.7);
+/* Form Elements */
+.form-group {
+  margin-bottom: var(--spacing-lg);
 }
 
-.meal-name-input:focus {
-    background-color: #d67a36; /* Slightly darker orange on focus */
-    box-shadow: 0 0 0 3px rgba(237, 135, 63, 0.2);
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
 }
 
-/* General styles for textareas */
-.full-width-textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #D6D6D6;
-    border-radius: 25px;
-    box-sizing: border-box;
-    font-size: 1em;
-    color: #333;
-    background-color: #ffffff;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--surface-white);
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: var(--font-family);
+  box-sizing: border-box;
 }
 
-.full-width-textarea:focus {
-    border-color: #ED873F;
-    box-shadow: 0 0 0 3px rgba(237, 135, 63, 0.2);
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px var(--primary-orange-light);
 }
 
-/* Main content layout with two columns */
-.main-form-content {
-    display: flex;
-    gap: 30px;
-    margin-bottom: 20px;
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
 }
 
-.left-column {
-    flex: 2; /* Takes more space */
+/* Image Upload Section */
+.upload-photo-group {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  text-align: center;
+  transition: all 0.3s ease;
+  background: var(--surface-light);
 }
 
-.right-column {
-    flex: 1; /* Takes less space */
-    display: flex;
-    justify-content: flex-end; /* Align to the right */
-    align-items: flex-start; /* Align to the top */
+.upload-photo-group:hover {
+  border-color: var(--primary-orange);
+  background: var(--primary-orange-light);
 }
 
-.photo-display-area {
-    width: 100%; /* Fill available space in right column */
-    height: 300px; /* Fixed height as per screenshot */
-    background-color: #A95D2A; /* Darker orange/brown color */
-    border-radius: 20px; /* Rounded corners */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: rgba(255, 255, 255, 0.8); /* Light text color for placeholder */
-    font-size: 1.2em;
-    font-weight: bold;
-    text-transform: uppercase;
-    overflow: hidden; /* Ensure image doesn't spill out */
-    margin-top: -40px;
+.form-input-file {
+  margin-bottom: var(--spacing-lg);
 }
 
-.photo-display-area img.meal-display-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Cover the area, cropping if necessary */
-    border-radius: 20px; /* Match container border-radius */
+.image-preview {
+  margin-top: var(--spacing-lg);
+  text-align: center;
 }
 
-/* Category and Upload Photo Row */
-.form-row.category-upload-row {
-    display: flex;
-    margin-left: 5px;
-    align-items: flex-end; /* Align items to the bottom of the row */
-    gap: 10px; /* Space between category dropdown and upload button */
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  object-fit: cover;
 }
 
-.form-section.category-section {
-    flex: 1; /* Category takes available space */
+.image-filename {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-style: italic;
 }
 
-.form-section.category-section label {
-    margin-left: 10px; /* Reset previous margin */
+/* Section Titles */
+.section-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: var(--spacing-xl) 0 var(--spacing-lg) 0;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--primary-orange);
+  position: relative;
 }
 
-.category-select {
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ED873F%22%20d%3D%22M287%2C197.8L154.2%2C65.1c-2.8-2.8-7.3-2.8-10.1%2C0L5.1%2C197.8c-2.8%2C2.8-2.8%2C7.3%2C0%2C10.1l11.4%2C11.4c2.8%2C2.8%2C7.3%2C2.8%2C10.1%2C0l122.9-122.9l122.9%2C122.9c2.8%2C2.8%2C7.3%2C2.8%2C10.1%2C0l11.4-11.4C289.8%2C205.1%2C289.8%2C200.6%2C287%2C197.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 15px top 50%;
-    background-size: 12px;
-    padding: 12px 20px;
-    border: 1.5px solid #ED873F; /* Orange border for category */
-    border-radius: 25px;
-    box-sizing: border-box;
-    font-size: 1em;
-    color: #333;
-    background-color: #ffffff;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    width: 500px; /* Make it full width of its container */
-    margin-left: 80px; /* Remove previous margin */
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: var(--secondary-teal);
 }
 
-.category-select:focus {
-    border-color: #d67a36;
-    box-shadow: 0 0 0 3px rgba(237, 135, 63, 0.2);
+.section-title:first-of-type {
+  margin-top: 0;
 }
 
-/* Hidden file input */
-.file-input {
-    opacity: 0;
-    position: absolute;
-    z-index: -1;
-    width: 0.1px;
-    height: 0.1px;
-    overflow: hidden;
+.advanced-nutrients-title {
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-medium);
 }
 
-/* Styled Upload Photo Button */
-.upload-photo-section .upload-photo-button {
-    background-color: #ED873F; /* Orange button style */
-    color: white;
-    padding: 12px 25px; /* Larger padding */
-    border-radius: 25px; /* More rounded */
-    cursor: pointer;
-    display: inline-block;
-    margin-bottom: 0; /* Remove default label margin */
-    font-weight: bold; /* Make text bold */
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    white-space: nowrap; /* Prevent text wrapping */
-    margin-right: 200px;
-}
-
-.upload-photo-section .upload-photo-button:hover {
-    background-color: #d67a36;
-    transform: translateY(-2px);
-}
-
-/* Remove current image preview related styles, as it's replaced by placeholder */
-.current-image-preview {
-    display: none;
-}
-
-
-h3 {
-    color: #1E525C;
-    font-size: 18px;
-    margin-top: 30px;
-    margin-bottom: 20px;
-}
-
-/* This creates the 2x2 grid layout: "2 side by side, 2 below side by side" */
-.nutrient-info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Creates two equal-width columns */
-    gap: 20px 40px; /* 20px vertical (row) gap, 40px horizontal (column) gap */
-    align-items: center; /* Vertically centers content within each grid cell */
-    margin-bottom: 30px; /* Add some space below the grid */
-}
-
-.nutrient-item {
-    display: flex; /* Makes label, input, and span align horizontally */
-    align-items: center; /* Vertically aligns elements within nutrient-item */
-    gap: 8px; /* Space between label, input, and unit */
-}
-
-/* General label style for all nutrient items within .nutrient-item */
-.nutrient-item label {
-    min-width: 90px; /* Ensures labels have enough space and align well */
-    text-align: left;
-    margin-bottom: 0;
-    font-size: 1em;
-    font-weight: normal; /* Labels in nutrient items are not bold in the screenshot */
-}
-
-/* Specific styles for each nutrient input for individual adjustment */
-
-/* Calories input */
-.nutrient-item input#calories {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 25px;
-    text-align: right;
-    font-size: 1em;
-    background-color: #E0E0E0; /* Light grey background */
-    color: #555;
-    outline: none;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Fat input */
-.nutrient-item input#fats {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 25px;
-    text-align: right;
-    font-size: 1em;
-    background-color: #E0E0E0; /* Light grey background */
-    color: #555;
-    outline: none;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Protein input */
-.nutrient-item input#protein {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 25px;
-    text-align: right;
-    font-size: 1em;
-    background-color: #E0E0E0; /* Light grey background */
-    color: #555;
-    outline: none;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Carb input */
-.nutrient-item input#carbohydrates {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 25px;
-    text-align: right;
-    font-size: 1em;
-    background-color: #E0E0E0; /* Light grey background */
-    color: #555;
-    outline: none;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Focus style for all nutrient inputs */
-.nutrient-item input:focus {
-    background-color: #d0d0d0;
-    box-shadow: 0 0 0 3px rgba(224, 224, 224, 0.5);
-}
-
-.nutrient-item span {
-    font-size: 0.95em;
-    color: #555;
-    margin-left: 5px; /* Ensures space between the input and the unit */
-}
-
+/* Nutrients Grid */
 .nutrients-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px 40px;
-    margin-bottom: 30px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
-.nutrient-item {
-    display: flex;
-    align-items: center;
+.nutrient-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--surface-light);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border-light);
+  transition: all 0.3s ease;
+  margin-bottom: 0;
 }
 
-.nutrient-label {
-    width: 130px;
-    font-weight: bold;
-    color: #1e525c;
-    font-size: 16px;
-    white-space: nowrap;
+.nutrient-group:hover {
+  border-color: var(--primary-orange);
+  background: var(--primary-orange-light);
+  transform: translateY(-1px);
 }
 
-.nutrient-input {
-    flex: 1;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    color: transparent;
-    text-align: right;
-    width: 100%;
+.nutrient-group label {
+  min-width: 100px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0;
+  font-size: var(--font-size-sm);
+}
+
+.form-input-short {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-white);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  text-align: right;
+  outline: none;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.form-input-short:focus {
+  background: rgba(255, 152, 0, 0.05);
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
 }
 
 .unit {
-    font-size: 15px;
-    color: #777;
-    margin-left: 10px;
-    min-width: 50px;
-    text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 40px;
+  text-align: left;
 }
 
-/* --- NEW / MODIFIED: Form Actions Container --- */
+/* Form Actions */
 .form-actions {
-    display: flex; /* Use flexbox to align children side-by-side */
-    justify-content: center; /* Center the buttons horizontally */
-    gap: 10px; /* Space between the buttons */
-    margin-top: 40px; /* Add margin-top to push it down from content above */
-    margin-bottom: 20px; /* Add some space below the buttons */
-    width: 100%; /* Ensure it takes full width to center effectively */
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding-top: var(--spacing-xl);
+  border-top: 2px solid var(--border-light);
 }
 
-
-.save-button,
-.cancel-button {
-    padding: 12px 30px;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: bold;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    width: 120px;
-    height: 50px;
+.button-base {
+  padding: var(--spacing-md) var(--spacing-xxl);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  font-family: var(--font-family);
+  box-shadow: var(--shadow-sm);
 }
 
 .save-button {
-    background-color: #ED873F;
-    color: white;
-    margin-left: 100px;
-    /* Removed margin-top and margin-left here, handled by .form-actions */
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  height:60px;
 }
 
 .save-button:hover {
-    background-color: #d67a36;
-    transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #e64a19 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .cancel-button {
-    background-color: #D6D6D6;
-    color: #555;
-    margin-left: 50px;
-    margin-top:17px;
-    /* Removed margin-left and margin-top here, handled by .form-actions */
+  background: var(--surface-light);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-medium);
+  height:60px;
 }
 
 .cancel-button:hover {
-    background-color: #bdbdbd;
-    transform: translateY(-2px);
+  background: var(--border-light);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
-.dropdown-checklist-container {
-    position: relative;
+
+/* Message Styling */
+.form-message {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  font-weight: 500;
+  text-align: center;
+}
+
+.loading-message {
+  background: rgba(255, 152, 0, 0.1);
+  color: var(--primary-orange);
+  border: 1px solid var(--primary-orange);
+}
+
+.error-message {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.success-message {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid #28a745;
+}
+
+/* Detail Loading/Error States */
+.detail-loading,
+.detail-error,
+.detail-message {
+  text-align: center;
+  padding: var(--spacing-xxl);
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  margin: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-error {
+  color: #dc3545;
+  border: 2px solid #dc3545;
+  background: rgba(220, 53, 69, 0.05);
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+@media (max-width: 1200px) {
+  .detail-main-layout {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .form-sections-wrapper {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  .nutrients-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .detail-main-layout,
+  .update-meal-plan-form {
+    padding: var(--spacing-lg);
+  }
+  
+  .meal-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .page-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .nutrients-display-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .nutrient-circle {
+    grid-column: span 2;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .button-base {
     width: 100%;
-    /* Ensure it doesn't break the layout of form-row category-upload-row */
-    margin-top: 8px; /* Adjust if needed to align with label */
+    max-width: 300px;
+  }
 }
 
-.dropdown-toggle-button {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 300px;
-    margin-left: 80px;
-    padding: 12px 15px;
-    border: 1.5px solid #1e525c;
-    border-radius: 20px;
-    background-color: #ffffff;
-    cursor: pointer;
-    font-size: 18px;
-    color: #333;
-    text-align: left;
-    outline: none;
-    transition: border-color 0.3s ease;
-    box-sizing: border-box;
+@media (max-width: 480px) {
+  .nutrients-display-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-main-layout,
+  .update-meal-plan-form {
+    padding: var(--spacing-md);
+  }
+  
+  .meal-title,
+  .page-title {
+    font-size: var(--font-size-xl);
+  }
 }
 
-.dropdown-toggle-button:hover,
-.dropdown-toggle-button:focus {
-    border-color: #ff9800;
+/* ==============================================
+   UTILITY CLASSES & ANIMATIONS
+   ============================================== */
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
 }
 
-.dropdown-arrow {
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #333;
-    transition: transform 0.2s ease;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.dropdown-toggle-button.open .dropdown-arrow {
-    transform: rotate(180deg);
+.slide-up {
+  animation: slideUp 0.4s ease-out;
 }
 
-.category-checklist {
-    position: absolute;
-    top: 100%; /* Position below the button */
-    left: 0;
-    width: 500px;
-    max-height: 250px; /* Limit height and add scroll */
-    overflow-y: auto;
-    margin-left: 30px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #ffffff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000; /* Ensure it appears above other content */
-    padding: 10px 0; /* Vertical padding */
-}
-
-.category-checklist .checkbox-item {
-    padding: 8px 15px; /* Padding for each checkbox row */
-    transition: background-color 0.2s ease;
-    display: flex; /* For aligning checkbox and label */
-    align-items: center;
-    cursor: pointer;
-    user-select: none; /* Prevent text selection on click */
-}
-
-.category-checklist .checkbox-item:hover {
-    background-color: #f0f0f0;
-}
-
-.checkbox-item input[type="checkbox"] {
-    /* Custom checkbox styling */
-    appearance: none; /* Hide default checkbox */
-    -webkit-appearance: none;
-    width: 22px;
-    height: 22px;
-    border: 2px solid #ccc;
-    border-radius: 5px; /* Slightly rounded square */
-    cursor: pointer;
-    position: relative;
-    outline: none;
-    transition: all 0.2s ease;
-    flex-shrink: 0; /* Prevent checkbox from shrinking */
-    margin-right: 8px; /* Space between checkbox and label */
-}
-
-.checkbox-item input[type="checkbox"]:checked {
-    background-color: #ff9800; /* Orange when checked */
-    border-color: #ff9800;
-}
-
-.checkbox-item input[type="checkbox"]:focus {
-    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.3); /* Focus ring */
-}
-
-/* Checkmark inside custom checkbox */
-.checkbox-item input[type="checkbox"]::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 7px;
-    width: 6px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 3px 3px 0;
-    transform: rotate(45deg) scale(0); /* Start hidden */
+@keyframes slideUp {
+  from {
     opacity: 0;
-    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-.checkbox-item input[type="checkbox"]:checked::after {
-    transform: rotate(45deg) scale(1); /* Show checkmark */
+    transform: translateY(20px);
+  }
+  to {
     opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.checkbox-item label {
-    margin-bottom: 0; /* Override any default label margin */
-    font-weight: normal; /* Override bold from form-section label */
-    color: #333;
-    cursor: pointer;
-    font-size: 1em; /* Ensure consistent font size */
-    flex-grow: 1; /* Allow label to take available space */
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: shimmer 2s infinite;
 }

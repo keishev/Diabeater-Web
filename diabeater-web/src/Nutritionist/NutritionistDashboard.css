@@ -1,582 +1,752 @@
-/* NutritionistDashboard.css */
+/* ==============================================
+   IMPROVED DIABEATER DASHBOARD CSS
+   Modern, cohesive styling with better UX
+   ============================================== */
 
-/* Base layout for the nutritionist dashboard */
+/* CSS Variables for consistent theming */
+:root {
+  /* Brand Colors */
+  --primary-orange: #ff9800;
+  --primary-orange-hover: #e65100;
+  --primary-orange-light: #ffe0b2;
+  --secondary-teal: #1e525c;
+  --secondary-teal-light: #2d6975;
+  
+  /* Neutral Colors */
+  --background-cream: #fffaf3;
+  --surface-white: #ffffff;
+  --surface-light: #f8f9fa;
+  --border-light: #e9ecef;
+  --border-medium: #dee2e6;
+  --text-primary: #2d3436;
+  --text-secondary: #636e72;
+  --text-light: #b2bec3;
+  
+  /* Status Colors */
+  --success-green: #00b894;
+  --success-green-light: #e8f5f1;
+  --warning-yellow: #fdcb6e;
+  --warning-yellow-light: #fef7e6;
+  --error-red: #e74c3c;
+  --error-red-light: #fdeaea;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 50px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.16);
+  
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+}
+
+/* ==============================================
+   BASE LAYOUT
+   ============================================== */
+
 .nutritionist-dashboard-page {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    min-height: 100vh;
-    background-color: #fffaf3; 
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--background-cream) 0%, #fff8f0 100%);
+  font-family: var(--font-family);
+  color: var(--text-primary);
 }
 
-/* Sidebar Styling (from AdminDashboard.css, with minor adjustments) */
+/* ==============================================
+   SIDEBAR
+   ============================================== */
+
 .sidebar {
-    width: 250px;
-    background-color: #fffaf3;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 1000;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+  width: 280px;
+  background: #fffaf3;
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-light);
 }
 
-/* Logo in Sidebar */
 .logo {
-    margin-bottom: 40px;
-    margin-top: 20px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  margin-bottom: var(--spacing-xxl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .logo img {
-    max-width: 50px;
-    height: auto;
-    margin-bottom: 5px;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: var(--spacing-sm);
+  filter: drop-shadow(var(--shadow-sm));
 }
 
 .logo-text {
-    font-size: 24px;
-    font-weight: bold;
-    color: #ff9800; /* DiaBeater orange color */
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff6b35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
-/* Navigation in Sidebar */
 .navigation {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* Allows navigation to take up available space */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--spacing-sm);
 }
 
 .nav-item {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    color: #555;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 152, 0, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.nav-item:hover::before {
+  left: 100%;
 }
 
 .nav-item i {
-    margin-right: 15px;
-    font-size: 20px;
+  margin-right: var(--spacing-md);
+  font-size: var(--font-size-lg);
+  width: 20px;
+  text-align: center;
+  transition: transform 0.3s ease;
 }
 
 .nav-item:hover {
-    background-color: #ffe0b2; /* Lighter orange on hover */
-    color: #ff9800;
+  background: linear-gradient(135deg, var(--primary-orange-light) 0%, rgba(255, 152, 0, 0.08) 100%);
+  color: var(--primary-orange);
+  transform: translateX(4px);
+}
+
+.nav-item:hover i {
+  transform: scale(1.1);
 }
 
 .nav-item.active {
-    background-color: #ffe0b2; /* Light orange for active */
-    color: #e65100; /* Darker orange text */
-    font-weight: bold;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
 }
 
 .nav-item.active i {
-    color: #e65100;
+  color: white;
 }
 
-/* Notification Badge */
-.nav-item .notification-badge {
-    background-color: #ff4d4f; /* Red background for visibility */
-    color: white;
-    border-radius: 50%;
-    padding: 2px 7px;
-    font-size: 0.7em;
-    min-width: 18px;
-    text-align: center;
-    line-height: 1;
-    box-sizing: border-box;
-    margin-left: auto; /* Pushes the badge to the right within the flex container */
-    transform: translateY(-50%); /* Adjust vertical positioning slightly if needed */
-    position: relative; /* Ensure it stays within the nav-item flow */
-    top: -5px; /* Adjust as needed for vertical alignment */
-    margin-top: 387px;
-    margin-right: 50px;
+.notification-badge {
+  background: linear-gradient(135deg, var(--error-red) 0%, #ff6b6b 100%);
+  color: white;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+  margin-left: auto;
+  animation: pulse 2s infinite;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
 }
 
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
 
-/* Logout Button */
 .logout-button {
-     background-color: #ff9800;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 20px;
-    font-size: 16px;
-    cursor: pointer;
-    width: calc(100% - 40px);
-    position: absolute;
-    bottom: 60px;
-    left: 20px;
-    margin-bottom: 20px;
-    transition: background-color 0.2s ease;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: auto;
+  margin-bottom: var(--spacing-lg);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .logout-button:hover {
-    background-color: #e65100;
+  background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #e64a19 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
-/* Main Content Area */
+/* ==============================================
+   MAIN CONTENT AREA
+   ============================================== */
+
 .main-content {
-    margin-left: 300px; /* Matches sidebar width */
-    width: calc(100% - 250px);
-    padding: 30px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100vh;
-    box-sizing: border-box;
-    background-color: #fffaf3; /* Slightly different background for content */
-    flex: 1;
+  margin-left: 280px;
+  width: calc(100% - 280px);
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+  background: transparent;
 }
 
-/* Header for My Meal Plans Content */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    gap: 15px; /* Space between items if they wrap */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
 }
 
 .page-title {
-    font-size: 28px;
-    color: #ff9800;
-    margin: 0;
-    white-space: nowrap; /* Prevent title from wrapping */
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.page-title i {
+  background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .search-controls {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap; /* Allow search and category to wrap */
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
 }
 
 .search-input {
-    padding: 8px 15px;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    font-size: 16px;
-    width: 250px; /* Fixed width for search input */
-    max-width: 100%;
-    box-sizing: border-box;
-    background-color: #fff;
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 40px;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-base);
+  background: var(--surface-white);
+  transition: all 0.3s ease;
+  outline: none;
 }
 
-/* Category Dropdown */
+.search-input:focus {
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-light);
+}
+
 .category-dropdown-container {
-    position: relative;
-    z-index: 10; /* Ensure dropdown appears above other content */
+  position: relative;
 }
 
 .category-button {
-    background-color: #ff9800;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s ease;
+  background: linear-gradient(135deg, var(--secondary-teal) 0%, var(--secondary-teal-light) 100%);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .category-button:hover {
-    background-color: #e65100;
+  background: linear-gradient(135deg, var(--secondary-teal-light) 0%, #3a7a87 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.dropdown-arrow {
+  transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
 }
 
 .category-dropdown-content {
-    position: absolute;
-    background-color: #fff;
-    min-width: 200px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius: 8px;
-    padding: 10px 0;
-    z-index: 1;
-    margin-top: 10px; /* Space below the button */
-    left: 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-.category-dropdown-content .dropdown-item {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-size: 15px;
-    transition: background-color 0.15s ease, color 0.15s ease;
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
 }
 
-.category-dropdown-content .dropdown-item:hover {
-    background-color: #ffe0b2;
-    color: #ff9800;
+.dropdown-item:hover {
+  background: var(--primary-orange-light);
+  color: var(--primary-orange);
 }
 
-.category-dropdown-content .dropdown-item.active {
-    background-color: #ffe0b2;
-    color: #e65100;
-    font-weight: bold;
+.dropdown-item.active {
+  background: var(--primary-orange);
+  color: white;
+  font-weight: 500;
 }
 
+/* ==============================================
+   TABS
+   ============================================== */
 
-/* Tabs Styling */
 .tabs {
-    margin-bottom: 25px;
-    display: flex;
-    border-bottom: 2px solid #eee;
-    gap: 35px; /* Space between tabs */
-    flex-wrap: wrap; /* Allow tabs to wrap on small screens */
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
+  background: var(--surface-white);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
 }
 
 .tab-button {
-    background: none;
-    border: none;
-    padding: 12px 0; /* Adjusted padding */
-    font-size: 16px;
-    font-weight: 500; /* Slightly less bold by default */
-    color: #777;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.3s ease;
-    white-space: nowrap; /* Prevent tab text from wrapping */
+  background: none;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
+}
+
+.tab-button:hover {
+  background: var(--primary-orange-light);
+  color: var(--primary-orange);
 }
 
 .tab-button.active {
-    color: #ff9800; /* Orange for active tab */
-    font-weight: bold;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
 }
 
-.tab-button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #ff9800; /* Orange underline for active tab */
-}
+/* ==============================================
+   MEAL PLAN GRID
+   ============================================== */
 
 .meal-plans-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
-    gap: 25px;
-    align-items: stretch; /* Ensures cards stretch to fill row height */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-xl);
+  padding: var(--spacing-md);
 }
 
-/* Base styles for all meal plan cards */
 .meal-plan-card {
-    display: flex;
-    flex-direction: column; /* Stack children (image, info) vertically */
-    background-color: #ffffff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    cursor: pointer;
-    min-height: 350px; /* CRITICAL: Maintain a consistent min-height for all cards */
-    width: 100%; /* Make it responsive within the grid, not fixed 400px */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  height: fit-content;
+}
+
+.meal-plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-teal));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
 .meal-plan-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+
+.meal-plan-card:hover::before {
+  opacity: 0.03;
+}
+
+.meal-plan-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
 }
 
 .meal-plan-image {
-    width: 100%;
-    height: 200px; /* Fixed height for consistency */
-    object-fit: cover;
-    flex-shrink: 0;
+  width: 400px;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
 }
 
-.meal-plan-info {
-    flex-grow: 1; /* Allows this section to take up remaining vertical space */
-    padding: 15px;
-    display: flex;
-    flex-direction: column; /* Stack children vertically */
-    align-items: center; /* CRITICAL: Centers ALL children horizontally within meal-plan-info */
-    /* REMOVE justify-content from here. We'll use individual item margins. */
-    text-align: center; /* Ensures text inside centered elements is also centered */
+.meal-plan-card:hover .meal-plan-image {
+  transform: scale(1.05);
 }
 
-/* Container for Name and Status to group and center them */
-.meal-plan-header-content {
-    width: 100%; /* Ensure it takes full width for text-align to be effective */
-    text-align: center; /* Center text and inline-block elements within */
-    margin-bottom: 10px; /* Space between header content and likes */
-    /* IMPORTANT: No flex properties or auto margins here. Let it sit at the top naturally. */
+.meal-plan-overlay {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-pill);
+  padding: var(--spacing-sm) var(--spacing-md);
 }
 
-.meal-plan-name {
-    font-size: 18px;
-    color: #333;
-    margin-top: 0;
-    margin-bottom: 5px; /* Space between name and status */
-    font-weight: bold;
-    text-align: center;
-    width: 100%; /* Ensure it takes full width */
-    box-sizing: border-box;
+.meal-plan-stats {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
 }
 
-.meal-plan-status {
-    font-size: 13px;
-    color: #666;
-    background-color: #f0f0f0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    font-weight: 600;
-    white-space: nowrap;
-    display: inline-block; /* Allows it to be centered by text-align on parent */
-}
-
-/* Likes count */
-.likes-count {
-    font-size: 15px;
-    color: #777;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: auto; /* Push likes count and subsequent content to the bottom */
-    width: 100%;
-    padding-bottom: 10px; /* Space between likes and the buttons below it */
+.likes-count, .saves-count {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
 .likes-count i {
-    margin-right: 5px;
-    color: #ff5252;
+  color: #ff6b6b;
 }
 
-/* Base styles for the actions container - most critical for consistent height */
-.meal-plan-actions {
-    display: flex;
-    justify-content: center; /* Center buttons horizontally */
-    align-items: center;
-    width: 100%; /* Ensure actions div takes full width for centering */
-    /* Do NOT use margin-top: auto here. likes-count handles the push. */
-    padding-top: 15px;
-    padding-bottom: 5px;
-    min-height: 50px; /* Ensures consistent minimum height for the actions container */
-    box-sizing: border-box;
-    margin-left: 100px;
-
+.saves-count i {
+  color: #4ecdc4;
 }
 
-
-/* Common button styles (keep as is) */
-.button-base {
-    border: none;
-    padding: 8px 15px;
-    border-radius: 60px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    margin: 0 5px;
-    font-weight: bold;
+.meal-plan-info {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  position: relative;
+  z-index: 2;
 }
 
-.button-base:active {
-    transform: translateY(1px);
+.meal-plan-header-content {
+  text-align: center;
 }
 
-.update-button {
-    background-color: #ff9800;
-    color: white;
+.meal-plan-name {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 1.3;
 }
 
-.update-button:hover {
-    background-color: #e65100;
+.meal-plan-status {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.delete-button {
-    background-color: #f44336;
-    color: white;
-}
-
-.delete-button:hover {
-    background-color: #d32f2f;
-}
-
-.approve-button {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.approve-button:hover {
-    background-color: #388E3C;
-}
-
-.admin-reject-button {
-    background-color: #ffc107;
-    color: #343a40;
-}
-
-.admin-reject-button:hover {
-    background-color: #e0a800;
-}
-
-/* Existing Status Styles (keep as is) */
 .meal-plan-status.UPLOADED {
-    background-color: #e0f2f7;
-    color: #0288d1;
+  background: var(--warning-yellow-light);
+  color: #b8860b;
+  border: 1px solid var(--warning-yellow);
 }
 
 .meal-plan-status.PENDING_APPROVAL {
-    background-color: #ffeb3b;
-    color: #795548;
+  background: var(--warning-yellow-light);
+  color: #b8860b;
+  border: 1px solid var(--warning-yellow);
 }
 
 .meal-plan-status.APPROVED {
-    background-color: #c8e6c9;
-    color: #388e3c;
+  background: var(--success-green-light);
+  color: var(--success-green);
+  border: 1px solid var(--success-green);
 }
 
 .meal-plan-status.REJECTED {
-    background-color: #ffcdd2;
-    color: #d32f2f;
+  background: var(--error-red-light);
+  color: var(--error-red);
+  border: 1px solid var(--error-red);
 }
 
+.meal-plan-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  margin-top: var(--spacing-md);
+}
 
+.button-base {
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.update-button {
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.update-button:hover {
+  background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #e64a19 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.delete-button {
+  background: linear-gradient(135deg, var(--error-red) 0%, #ff6b6b 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.delete-button:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.approve-button {
+  background: linear-gradient(135deg, var(--success-green) 0%, #55a3ff 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.approve-button:hover {
+  background: linear-gradient(135deg, #00a085 0%, #4a90e2 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-reject-button {
+  background: linear-gradient(135deg, var(--warning-yellow) 0%, #ffa726 100%);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-reject-button:hover {
+  background: linear-gradient(135deg, #f39c12 0%, #ff9800 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ==============================================
+   EMPTY STATE
+   ============================================== */
 
 .no-meal-plans-message {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 50px 20px;
-    font-size: 18px;
-    color: #666;
-    background-color: #fff; /* White background for message */
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xxl);
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--border-medium);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-    .meal-plans-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
+.no-meal-plans-message i {
+  font-size: 4rem;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-lg);
+  display: block;
 }
 
-@media (max-width: 768px) {
-    .sidebar {
-        width: 80px; /* Collapse sidebar on smaller screens */
-    }
-
-    .sidebar .logo-text,
-    .sidebar .nav-item span {
-        display: none; /* Hide text, only show icons */
-    }
-
-    .sidebar .nav-item {
-        justify-content: center; /* Center icons */
-        padding: 15px 0;
-    }
-
-    .sidebar .nav-item i {
-        margin-right: 0;
-    }
-
-    .sidebar .logout-button {
-        width: 60px; /* Adjust button width */
-        left: 10px;
-        font-size: 0; /* Hide text */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .sidebar .logout-button::before {
-        content: "\f011"; /* FontAwesome logout icon */
-        font-family: "Font Awesome 5 Free";
-        font-weight: 900;
-        font-size: 16px;
-    }
-    /* Adjust notification badge position for collapsed sidebar */
-    .nav-item .notification-badge {
-        position: absolute; /* Absolute positioning relative to parent */
-        top: 5px; /* Adjust as needed */
-        right: 5px; /* Adjust as needed */
-        margin-left: 0; /* Remove auto margin */
-        transform: none; /* Remove transform */
-    }
-
-
-    .main-content {
-        margin-left: 80px; /* Adjust margin for collapsed sidebar */
-        padding: 15px;
-    }
-
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .search-controls {
-        flex-direction: column;
-        width: 100%;
-        gap: 10px;
-    }
-
-    .search-input {
-        width: 100%; /* Full width for search input on small screens */
-    }
-
-    .category-button {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .category-dropdown-content {
-        width: 100%;
-        left: 0;
-        right: 0;
-    }
-
-    .tabs {
-        flex-direction: column;
-        margin-left: 0;
-        gap: 10px;
-        align-items: stretch; /* Stretch tabs to full width */
-    }
-
-    .tab-button {
-        width: 100%;
-        text-align: center;
-        padding: 10px 0;
-    }
-
-    .meal-plans-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
+.no-meal-plans-message h3 {
+  font-size: var(--font-size-xl);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-weight: 600;
 }
 
-@media (max-width: 480px) {
-    .meal-plans-grid {
-        grid-template-columns: 1fr; /* Single column on very small screens */
-    }
-    .meal-plan-card {
-        min-height: auto; /* Allow height to adjust */
-    }
-    .meal-plan-image {
-        height: 180px; /* Slightly smaller image on very small screens */
-    }
+.no-meal-plans-message p {
+  color: var(--text-light);
+  font-size: var(--font-size-base);
+  margin: 0;
 }
 
+/* ==============================================
+   LOADING STATES
+   ============================================== */
+
+.loading-container, .global-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+  gap: var(--spacing-lg);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-light);
+  border-top: 4px solid var(--primary-orange);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.global-error, .global-success, .error-message, .success-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  margin-bottom: var(--spacing-lg);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.global-error, .error-message {
+  background: var(--error-red-light);
+  color: var(--error-red);
+  border: 1px solid var(--error-red);
+}
+
+.global-success, .success-message {
+  background: var(--success-green-light);
+  color: var(--success-green);
+  border: 1px solid var(--success-green);
+}

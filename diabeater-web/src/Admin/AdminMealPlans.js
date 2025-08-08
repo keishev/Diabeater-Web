@@ -53,7 +53,8 @@ const AdminMealPlans = observer(() => {
         };
     }, []);
 
-    const handleApproveClick = useCallback((id) => {
+    const handleApproveClick = useCallback((id, event) => {
+        event.stopPropagation(); // Prevent card click from triggering
         setSelectedPlanToApprove(id);
         setShowApproveConfirmModal(true);
     }, []);
@@ -89,7 +90,8 @@ const AdminMealPlans = observer(() => {
         setSelectedPlanToApprove(null);
     }, []);
 
-    const handleRejectClick = useCallback((id) => {
+    const handleRejectClick = useCallback((id, event) => {
+        event.stopPropagation(); // Prevent card click from triggering
         setSelectedPlanToReject(id);
         setSelectedRejectReason('');
         setOtherReasonText('');
@@ -153,7 +155,7 @@ const AdminMealPlans = observer(() => {
         setOtherReasonText('');
     }, []);
 
-    const handleViewDetailsClick = useCallback(async (id) => {
+    const handleCardClick = useCallback(async (id) => {
         await MealPlanViewModel.loadMealPlanDetails(id);
         if (MealPlanViewModel.selectedMealPlanForDetail) {
             setShowDetailView(true);
@@ -261,58 +263,80 @@ const AdminMealPlans = observer(() => {
             </div>
 
             {localLoading || MealPlanViewModel.loading ? (
-                <p>Loading meal plans...</p>
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p className="loading-text">Loading meal plans...</p>
+                </div>
             ) : error ? (
-                <p className="error-message">{error}</p>
+                <div className="error-container">
+                    <p className="error-message">{error}</p>
+                </div>
             ) : (
                 <div className="meal-plans-grid">
                     {MealPlanViewModel.filteredMealPlans.length > 0 ? (
                         MealPlanViewModel.filteredMealPlans.map(plan => (
-                            <div key={plan._id} className="meal-plan-card">
-                                <img
-                                    src={plan.imageUrl || `/assetscopy/${plan.imageFileName}`}
-                                    alt={plan.name}
-                                    className="meal-plan-card-image"
-                                    onClick={() => handleViewDetailsClick(plan._id)}
-                                />
-                                <div className="meal-plan-card-info">
-                                    <h3 className="meal-plan-card-name">{plan.name}</h3>
-                                    <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
-                                    <p className="meal-plan-card-status">
-                                        Status: {plan.status}
-                                        {/* NEW: Display saveCount for all plans */}
-                                        {plan.saveCount && plan.saveCount > 0 && (
-                                            <span className="meal-plan-save-count"> | Saves: {plan.saveCount}</span>
-                                        )}
-                                    </p>
+                            <div 
+                                key={plan._id} 
+                                className="meal-plan-card"
+                                onClick={() => handleCardClick(plan._id)}
+                            >
+                                <div className="meal-plan-image-container">
+                                    <img
+                                        src={plan.imageUrl || `/assetscopy/${plan.imageFileName}`}
+                                        alt={plan.name}
+                                        className="meal-plan-card-image"
+                                    />
+                                    <div className="status-badge">
+                                        <span className={`status-indicator status-${plan.status.toLowerCase().replace('_', '-')}`}>
+                                            {plan.status.replace('_', ' ')}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="meal-plan-card-actions">
+                                <div className="meal-plan-card-content">
+                                    <div className="meal-plan-card-info">
+                                        <h3 className="meal-plan-card-name">{plan.name}</h3>
+                                        <p className="meal-plan-card-author">by {plan.author || 'N/A'}</p>
+                                        {plan.saveCount && plan.saveCount > 0 && (
+                                            <p className="meal-plan-save-count">
+                                                <span className="save-icon">💾</span>
+                                                {plan.saveCount} saves
+                                            </p>
+                                        )}
+                                    </div>
                                     {plan.status === 'PENDING_APPROVAL' && (
-                                        <>
+                                        <div className="meal-plan-card-actions">
                                             <button
                                                 className="approve-button"
-                                                onClick={() => handleApproveClick(plan._id)}
+                                                onClick={(e) => handleApproveClick(plan._id, e)}
                                                 disabled={localLoading}
                                             >
                                                 APPROVE
                                             </button>
                                             <button
                                                 className="reject-button"
-                                                onClick={() => handleRejectClick(plan._id)}
+                                                onClick={(e) => handleRejectClick(plan._id, e)}
                                                 disabled={localLoading}
                                             >
                                                 REJECT
                                             </button>
-                                        </>
+                                        </div>
                                     )}
                                     {plan.status === 'REJECTED' && plan.rejectionReason && (
-                                        <p className="rejection-info">Reason: {plan.rejectionReason}</p>
+                                        <div className="rejection-info-container">
+                                            <p className="rejection-info">
+                                                <span className="rejection-label">Reason:</span>
+                                                {plan.rejectionReason}
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <p className="no-pending-plans-message">No meal plans matching your criteria for the selected status.</p>
+                        <div className="no-plans-container">
+                            <div className="no-plans-icon">📋</div>
+                            <p className="no-pending-plans-message">No meal plans matching your criteria for the selected status.</p>
+                        </div>
                     )}
                 </div>
             )}

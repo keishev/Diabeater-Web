@@ -117,15 +117,7 @@ const NutritionistProfile = observer(() => {
                 onChange={(e) => vm.setProfileField('email', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label htmlFor="contactNumber">Contact Number</label>
-              <input
-                type="text"
-                id="contactNumber"
-                value={profile.contactNumber || ''}
-                onChange={(e) => vm.setProfileField('contactNumber', e.target.value)}
-              />
-            </div>
+            
           </div>
 
           <button className="np-save-button" onClick={handleSave} disabled={vm.isLoading}>

@@ -26,15 +26,21 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
 
     return (
         <div className={cardClassName} onClick={() => onClick(mealPlan._id)}> {/* Pass ID to select for detail */}
-            <img src={imageUrl} alt={mealPlan.name} className="meal-plan-image" />
+            <div className="meal-plan-image-wrapper">
+                <img src={imageUrl} alt={mealPlan.name} className="meal-plan-image" />
+                <div className="meal-plan-overlay">
+                    <div className="meal-plan-stats">
+                        <span className="saves-count">
+                            <i className="fas fa-bookmark"></i> {mealPlan.saveCount || 0}
+                        </span>
+                    </div>
+                </div>
+            </div>
             <div className="meal-plan-info">
                 <div className="meal-plan-header-content">
                     <h3 className="meal-plan-name">{mealPlan.name}</h3>
                     <span className={`meal-plan-status ${mealPlan.status}`}>Status: {displayStatus}</span>
                 </div>
-                <span className="likes-count">
-                    <i className="fa-solid fa-heart"></i> {mealPlan.likes || 0}
-                </span>
 
                 <div className="meal-plan-actions">
                     {/* Nutritionist actions: UPDATE and DELETE */}
@@ -48,6 +54,7 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
                                 }}
                                 disabled={isNutritionistActionDisabled}
                             >
+                                <i className="fas fa-edit"></i>
                                 UPDATE
                             </button>
                             <button
@@ -55,6 +62,7 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
                                 onClick={(e) => { e.stopPropagation(); onDeleteClick(mealPlan._id, mealPlan.imageFileName); }}
                                 disabled={isNutritionistActionDisabled}
                             >
+                                <i className="fas fa-trash"></i>
                                 DELETE
                             </button>
                         </>
@@ -62,13 +70,22 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
                     {/* Admin actions */}
                     {isAdmin && mealPlan.status === 'PENDING_APPROVAL' && (
                         <>
-                            <button className="button-base approve-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'APPROVED', mealPlan.authorId); }}>APPROVE</button>
-                            <button className="button-base admin-reject-button" onClick={(e) => { e.stopPropagation(); onRejectClick(mealPlan._id, 'REJECTED', mealPlan.authorId); }}>REJECT</button>
+                            <button className="button-base approve-button" onClick={(e) => { e.stopPropagation(); onApproveClick(mealPlan._id, 'APPROVED', mealPlan.authorId); }}>
+                                <i className="fas fa-check"></i>
+                                APPROVE
+                            </button>
+                            <button className="button-base admin-reject-button" onClick={(e) => { e.stopPropagation(); onRejectClick(mealPlan._id, 'REJECTED', mealPlan.authorId); }}>
+                                <i className="fas fa-times"></i>
+                                REJECT
+                            </button>
                         </>
                     )}
                     {/* Admins can delete approved/rejected plans directly if needed, or modify behavior */}
                     {isAdmin && mealPlan.status !== 'PENDING_APPROVAL' && (
-                        <button className="button-base delete-button" onClick={(e) => { e.stopPropagation(); onDeleteClick(mealPlan._id, mealPlan.imageFileName); }}>DELETE</button>
+                        <button className="button-base delete-button" onClick={(e) => { e.stopPropagation(); onDeleteClick(mealPlan._id, mealPlan.imageFileName); }}>
+                            <i className="fas fa-trash"></i>
+                            DELETE
+                        </button>
                     )}
                 </div>
             </div>
@@ -181,21 +198,29 @@ const MyMealPlansContent = observer(({
     return (
         <>
             <header className="header">
-                <h1 className="page-title">MEAL PLANS</h1>
+                <h1 className="page-title">
+                    <i className="fas fa-utensils"></i>
+                    MEAL PLANS
+                </h1>
                 <div className="search-controls">
-                    <input
-                        type="text"
-                        placeholder="Search meal plans..."
-                        className="search-input"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                    <div className="search-input-wrapper">
+                        <i className="fas fa-search search-icon"></i>
+                        <input
+                            type="text"
+                            placeholder="Search meal plans..."
+                            className="search-input"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                     <div className="category-dropdown-container">
                         <button
                             className="category-button"
                             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                         >
-                            {selectedCategory || "Search by Category"}
+                            <i className="fas fa-filter"></i>
+                            {selectedCategory || "All Categories"}
+                           
                         </button>
                         {showCategoryDropdown && (
                             <div className="category-dropdown-content">
@@ -206,6 +231,7 @@ const MyMealPlansContent = observer(({
                                         setShowCategoryDropdown(false);
                                     }}
                                 >
+                                    <i className="fas fa-th-large"></i>
                                     All Categories
                                 </button>
                                 {allCategories.map((category) => (
@@ -217,6 +243,7 @@ const MyMealPlansContent = observer(({
                                             setShowCategoryDropdown(false);
                                         }}
                                     >
+                                        <i className="fas fa-tag"></i>
                                         {category}
                                     </button>
                                 ))}
@@ -238,9 +265,14 @@ const MyMealPlansContent = observer(({
                 ))}
             </div>
 
-            {loading && <p>Loading meal plans...</p>}
-            {error && <p className="error-message">{error}</p>}
-            {success && <p className="success-message">{success}</p>}
+            {loading && (
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading meal plans...</p>
+                </div>
+            )}
+            {error && <div className="error-message"><i className="fas fa-exclamation-triangle"></i>{error}</div>}
+            {success && <div className="success-message"><i className="fas fa-check-circle"></i>{success}</div>}
 
             <div className="meal-plans-grid">
                 {displayedMealPlans.length > 0 ? (
@@ -257,9 +289,11 @@ const MyMealPlansContent = observer(({
                         />
                     ))
                 ) : (
-                    <p className="no-meal-plans-message">
-                        No meal plans found for "{localActiveTab.replace(/_/g, ' ')}" with the current filters.
-                    </p>
+                    <div className="no-meal-plans-message">
+                        <i className="fas fa-search"></i>
+                        <h3>No meal plans found</h3>
+                        <p>No meal plans found for "{localActiveTab.replace(/_/g, ' ')}" with the current filters.</p>
+                    </div>
                 )}
             </div>
         </>
@@ -318,7 +352,10 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
                     </div>
                 )}
             </nav>
-            <button className="logout-button" onClick={onLogout}>Log out</button>
+            <button className="logout-button" onClick={onLogout}>
+                <i className="fas fa-sign-out-alt"></i>
+                <span>Log out</span>
+            </button>
         </div>
     );
 });
@@ -441,9 +478,24 @@ const NutritionistDashboard = observer(({ onLogout }) => {
             />
             <div className="main-content">
                 {/* Global loading/error/success messages from ViewModel */}
-                {loading && <p className="dashboard-message loading-message">Loading...</p>}
-                {error && <p className="dashboard-message error-message">{error}</p>}
-                {success && <p className="dashboard-message success-message">{success}</p>}
+                {loading && (
+                    <div className="global-loading">
+                        <div className="loading-spinner"></div>
+                        <span>Loading...</span>
+                    </div>
+                )}
+                {error && (
+                    <div className="global-error">
+                        <i className="fas fa-exclamation-circle"></i>
+                        <span>{error}</span>
+                    </div>
+                )}
+                {success && (
+                    <div className="global-success">
+                        <i className="fas fa-check-circle"></i>
+                        <span>{success}</span>
+                    </div>
+                )}
 
                 {currentView === 'nutritionistProfile' && currentUserRole === 'nutritionist' && <NutritionistProfile />}
 

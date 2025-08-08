@@ -53,7 +53,7 @@
 }
 
 .admin-status-tabs .tab-button.active {
-    color: #ff9800; /* Orange for the active tab */
+    color: #fffaf3; /* Orange for the active tab */
 }
 
 .admin-status-tabs .tab-button.active::after {
@@ -220,7 +220,7 @@
 }
 
 .meal-plan-card-image {
-    width: 100%;
+    width: 400px;
     height: 200px; /* Fixed height for consistent image size */
     object-fit: cover; /* Ensures images cover the area without distortion */
     cursor: pointer; /* Indicates it's clickable */
