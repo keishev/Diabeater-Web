@@ -38,7 +38,7 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
             </div>
             <div className="meal-plan-info">
                 <div className="meal-plan-header-content">
-                    <h3 className="meal-plan-name">{mealPlan.name}</h3>
+                    <h3 className="nutritionist-meal-plan-name">{mealPlan.name}</h3>
                     <span className={`meal-plan-status ${mealPlan.status}`}>Status: {displayStatus}</span>
                 </div>
 
@@ -198,7 +198,7 @@ const MyMealPlansContent = observer(({
     return (
         <>
             <header className="header">
-                <h1 className="page-title">
+                <h1 className="nutri-dashboard-page-title">
                     <i className="fas fa-utensils"></i>
                     MEAL PLANS
                 </h1>
@@ -303,6 +303,7 @@ const MyMealPlansContent = observer(({
 
 // --- Sidebar component ---
 // This component does not need to be an observer, but receives props
+// Fixed Sidebar component with better structure for notification badge
 const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
     // Directly access unreadNotificationCount from the ViewModel
     const unreadCount = mealPlanViewModel.unreadNotificationCount;
@@ -345,10 +346,12 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
                         onClick={() => onNavigate('notifications')}
                     >
                         <i className="fas fa-bell"></i>
-                        <span>Notifications</span>
-                        {unreadCount > 0 && (
-                            <span className="notification-badge">{unreadCount}</span>
-                        )}
+                        <span>
+                            Notifications
+                            {unreadCount > 0 && (
+                                <span className="notification-badge">{unreadCount}</span>
+                            )}
+                        </span>
                     </div>
                 )}
             </nav>
@@ -359,7 +362,6 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
         </div>
     );
 });
-
 
 // --- NutritionistDashboard Main Component ---
 const NutritionistDashboard = observer(({ onLogout }) => {

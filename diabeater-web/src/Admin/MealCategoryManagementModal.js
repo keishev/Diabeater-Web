@@ -1,7 +1,7 @@
 // src/Components/MealCategoryManagementModal.js
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import './MealCategoryManagementModal.css'; // Create this CSS file
+import './MealCategoryManagementModal.css';
 
 const MealCategoryManagementModal = observer(({ isOpen, onClose, mealPlanViewModel }) => {
     const [newCategoryName, setNewCategoryName] = useState('');
@@ -94,87 +94,125 @@ const MealCategoryManagementModal = observer(({ isOpen, onClose, mealPlanViewMod
     if (!isOpen) return null;
 
     return (
-        <div className="category-modal-overlay">
-            <div className="category-modal-content">
-                <h2 className="modal-title">Manage Meal Plan Categories</h2>
-                {modalLoading && <p>Loading...</p>}
-                {modalError && <p className="error-message">{modalError}</p>}
+        <div className="meal-category-modal-overlay">
+            <div className="meal-category-modal-content">
+                <h2 className="meal-category-modal-title">Manage Meal Plan Categories</h2>
+                {modalLoading && <p className="meal-category-loading-text">Loading...</p>}
+                {modalError && <p className="meal-category-error-message">{modalError}</p>}
 
                 {/* Create New Category Form */}
-                <div className="create-category-section">
-                    <h3>Create New Category</h3>
+                <div className="meal-category-create-section">
+                    <h3 className="meal-category-section-title">Create New Category</h3>
                     <form onSubmit={handleCreateCategory}>
-                        <div className="form-group">
-                            <label htmlFor="newCategoryName">Category Name:</label>
+                        <div className="meal-category-form-group">
+                            <label htmlFor="newCategoryName" className="meal-category-form-label">Category Name:</label>
                             <input
                                 type="text"
                                 id="newCategoryName"
+                                className="meal-category-form-input"
                                 value={newCategoryName}
                                 onChange={(e) => setNewCategoryName(e.target.value)}
                                 required
+                                placeholder="Enter category name..."
                             />
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="newCategoryDescription">Description:</label>
+                        <div className="meal-category-form-group">
+                            <label htmlFor="newCategoryDescription" className="meal-category-form-label">Description:</label>
                             <textarea
                                 id="newCategoryDescription"
+                                className="meal-category-form-textarea"
                                 value={newCategoryDescription}
                                 onChange={(e) => setNewCategoryDescription(e.target.value)}
                                 rows="3"
                                 required
+                                placeholder="Enter category description..."
                             ></textarea>
                         </div>
-                        <button type="submit" disabled={modalLoading}>Add Category</button>
+                        <button 
+                            type="submit" 
+                            className="meal-category-button meal-category-create-button" 
+                            disabled={modalLoading}
+                        >
+                            Add Category
+                        </button>
                     </form>
                 </div>
 
                 {/* Existing Categories List */}
-                <div className="existing-categories-section">
-                    <h3>Existing Categories</h3>
+                <div className="meal-category-existing-section">
+                    <h3 className="meal-category-section-title">Existing Categories</h3>
                     {mealPlanViewModel.loadingCategories ? (
-                        <p>Loading categories...</p>
+                        <p className="meal-category-loading-text">Loading categories...</p>
                     ) : (
-                        <ul className="category-list">
+                        <ul className="meal-category-list">
                             {mealPlanViewModel.allCategoriesWithDetails.length === 0 ? (
-                                <p>No categories found.</p>
+                                <p className="meal-category-no-items">No categories found.</p>
                             ) : (
                                 mealPlanViewModel.allCategoriesWithDetails.map(category => (
-                                    <li key={category.id} className="category-item">
+                                    <li key={category.id} className="meal-category-item">
                                         {editingCategory?.id === category.id ? (
-                                            <form onSubmit={handleUpdateCategory} className="edit-form">
-                                                <div className="form-group">
-                                                    <label htmlFor={`editName-${category.id}`}>Name:</label>
+                                            <form onSubmit={handleUpdateCategory} className="meal-category-edit-form">
+                                                <div className="meal-category-form-group">
+                                                    <label htmlFor={`editName-${category.id}`} className="meal-category-form-label">Name:</label>
                                                     <input
                                                         type="text"
                                                         id={`editName-${category.id}`}
+                                                        className="meal-category-form-input"
                                                         value={editCategoryName}
                                                         onChange={(e) => setEditCategoryName(e.target.value)}
                                                         required
                                                     />
                                                 </div>
-                                                <div className="form-group">
-                                                    <label htmlFor={`editDesc-${category.id}`}>Description:</label>
+                                                <div className="meal-category-form-group">
+                                                    <label htmlFor={`editDesc-${category.id}`} className="meal-category-form-label">Description:</label>
                                                     <textarea
                                                         id={`editDesc-${category.id}`}
+                                                        className="meal-category-form-textarea"
                                                         value={editCategoryDescription}
                                                         onChange={(e) => setEditCategoryDescription(e.target.value)}
                                                         rows="2"
                                                         required
                                                     ></textarea>
                                                 </div>
-                                                <button type="submit" disabled={modalLoading}>Update</button>
-                                                <button type="button" onClick={() => setEditingCategory(null)} className="cancel-button">Cancel</button>
+                                                <div className="meal-category-edit-actions">
+                                                    <button 
+                                                        type="submit" 
+                                                        className="meal-category-button meal-category-update-button" 
+                                                        disabled={modalLoading}
+                                                    >
+                                                        Update
+                                                    </button>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setEditingCategory(null)} 
+                                                        className="meal-category-button meal-category-cancel-button"
+                                                        disabled={modalLoading}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
                                             </form>
                                         ) : (
                                             <>
-                                                <div>
-                                                    {/* Display only name and description */}
-                                                    <strong>{category.categoryName}</strong>
-                                                    <p>{category.categoryDescription}</p>
+                                                <div className="meal-category-item-content">
+                                                    <h4 className="meal-category-item-name">{category.categoryName}</h4>
+                                                    <p className="meal-category-item-description">{category.categoryDescription}</p>
                                                 </div>
-                                                <div className="category-actions">
-                                                    <button onClick={() => handleEditClick(category)} disabled={modalLoading}>Edit</button>
-                                                    <button onClick={() => handleDeleteCategory(category.id)} disabled={modalLoading} className="delete-button">Delete</button>
+                                                <div className="meal-category-item-actions">
+                                                    <button 
+                                                        onClick={() => handleEditClick(category)} 
+                                                        disabled={modalLoading}
+                                                        className="meal-category-button meal-category-edit-button"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteCategory(category.id)} 
+                                                        disabled={modalLoading} 
+                                                        className="meal-category-button meal-category-delete-button"
+                                                    >
+                                                        Delete
+                                                    </button>
                                                 </div>
                                             </>
                                         )}
@@ -185,9 +223,15 @@ const MealCategoryManagementModal = observer(({ isOpen, onClose, mealPlanViewMod
                     )}
                 </div>
 
-                {/* Moved the close button inside the modal content */}
-                <div className="modal-actions">
-                    <button className="close-button" onClick={onClose} disabled={modalLoading}>Close</button>
+                {/* Modal Actions */}
+                <div className="meal-category-modal-actions">
+                    <button 
+                        className="meal-category-button meal-category-close-button" 
+                        onClick={onClose} 
+                        disabled={modalLoading}
+                    >
+                        Close
+                    </button>
                 </div>
             </div>
         </div>

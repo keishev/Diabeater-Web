@@ -1,198 +1,444 @@
 /* src/Admin/UserFeedbacksPage.css */
 
 .user-feedbacks-page {
-    padding: 30px;
-    background-color: #fffaf3; /* Light background matching your admin panel */
-    min-height: calc(100vh - 60px); /* Adjust based on your header/footer if any */
-    font-family: Arial, sans-serif; /* Keep consistent font */
-    color: #333; /* Default text color */
+    padding: 40px;
+    background: linear-gradient(135deg, #fffaf3 0%, #fef7ed 100%);
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #2c3e50;
 }
 
 .feedbacks-main-title {
-    font-size: 28px;
-    color: #1e525c;
-    margin-bottom: 40px;
-    font-weight: bold;
+    font-size: 32px;
+    background: linear-gradient(135deg, #1e525c 0%, #2c3e50 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 50px;
+    font-weight: 700;
     margin-left: 40px;
-    letter-spacing: 1px;
-    border-bottom: 2px solid #ff9800; /* Orange underline */
-    padding-bottom: 10px;
-    display: inline-block; /* To make border-bottom fit content */
+    letter-spacing: 2px;
+    position: relative;
+}
+
+.feedbacks-main-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+    border-radius: 2px;
+}
+
+/* Marketing Section Styling */
+.marketing-section {
+    margin: 40px;
+    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 152, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+.marketing-section h2 {
+    color: #1e525c;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.marketing-section h2::before {
+    content: '⭐';
+    font-size: 20px;
+}
+
+.automate-marketing-button {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+    margin-bottom: 25px;
+}
+
+.automate-marketing-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.marketing-feedbacks-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.marketing-feedback-item {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    padding: 20px;
+    border-radius: 15px;
+    border-left: 4px solid #ff9800;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.marketing-feedback-item:hover {
+    transform: translateY(-2px);
+}
+
+.marketing-feedback-item p {
+    margin: 8px 0;
+}
+
+.marketing-feedback-item strong {
+    color: #1e525c;
+    font-weight: 600;
 }
 
 .feedbacks-table-container {
-    background-color: #fffaf3; /* Keep consistent with page background */
-    border-radius: 8px;
+    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+    border-radius: 20px;
     margin-left: 40px;
-    margin-right: 40px; /* Added right margin for symmetry */
-    overflow-x: auto; /* For responsiveness on smaller screens */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Soft shadow for definition */
+    margin-right: 40px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.1);
 }
 
 .feedbacks-table {
-    width: 100%; /* Important: Set to 100% within its container */
+    width: 100%;
     border-collapse: collapse;
-    min-width: 1200px; /* Ensures the table is at least this wide */
-    table-layout: fixed; /* Ensures columns have fixed width based on content or defined width */
+    min-width: 1200px;
+    table-layout: fixed;
+    background: white;
 }
 
 .feedbacks-table th,
 .feedbacks-table td {
-    padding: 15px 20px;
+    padding: 20px;
     text-align: left;
-    border-bottom: 1.5px solid #8f8f8f;
-    font-size: 16px;
-    color: #1e525c; /* Main text color for table content */
-    word-wrap: break-word; /* Prevents long words from breaking layout */
+    border-bottom: 1px solid rgba(143, 143, 143, 0.2);
+    font-size: 15px;
+    color: #2c3e50;
+    word-wrap: break-word;
+    vertical-align: middle;
 }
 
 .feedbacks-table th {
-    background-color: #fffaf3; /* Consistent with table background */
-    font-weight: bold;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 700;
     color: #1e525c;
     text-transform: uppercase;
-    font-size: 18px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid rgba(255, 152, 0, 0.3);
 }
 
-/* Column widths - Adjusted for 5 columns: Name, Feedback, Rating, Status, Actions */
+/* Column widths - Updated for 6 columns */
 .feedbacks-table th:nth-child(1),
 .feedbacks-table td:nth-child(1) {
-    width: 15%; /* Name */
+    width: 12%;
 }
 .feedbacks-table th:nth-child(2),
 .feedbacks-table td:nth-child(2) {
-    width: 45%; /* Feedback */
+    width: 35%;
 }
 .feedbacks-table th:nth-child(3),
 .feedbacks-table td:nth-child(3) {
-    width: 10%; /* Rating */
+    width: 10%;
     text-align: center;
 }
 .feedbacks-table th:nth-child(4),
 .feedbacks-table td:nth-child(4) {
-    width: 15%; /* Status */
+    width: 12%;
     text-align: center;
 }
 .feedbacks-table th:nth-child(5),
 .feedbacks-table td:nth-child(5) {
-    width: 15%; /* Actions */
-    text-align: center; /* Center the button/status */
+    width: 13%;
+    text-align: center;
+}
+.feedbacks-table th:nth-child(6),
+.feedbacks-table td:nth-child(6) {
+    width: 18%;
+    text-align: center;
 }
 
-
 .feedbacks-table tbody tr:last-child td {
-    border-bottom: none; /* No border on the last row */
+    border-bottom: none;
+}
+
+.feedbacks-table tbody tr {
+    transition: all 0.2s ease;
 }
 
 .feedbacks-table tbody tr:hover {
-    background-color: #fcf2e6; /* Light orange hover effect */
+    background: linear-gradient(135deg, #fcf2e6 0%, #fef7ed 100%);
+    transform: scale(1.002);
 }
 
-
-/* Approve Button */
-.approve-button {
-    background-color: #ff9800; /* Orange from your palette */
+/* Button Styles */
+.approve-button, .retrack-button {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
     color: white;
-    padding: 8px 18px;
+    padding: 10px 20px;
     border: none;
     border-radius: 20px;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    min-width: 90px; /* Ensure consistent button size */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: all 0.3s ease;
+    min-width: 90px;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
-.approve-button:hover {
-    background-color: #e68900;
-    transform: translateY(-1px);
+.approve-button:hover, .retrack-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
 }
 
-.approve-button:active {
+.retrack-button {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.retrack-button:hover {
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+.approve-button:active, .retrack-button:active {
     transform: translateY(0);
 }
 
-.approve-button:disabled {
-    background-color: #cccccc;
+.approve-button:disabled, .retrack-button:disabled {
+    background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
     cursor: not-allowed;
     box-shadow: none;
+    transform: none;
+}
+
+.toggle-marketing-button {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 18px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.toggle-marketing-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+.toggle-marketing-button.active {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.toggle-marketing-button.active:hover {
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+}
+
+.toggle-marketing-button:disabled {
+    background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 /* Feedback Status Styling */
 .feedback-status {
-    padding: 8px 18px;
+    padding: 8px 16px;
     border-radius: 20px;
-    font-size: 14px;
-    font-weight: bold;
-    min-width: 90px;
-    display: inline-block; /* To allow padding/border-radius */
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 80px;
+    display: inline-block;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* Subtle shadow for statuses */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .feedback-status.approved {
-    background-color: #d4edda; /* Light green background */
-    color: #155724; /* Dark green text */
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border: 1px solid rgba(21, 87, 36, 0.2);
 }
 
 .feedback-status.pending {
-    background-color: #fff3cd; /* Light yellow background */
-    color: #856404; /* Dark yellow text */
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+    border: 1px solid rgba(133, 100, 4, 0.2);
 }
 
 .feedback-status.rejected {
-    background-color: #f8d7da; /* Light red background */
-    color: #721c24; /* Dark red text */
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border: 1px solid rgba(114, 28, 36, 0.2);
 }
 
 /* Star Rating */
-.star-rating {
-  display: flex; /* Use flex to align stars horizontally */
-  justify-content: center; /* Center stars in the cell */
-  align-items: center;
-  color: #ffc107; /* Gold color for stars */
-  font-size: 1.2em; /* Adjust star size */
-  gap: 2px; /* Small gap between stars */
+.star-rating, .stars-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+}
+
+.star.filled, .star {
+    font-size: 18px;
+    transition: all 0.2s ease;
 }
 
 .star.filled {
-  color: #ffc107;
+    color: #ffc107;
+    text-shadow: 0 1px 3px rgba(255, 193, 7, 0.5);
 }
 
-.star.empty {
-  color: #ccc;
+.star:not(.filled) {
+    color: #e0e0e0;
 }
 
 .featured-badge {
-  margin-left: 8px;
-  font-size: 0.8em;
-  padding: 3px 6px;
-  background-color: #ffe08a; /* Light gold background */
-  border-radius: 3px;
-  color: #b38a00; /* Darker gold text */
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow */
+    margin-left: 10px;
+    font-size: 11px;
+    padding: 4px 8px;
+    background: linear-gradient(135deg, #ffe08a 0%, #ffd54f 100%);
+    border-radius: 12px;
+    color: #f57f17;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(245, 127, 23, 0.2);
 }
 
 /* Empty state */
 .no-feedbacks {
     text-align: center;
-    padding: 30px;
-    color: #777;
+    padding: 60px 30px;
+    color: #6c757d;
     font-style: italic;
-    font-size: 1.1em;
+    font-size: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    margin: 20px 40px;
 }
 
 /* Loading and Error states */
 .user-feedbacks-page.loading,
 .user-feedbacks-page.error {
-    text-align: center;
-    padding: 50px;
-    font-size: 1.4em; /* Slightly larger text */
-    color: #555;
-    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.user-feedbacks-page.loading {
+    color: #1e525c;
+}
+
+.user-feedbacks-page.loading::after {
+    content: '';
+    margin-left: 10px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e0e0e0;
+    border-top: 2px solid #ff9800;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .user-feedbacks-page.error {
-    color: #dc3545; /* Red for error messages */
+    color: #dc3545;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .feedbacks-table {
+        min-width: 1000px;
+    }
+    
+    .marketing-feedbacks-list {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .user-feedbacks-page {
+        padding: 20px 15px;
+    }
+    
+    .feedbacks-main-title {
+        font-size: 24px;
+        margin-left: 0;
+        text-align: center;
+    }
+    
+    .marketing-section {
+        margin: 20px 0;
+        padding: 20px;
+        border-radius: 15px;
+    }
+    
+    .feedbacks-table-container {
+        margin: 20px 0;
+        border-radius: 15px;
+    }
+    
+    .feedbacks-table th,
+    .feedbacks-table td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+    
+    .marketing-feedbacks-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Scrollbar Styling */
+.feedbacks-table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.feedbacks-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.feedbacks-table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+    border-radius: 4px;
+}
+
+.feedbacks-table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #f57c00, #ef6c00);
 }

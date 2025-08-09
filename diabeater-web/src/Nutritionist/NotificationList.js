@@ -95,7 +95,7 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
     if (filteredNotifications.length === 0) {
         return (
             <div className="notification-list-content">
-                <h2 className="page-title">NOTIFICATIONS</h2>
+                <h2 className="notification-page-title">NOTIFICATIONS</h2>
                 <p className="no-notifications-message">You have no meal plan notifications at the moment.</p>
             </div>
         );
@@ -104,7 +104,7 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
     return (
         <div className="notification-list-content">
             <div className="notifications-header">
-                <h2 className="page-title">NOTIFICATIONS</h2>
+                <h2 className="notification-page-title">NOTIFICATIONS</h2>
                 <div className="notification-stats">
                     <span className="total-count">Total: {filteredNotifications.length}</span>
                     {unreadNotifications.length > 0 && (

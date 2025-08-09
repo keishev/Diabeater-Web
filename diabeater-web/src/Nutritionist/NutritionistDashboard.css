@@ -105,11 +105,10 @@
 }
 
 .logo img {
-  width: 64px;
-  height: 64px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
   margin-bottom: var(--spacing-sm);
-  filter: drop-shadow(var(--shadow-sm));
 }
 
 .logo-text {
@@ -129,41 +128,38 @@
   gap: var(--spacing-sm);
 }
 
+/* Fixed nav-item styles */
 .nav-item {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  color: var(--text-secondary);
-  font-size: var(--font-size-base);
-  font-weight: 500;
+  padding: 15px 20px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  color: #555;
+  font-size: 18px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative; /* Important for proper badge positioning */
+  overflow: hidden; /* Prevents the pseudo-element from extending outside */
+  justify-content: space-between; /* This helps with badge positioning */
 }
 
-.nav-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 152, 0, 0.1), transparent);
-  transition: left 0.5s;
-}
-
-.nav-item:hover::before {
-  left: 100%;
-}
-
+/* Removed the problematic ::before pseudo-element that was causing weird hover effects */
 .nav-item i {
   margin-right: var(--spacing-md);
   font-size: var(--font-size-lg);
   width: 20px;
   text-align: center;
   transition: transform 0.3s ease;
+  flex-shrink: 0; /* Prevents icon from shrinking */
+}
+
+/* Fixed: Create a container for the text and badge */
+.nav-item span {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .nav-item:hover {
@@ -187,6 +183,7 @@
   color: white;
 }
 
+/* Fixed notification badge positioning */
 .notification-badge {
   background: linear-gradient(135deg, var(--error-red) 0%, #ff6b6b 100%);
   color: white;
@@ -196,9 +193,16 @@
   font-weight: 600;
   min-width: 20px;
   text-align: center;
-  margin-left: auto;
   animation: pulse 2s infinite;
   box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+  /* Fixed positioning */
+  position: static; /* Changed from absolute positioning */
+  margin-left: 8px; /* Small gap from the text */
+  flex-shrink: 0; /* Prevents badge from shrinking */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px; /* Fixed height for consistency */
 }
 
 @keyframes pulse {
@@ -258,10 +262,10 @@
   border: 1px solid var(--border-light);
 }
 
-.page-title {
-  font-size: var(--font-size-3xl);
+.nutri-dashboard-page-title {
+  font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-teal) 100%);
+  background: #f79554;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -272,7 +276,7 @@
 }
 
 .page-title i {
-  background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-teal) 100%);
+  background: #f79554;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -545,8 +549,8 @@
   text-align: center;
 }
 
-.meal-plan-name {
-  font-size: var(--font-size-xl);
+.nutritionist-meal-plan-name {
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 var(--spacing-sm) 0;

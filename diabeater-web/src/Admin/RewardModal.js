@@ -73,39 +73,39 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
     return (
         <div className="reward-modal-overlay" onClick={handleOverlayClick}>
             <div className="reward-modal-content">
-                <div className="modal-header">
-                    <h2 className="modal-title">{modalTitle}</h2>
-                    <button className="close-button" onClick={onClose} aria-label="Close">&times;</button>
+                <div className="reward-modal-header">
+                    <h2 className="reward-modal-title">{modalTitle}</h2>
+                    <button className="reward-modal-close-button" onClick={onClose} aria-label="Close">&times;</button>
                 </div>
-                <div className="modal-body">
-                    <div className="form-group modal-row">
-                        <label htmlFor="rewardName" className="modal-label">Selected Reward:</label>
+                <div className="reward-modal-body">
+                    <div className="reward-modal-form-group reward-modal-row">
+                        <label htmlFor="rewardName" className="reward-modal-label">Selected Reward:</label>
                         <input
                             id="rewardName"
                             type="text"
-                            className="modal-input read-only modal-input-right"
+                            className="reward-modal-input reward-modal-read-only reward-modal-input-right"
                             value={rewardNameDisplay}
                             readOnly
                         />
                     </div>
-                    <div className="form-group modal-row">
-                        <label htmlFor="quantity" className="modal-label">{quantityLabel}:</label>
+                    <div className="reward-modal-form-group reward-modal-row">
+                        <label htmlFor="quantity" className="reward-modal-label">{quantityLabel}:</label>
                         <input
                             id="quantity"
                             type="number"
-                            className="modal-input modal-input-right"
+                            className="reward-modal-input reward-modal-input-right"
                             value={currentQuantity !== null ? currentQuantity : ''}
                             onChange={(e) => setCurrentQuantity(e.target.value)}
                             placeholder={`Enter ${quantityLabel.toLowerCase()}`}
                             required
                         />
                     </div>
-                    <div className="form-group modal-row">
-                        <label htmlFor="pointsNeeded" className="modal-label">Points Needed:</label>
+                    <div className="reward-modal-form-group reward-modal-row">
+                        <label htmlFor="pointsNeeded" className="reward-modal-label">Points Needed:</label>
                         <input
                             id="pointsNeeded"
                             type="number"
-                            className="modal-input modal-input-right"
+                            className="reward-modal-input reward-modal-input-right"
                             value={currentPointsNeeded !== null ? currentPointsNeeded : ''}
                             onChange={(e) => setCurrentPointsNeeded(e.target.value)}
                             placeholder="Enter points needed"
@@ -113,9 +113,9 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
                         />
                     </div>
                 </div>
-                <div className="modal-actions">
-                    <button className="cancel-button" onClick={onClose}>Cancel</button>
-                    <button className="confirm-button" onClick={handleConfirmClick}>
+                <div className="reward-modal-actions">
+                    <button className="reward-modal-cancel-button" onClick={onClose}>Cancel</button>
+                    <button className="reward-modal-confirm-button" onClick={handleConfirmClick}>
                         {confirmButtonText}
                     </button>
                 </div>

@@ -1,26 +1,37 @@
+/* ==============================================
+   UPDATE MEAL PLAN - COMPONENT-SPECIFIC STYLES
+   ============================================== */
+
 .update-meal-plan-container {
   background: var(--background-cream);
   min-height: 100vh;
   font-family: var(--font-family);
 }
 
-.header {
-  background: var(--surface-white);
+/* ==============================================
+   HEADER SECTION
+   ============================================== */
+
+.update-meal-plan-header {
+  background: #fffaf3;
   padding: var(--spacing-xl);
-  box-shadow: var(--shadow-sm);
   border-bottom: 1px solid var(--border-light);
-  text-align: center;
+  text-align: left;
 }
 
-.page-title {
+.update-meal-plan-page-title {
   font-size: var(--font-size-3xl);
   font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-teal) 100%);
+  background: #f79554;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
 }
+
+/* ==============================================
+   FORM LAYOUT
+   ============================================== */
 
 .update-meal-plan-form {
   max-width: 1400px;
@@ -28,28 +39,35 @@
   padding: var(--spacing-xl);
 }
 
-.form-sections-wrapper {
+.update-meal-plan-sections-wrapper {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: var(--spacing-xxl);
   margin-bottom: var(--spacing-xl);
 }
 
-.form-section-left,
-.form-section-right {
+.update-meal-plan-section-left,
+.update-meal-plan-section-right {
   background: var(--surface-white);
   padding: var(--spacing-xl);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-light);
 }
+.update-meal-plan-section-right {
+  width: 800px;
+  height: 1000px;
+}
 
-/* Form Elements */
-.form-group {
+/* ==============================================
+   FORM ELEMENTS
+   ============================================== */
+
+.update-meal-plan-form-group {
   margin-bottom: var(--spacing-lg);
 }
 
-.form-group label {
+.update-meal-plan-form-group label {
   display: block;
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
@@ -57,8 +75,8 @@
   font-size: var(--font-size-base);
 }
 
-.form-input,
-.form-textarea {
+.update-meal-plan-form-input,
+.update-meal-plan-form-textarea {
   width: 100%;
   padding: var(--spacing-md) var(--spacing-lg);
   border: 2px solid var(--border-light);
@@ -72,19 +90,22 @@
   box-sizing: border-box;
 }
 
-.form-input:focus,
-.form-textarea:focus {
+.update-meal-plan-form-input:focus,
+.update-meal-plan-form-textarea:focus {
   border-color: var(--primary-orange);
   box-shadow: 0 0 0 3px var(--primary-orange-light);
 }
 
-.form-textarea {
+.update-meal-plan-form-textarea {
   resize: vertical;
   min-height: 120px;
 }
 
-/* Image Upload Section */
-.upload-photo-group {
+/* ==============================================
+   IMAGE UPLOAD SECTION
+   ============================================== */
+
+.update-meal-plan-upload-photo-group {
   border: 2px dashed var(--border-light);
   border-radius: var(--radius-xl);
   padding: var(--spacing-xl);
@@ -93,21 +114,21 @@
   background: var(--surface-light);
 }
 
-.upload-photo-group:hover {
+.update-meal-plan-upload-photo-group:hover {
   border-color: var(--primary-orange);
   background: var(--primary-orange-light);
 }
 
-.form-input-file {
+.update-meal-plan-form-input-file {
   margin-bottom: var(--spacing-lg);
 }
 
-.image-preview {
+.update-meal-plan-image-preview {
   margin-top: var(--spacing-lg);
   text-align: center;
 }
 
-.image-preview img {
+.update-meal-plan-image-preview img {
   max-width: 100%;
   max-height: 200px;
   border-radius: var(--radius-lg);
@@ -115,15 +136,18 @@
   object-fit: cover;
 }
 
-.image-filename {
+.update-meal-plan-image-filename {
   margin-top: var(--spacing-sm);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   font-style: italic;
 }
 
-/* Section Titles */
-.section-title {
+/* ==============================================
+   SECTION TITLES
+   ============================================== */
+
+.update-meal-plan-section-title {
   font-size: var(--font-size-2xl);
   font-weight: 600;
   color: var(--text-primary);
@@ -133,7 +157,7 @@
   position: relative;
 }
 
-.section-title::after {
+.update-meal-plan-section-title::after {
   content: '';
   position: absolute;
   bottom: -2px;
@@ -143,24 +167,27 @@
   background: var(--secondary-teal);
 }
 
-.section-title:first-of-type {
+.update-meal-plan-section-title:first-of-type {
   margin-top: 0;
 }
 
-.advanced-nutrients-title {
+.update-meal-plan-advanced-nutrients-title {
   color: var(--text-secondary);
   border-bottom-color: var(--border-medium);
 }
 
-/* Nutrients Grid */
-.nutrients-grid {
+/* ==============================================
+   NUTRIENTS SECTION
+   ============================================== */
+
+.update-meal-plan-nutrients-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
 }
 
-.nutrient-group {
+.update-meal-plan-nutrient-group {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
@@ -170,15 +197,16 @@
   border: 2px solid var(--border-light);
   transition: all 0.3s ease;
   margin-bottom: 0;
+  width: 350px;
 }
 
-.nutrient-group:hover {
+.update-meal-plan-nutrient-group:hover {
   border-color: var(--primary-orange);
   background: var(--primary-orange-light);
   transform: translateY(-1px);
 }
 
-.nutrient-group label {
+.update-meal-plan-nutrient-group label {
   min-width: 100px;
   font-weight: 600;
   color: var(--text-primary);
@@ -186,8 +214,9 @@
   font-size: var(--font-size-sm);
 }
 
-.form-input-short {
+.update-meal-plan-form-input-short {
   flex: 1;
+  width: 100px;
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   border-radius: var(--radius-sm);
@@ -200,12 +229,12 @@
   font-weight: 600;
 }
 
-.form-input-short:focus {
+.update-meal-plan-form-input-short:focus {
   background: rgba(255, 152, 0, 0.05);
   box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
 }
 
-.unit {
+.update-meal-plan-nutrient-unit {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   font-weight: 500;
@@ -213,8 +242,11 @@
   text-align: left;
 }
 
-/* Form Actions */
-.form-actions {
+/* ==============================================
+   FORM ACTIONS
+   ============================================== */
+
+.update-meal-plan-form-actions {
   display: flex;
   justify-content: center;
   gap: var(--spacing-lg);
@@ -222,7 +254,7 @@
   border-top: 2px solid var(--border-light);
 }
 
-.button-base {
+.update-meal-plan-button-base {
   padding: var(--spacing-md) var(--spacing-xxl);
   border: none;
   border-radius: var(--radius-lg);
@@ -237,36 +269,38 @@
   gap: var(--spacing-sm);
   font-family: var(--font-family);
   box-shadow: var(--shadow-sm);
+  height: 60px;
 }
 
-.save-button {
+.update-meal-plan-save-button {
   background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
   color: white;
-  height:60px;
 }
 
-.save-button:hover {
+.update-meal-plan-save-button:hover {
   background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #e64a19 100%);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.cancel-button {
+.update-meal-plan-cancel-button {
   background: var(--surface-light);
   color: var(--text-secondary);
   border: 2px solid var(--border-medium);
-  height:60px;
 }
 
-.cancel-button:hover {
+.update-meal-plan-cancel-button:hover {
   background: var(--border-light);
   color: var(--text-primary);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-/* Message Styling */
-.form-message {
+/* ==============================================
+   MESSAGE STYLING
+   ============================================== */
+
+.update-meal-plan-form-message {
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-lg);
   margin-bottom: var(--spacing-lg);
@@ -274,131 +308,42 @@
   text-align: center;
 }
 
-.loading-message {
+.update-meal-plan-loading-message {
   background: rgba(255, 152, 0, 0.1);
   color: var(--primary-orange);
   border: 1px solid var(--primary-orange);
 }
 
-.error-message {
+.update-meal-plan-error-message {
   background: rgba(220, 53, 69, 0.1);
   color: #dc3545;
   border: 1px solid #dc3545;
 }
 
-.success-message {
+.update-meal-plan-success-message {
   background: rgba(40, 167, 69, 0.1);
   color: #28a745;
   border: 1px solid #28a745;
 }
 
-/* Detail Loading/Error States */
-.detail-loading,
-.detail-error,
-.detail-message {
-  text-align: center;
-  padding: var(--spacing-xxl);
-  font-size: var(--font-size-lg);
-  color: var(--text-secondary);
-  background: var(--surface-white);
-  border-radius: var(--radius-xl);
-  margin: var(--spacing-xl);
-  box-shadow: var(--shadow-sm);
-}
-
-.detail-error {
-  color: #dc3545;
-  border: 2px solid #dc3545;
-  background: rgba(220, 53, 69, 0.05);
-}
-
 /* ==============================================
-   RESPONSIVE DESIGN
+   UTILITY ANIMATIONS
    ============================================== */
 
-@media (max-width: 1200px) {
-  .detail-main-layout {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-  }
-  
-  .form-sections-wrapper {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-xl);
-  }
-  
-  .nutrients-grid {
-    grid-template-columns: 1fr;
-  }
+.update-meal-plan-fade-in {
+  animation: updateMealPlanFadeIn 0.5s ease-in;
 }
 
-@media (max-width: 768px) {
-  .detail-main-layout,
-  .update-meal-plan-form {
-    padding: var(--spacing-lg);
-  }
-  
-  .meal-title {
-    font-size: var(--font-size-2xl);
-  }
-  
-  .page-title {
-    font-size: var(--font-size-2xl);
-  }
-  
-  .nutrients-display-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .nutrient-circle {
-    grid-column: span 2;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .button-base {
-    width: 100%;
-    max-width: 300px;
-  }
-}
-
-@media (max-width: 480px) {
-  .nutrients-display-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .detail-main-layout,
-  .update-meal-plan-form {
-    padding: var(--spacing-md);
-  }
-  
-  .meal-title,
-  .page-title {
-    font-size: var(--font-size-xl);
-  }
-}
-
-/* ==============================================
-   UTILITY CLASSES & ANIMATIONS
-   ============================================== */
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
+@keyframes updateMealPlanFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.slide-up {
-  animation: slideUp 0.4s ease-out;
+.update-meal-plan-slide-up {
+  animation: updateMealPlanSlideUp 0.4s ease-out;
 }
 
-@keyframes slideUp {
+@keyframes updateMealPlanSlideUp {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -409,22 +354,51 @@
   }
 }
 
-/* Shimmer effect for loading states */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+@media (max-width: 1200px) {
+  .update-meal-plan-sections-wrapper {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  .update-meal-plan-nutrients-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.shimmer {
-  position: relative;
-  overflow: hidden;
+@media (max-width: 768px) {
+  .update-meal-plan-form {
+    padding: var(--spacing-lg);
+  }
+  
+  .update-meal-plan-page-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .update-meal-plan-form-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .update-meal-plan-button-base {
+    width: 100%;
+    max-width: 300px;
+  }
 }
 
-.shimmer::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
-  transform: translateX(-100%);
-  animation: shimmer 2s infinite;
+@media (max-width: 480px) {
+  .update-meal-plan-form {
+    padding: var(--spacing-md);
+  }
+  
+  .update-meal-plan-page-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .update-meal-plan-header {
+    padding: var(--spacing-lg);
+  }
 }

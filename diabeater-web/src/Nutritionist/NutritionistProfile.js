@@ -87,7 +87,7 @@ const NutritionistProfile = observer(() => {
         <div className="profile-details">
           <h2 className="section-title">Basic Information</h2>
           <div className="form-row">
-            <div className="form-group">
+            <div className="nutritionist-form-group">
               <label htmlFor="firstName">First Name</label>
               <input
                 type="text"
@@ -96,7 +96,7 @@ const NutritionistProfile = observer(() => {
                 onChange={(e) => vm.setProfileField('firstName', e.target.value)}
               />
             </div>
-            <div className="form-group">
+            <div className="nutritionist-form-group">
               <label htmlFor="lastName">Last Name</label>
               <input
                 type="text"

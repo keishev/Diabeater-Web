@@ -167,10 +167,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
 
     return (
         <div className="create-meal-plan-content">
-            <h2 className="page-title">CREATE MEAL PLAN</h2>
-            <form onSubmit={handleSubmit} className="meal-plan-form">
-                <div className="form-row-top">
-                    <div className="form-group meal-name">
+            <h2 className="create-meal-plan-page-title">CREATE MEAL PLAN</h2>
+            <form onSubmit={handleSubmit} className="create-meal-plan-form">
+                <div className="create-meal-plan-form-row-top">
+                    <div className="create-meal-plan-form-group create-meal-plan-meal-name">
                         <label htmlFor="meal-name">Meal Name</label>
                         <input
                             type="text"
@@ -182,7 +182,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                         />
                     </div>
 
-                    <div className="form-group upload-photo">
+                    <div className="create-meal-plan-form-group create-meal-plan-upload-photo">
                         <input
                             type="file"
                             id="upload-photo"
@@ -191,34 +191,34 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             style={{ display: 'none' }}
                         />
                         {imagePreviewUrl ? (
-                            <div className="uploaded-image-preview">
-                                <img src={imagePreviewUrl} alt="Meal Preview" className="meal-thumbnail" />
-                                <label htmlFor="upload-photo" className="change-photo-button">
+                            <div className="create-meal-plan-uploaded-image-preview">
+                                <img src={imagePreviewUrl} alt="Meal Preview" className="create-meal-plan-meal-thumbnail" />
+                                <label htmlFor="upload-photo" className="create-meal-plan-change-photo-button">
                                     Change Picture
                                 </label>
                             </div>
                         ) : (
-                            <label htmlFor="upload-photo" className="upload-photo-button initial">
+                            <label htmlFor="upload-photo" className="create-meal-plan-upload-photo-button create-meal-plan-initial">
                                 Upload Picture
                             </label>
                         )}
                     </div>
 
-                    <div className="form-group category">
+                    <div className="create-meal-plan-form-group create-meal-plan-category">
                         <label>Category</label>
-                        <div className="dropdown-checklist-container" ref={categoryDropdownRef}>
+                        <div className="create-meal-plan-dropdown-checklist-container" ref={categoryDropdownRef}>
                             <button
                                 type="button"
-                                className={`dropdown-toggle-button ${isCategoryDropdownOpen ? 'open' : ''}`}
+                                className={`create-meal-plan-dropdown-toggle-button ${isCategoryDropdownOpen ? 'create-meal-plan-open' : ''}`}
                                 onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
                             >
                                 {getCategoryButtonText()}
-                                <span className="dropdown-arrow"></span>
+                                <span className="create-meal-plan-dropdown-arrow"></span>
                             </button>
                             {isCategoryDropdownOpen && (
-                                <div className="category-checklist">
+                                <div className="create-meal-plan-category-checklist">
                                     {categoryOptions.map((option, index) => (
-                                        <div key={index} className="checkbox-item">
+                                        <div key={index} className="create-meal-plan-checkbox-item">
                                             <input
                                                 type="checkbox"
                                                 id={`category-${index}`}
@@ -237,8 +237,8 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                 </div>
 
                 {/* ⭐ NEW: Split Description Fields ⭐ */}
-                <h3 className="create-meal-section-title">Meal Details</h3>
-                <div className="form-group">
+                <h3 className="create-meal-plan-section-title">Meal Details</h3>
+                <div className="create-meal-plan-form-group">
                     <label htmlFor="ingredients">Ingredients</label>
                     <textarea
                         id="ingredients"
@@ -250,7 +250,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                     ></textarea>
                 </div>
 
-                <div className="form-group">
+                <div className="create-meal-plan-form-group">
                     <label htmlFor="steps">Preparation Steps</label>
                     <textarea
                         id="steps"
@@ -262,7 +262,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                     ></textarea>
                 </div>
 
-                <div className="form-group">
+                <div className="create-meal-plan-form-group create-meal-plan-description">
                     <label htmlFor="general-description">General Description & Notes</label>
                     <textarea
                         id="general-description"
@@ -273,10 +273,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                     ></textarea>
                 </div>
 
-                <h3 className="create-meal-section-title">Nutrients Information</h3>
-                <div className="nutrients-grid">
-                    <div className="nutrient-item">
-                        <label htmlFor="calories" className="nutrient-label">Calories</label>
+                <h3 className="create-meal-plan-section-title">Nutrients Information</h3>
+                <div className="create-meal-plan-nutrients-grid">
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="calories" className="create-meal-plan-nutrient-label">Calories</label>
                         <input
                             type="number"
                             id="calories"
@@ -286,11 +286,11 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             min="0"
                             required
                         />
-                        <span className="unit">kcal</span>
+                        <span className="create-meal-plan-unit">kcal</span>
                     </div>
 
-                    <div className="nutrient-item">
-                        <label htmlFor="protein" className="nutrient-label">Protein</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="protein" className="create-meal-plan-nutrient-label">Protein</label>
                         <input
                             type="number"
                             id="protein"
@@ -300,11 +300,11 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             min="0"
                             required
                         />
-                        <span className="unit">grams</span>
+                        <span className="create-meal-plan-unit">grams</span>
                     </div>
 
-                    <div className="nutrient-item">
-                        <label htmlFor="carbohydrates" className="nutrient-label">Carbohydrates</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="carbohydrates" className="create-meal-plan-nutrient-label">Carbohydrates</label>
                         <input
                             type="number"
                             id="carbohydrates"
@@ -314,11 +314,11 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             min="0"
                             required
                         />
-                        <span className="unit">grams</span>
+                        <span className="create-meal-plan-unit">grams</span>
                     </div>
 
-                    <div className="nutrient-item">
-                        <label htmlFor="fats" className="nutrient-label">Fats</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="fats" className="create-meal-plan-nutrient-label">Fats</label>
                         <input
                             type="number"
                             id="fats"
@@ -328,15 +328,15 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             min="0"
                             required
                         />
-                        <span className="unit">grams</span>
+                        <span className="create-meal-plan-unit">grams</span>
                     </div>
                 </div>
 
                 {/* ⭐ NEW: Premium Nutritional Information (always shown for input, display logic for premium unlock) ⭐ */}
-                <h3 className="create-meal-section-title">Advanced Nutrients (Optional)</h3>
-                <div className="nutrients-grid premium-nutrients">
-                    <div className="nutrient-item">
-                        <label htmlFor="sugar" className="nutrient-label">Sugar</label>
+                <h3 className="create-meal-plan-section-title">Advanced Nutrients (Optional)</h3>
+                <div className="create-meal-plan-nutrients-grid create-meal-plan-premium-nutrients">
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="sugar" className="create-meal-plan-nutrient-label">Sugar</label>
                         <input
                             type="number"
                             id="sugar"
@@ -345,10 +345,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             placeholder="0"
                             min="0"
                         />
-                        <span className="unit">grams</span>
+                        <span className="create-meal-plan-unit">grams</span>
                     </div>
-                    <div className="nutrient-item">
-                        <label htmlFor="saturatedFat" className="nutrient-label">Saturated Fat</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="saturatedFat" className="create-meal-plan-nutrient-label">Saturated Fat</label>
                         <input
                             type="number"
                             id="saturatedFat"
@@ -357,10 +357,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             placeholder="0"
                             min="0"
                         />
-                        <span className="unit">grams</span>
+                        <span className="create-meal-plan-unit">grams</span>
                     </div>
-                    <div className="nutrient-item">
-                        <label htmlFor="unsaturatedFat" className="nutrient-label">Unsaturated Fat</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="unsaturatedFat" className="create-meal-plan-nutrient-label">Unsaturated Fat</label>
                         <input
                             type="number"
                             id="unsaturatedFat"
@@ -369,10 +369,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             placeholder="0"
                             min="0"
                         />
-                        <span className="unit">grams</span>
+                        <span className="create-meal-plan-unit">grams</span>
                     </div>
-                    <div className="nutrient-item">
-                        <label htmlFor="cholesterol" className="nutrient-label">Cholesterol</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="cholesterol" className="create-meal-plan-nutrient-label">Cholesterol</label>
                         <input
                             type="number"
                             id="cholesterol"
@@ -381,10 +381,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             placeholder="0"
                             min="0"
                         />
-                        <span className="unit">mg</span>
+                        <span className="create-meal-plan-unit">mg</span>
                     </div>
-                    <div className="nutrient-item">
-                        <label htmlFor="sodium" className="nutrient-label">Sodium</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="sodium" className="create-meal-plan-nutrient-label">Sodium</label>
                         <input
                             type="number"
                             id="sodium"
@@ -393,10 +393,10 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             placeholder="0"
                             min="0"
                         />
-                        <span className="unit">mg</span>
+                        <span className="create-meal-plan-unit">mg</span>
                     </div>
-                    <div className="nutrient-item">
-                        <label htmlFor="potassium" className="nutrient-label">Potassium</label>
+                    <div className="create-meal-plan-nutrient-item">
+                        <label htmlFor="potassium" className="create-meal-plan-nutrient-label">Potassium</label>
                         <input
                             type="number"
                             id="potassium"
@@ -405,15 +405,14 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                             placeholder="0"
                             min="0"
                         />
-                        <span className="unit">mg</span>
+                        <span className="create-meal-plan-unit">mg</span>
                     </div>
                 </div>
 
+                {error && <p className="create-meal-plan-error-message">{error}</p>}
+                {success && <p className="create-meal-plan-success-message">{success}</p>}
 
-                {error && <p className="error-message">{error}</p>}
-                {success && <p className="success-message">{success}</p>}
-
-                <button type="submit" className="create-button" disabled={loading}>
+                <button type="submit" className="create-meal-plan-create-button" disabled={loading}>
                     {loading ? 'Creating...' : '+ CREATE'}
                 </button>
             </form>

@@ -1,333 +1,367 @@
 /* src/RewardModal.css */
 
-.modal-overlay {
-    /* *** CRITICAL PROPERTIES FOR OVERLAY AND CENTERING *** */
-    position: fixed; /* Positions the overlay relative to the viewport */
-    top: 0;          /* Aligns to the top edge of the viewport */
-    left: 0;         /* Aligns to the left edge of the viewport */
-    width: 100vw;     /* Makes the overlay span the full width of the viewport */
-    height: 100vh;    /* Makes the overlay span the full height of the viewport */
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    display: flex;   /* Enables Flexbox for easy centering of children (the modal-content) */
-    justify-content: center; /* Horizontally centers the modal-content within the overlay */
-    align-items: center;     /* Vertically centers the modal-content within the overlay */
-    z-index: 9999 !important;   /* Ensures the modal appears on top of other content. Adjust if needed */
-
-    /* Optional: for a smoother appearance */
-    opacity: 1; /* Make sure it's visible, although `display: none` would be handled by JS */
-    transition: opacity 0.3s ease-out; /* Smooth transition for fade-in/out */
-    pointer-events: auto;
+/* --- Variables for consistent theming --- */
+:root {
+  --theme-bg-light: #FFFAF3;
+  --theme-orange: #F79554;
+  --theme-orange-hover: #e07f43;
+  --theme-blue-dark: #1E525C;
+  --theme-grey-dark: #4c4c4c;
+  --theme-grey-light: #a0a0a0;
+  --active-orange: #E65100;
+  --error-red: #F44336;
 }
 
-/* If you want to animate the modal itself when it appears */
-.modal-content {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 500px;
-    border: 2px solid #007bff;
-    position: relative;
-    z-index: 10000;
-    /* Optional: Add a subtle animation for appearing */
-    animation: fadeInScale 0.3s ease-out forwards; /* Ensures the final state of the animation is kept */
-}
-
-/* Optional: Animation for appearing */
-@keyframes fadeInScale {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Styles for modal header, form elements, buttons */
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.modal-title {
-    font-size: 1.5em;
-    color: #1E525C;
-    font-weight: 700;
-    margin: 0;
-    flex: 1;
-    text-align: left;
-}
-
-.close-button {
-    background: none;
-    border: none;
-    font-size: 2em;
-    cursor: pointer;
-    color: #aaa;
-    transition: color 0.2s;
-    margin-left: 16px;
-    line-height: 1;
-    align-self: flex-start;
-}
-
-.close-button:hover {
-    color: #f7931e;
-}
-
-.modal-body {
-    margin-bottom: 18px;
-}
-
-.modal-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    gap: 12px;
-}
-
-.modal-label {
-    color: #1E525C;
-    font-weight: 600;
-    font-size: 1em;
-    flex: 1 1 50%;
-    text-align: left;
-    margin-right: 8px;
-}
-
-.modal-input {
-    flex: 1 1 50%;
-    width: auto;
-    min-width: 120px;
-    max-width: 180px;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1em;
-    box-sizing: border-box;
-    background: #f9f9f9;
-    color: #333;
-    text-align: right;
-    margin-left: 8px;
-}
-
-.modal-input-right {
-    text-align: right;
-}
-
-.modal-input:focus {
-    border-color: #007bff;
-    outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.modal-input.read-only {
-    background-color: #e9ecef;
-    cursor: not-allowed;
-    color: #666;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    margin-top: 18px;
-}
-
-.confirm-button {
-    background-color: #f7931e;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 12px 28px;
-    font-size: 1.08em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 8px rgba(247,147,30,0.08);
-}
-
-.confirm-button:hover {
-    background-color: #ffa94d;
-}
-
-.cancel-button {
-    background-color: #1E525C;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 12px 22px;
-    font-size: 1.08em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 8px rgba(30,82,92,0.08);
-}
-
-.cancel-button:hover {
-    background-color: #174046;
-}
-
-body {
-    overflow: visible !important;
-}
-
+/* Main overlay for the modal */
 .reward-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.35);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+    pointer-events: auto;
 }
 
+/* Main modal container */
 .reward-modal-content {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(30,82,92,0.18);
-    max-width: 400px;
-    width: 100%;
-    padding: 32px 28px 24px 28px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(30, 82, 92, 0.2);
+    max-width: 500px;
+    width: 90%;
+    padding: 40px;
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    animation: rewardModalFadeInScale 0.3s ease-out forwards;
+    border: 1px solid rgba(247, 149, 84, 0.2);
 }
 
-.modal-header {
+/* Animation for modal appearance */
+@keyframes rewardModalFadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Modal header */
+.reward-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 18px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(247, 149, 84, 0.2);
 }
 
-.modal-title {
-    font-size: 1.35em;
-    color: #1E525C;
+.reward-modal-title {
+    font-size: 24px;
+    color: var(--theme-blue-dark);
     font-weight: 700;
     margin: 0;
     flex: 1;
     text-align: left;
+    letter-spacing: 0.5px;
 }
 
-.close-button {
+.reward-modal-close-button {
     background: none;
     border: none;
-    font-size: 2em;
+    font-size: 28px;
     cursor: pointer;
-    color: #aaa;
-    transition: color 0.2s;
-    margin-left: 16px;
+    color: var(--theme-grey-light);
+    transition: color 0.3s ease, transform 0.2s ease;
+    margin-left: 20px;
     line-height: 1;
-    align-self: flex-start;
-}
-.close-button:hover {
-    color: #f7931e;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
 }
 
-.modal-body {
-    margin-bottom: 18px;
+.reward-modal-close-button:hover {
+    color: var(--theme-orange);
+    background-color: rgba(247, 149, 84, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Modal body */
+.reward-modal-body {
+    margin-bottom: 30px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 20px;
 }
 
-.modal-row {
+/* Form row styling */
+.reward-modal-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 20px;
     width: 100%;
 }
 
-.modal-label {
-    color: #1E525C;
+.reward-modal-label {
+    color: var(--theme-blue-dark);
     font-weight: 600;
-    font-size: 1em;
-    flex: 0 0 50%;
+    font-size: 16px;
+    flex: 0 0 45%;
     text-align: left;
-    margin-right: 8px;
+    margin: 0;
 }
 
-.modal-input {
-    flex: 0 0 50%;
-    width: 140px;
-    min-width: 100px;
-    max-width: 180px;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1em;
+/* Input styling */
+.reward-modal-input {
+    flex: 1;
+    width: 350px;
+    padding: 12px 16px;
+    border: 2px solid var(--theme-blue-dark);
+    border-radius: 25px;
+    font-size: 16px;
     box-sizing: border-box;
-    background: #f9f9f9;
-    color: #333;
-    text-align: right;
-    margin-left: 8px;
-}
-
-.modal-input-right {
-    text-align: right;
-}
-
-.modal-input:focus {
-    border-color: #f7931e;
+    background: #ffffff;
+    color: var(--theme-grey-dark);
+    text-align: left;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(247,147,30,0.15);
 }
 
-.modal-input.read-only {
-    background-color: #e9ecef;
+.reward-modal-input-right {
+    text-align: center;
+}
+
+.reward-modal-input:focus {
+    border-color: var(--theme-orange);
+    box-shadow: 0 0 0 3px rgba(247, 149, 84, 0.15);
+}
+
+.reward-modal-input.reward-modal-read-only {
+    background-color: rgba(240, 240, 240, 0.7);
     cursor: not-allowed;
-    color: #666;
+    color: var(--theme-grey-dark);
+    border-color: var(--theme-grey-light);
 }
 
-.modal-actions {
+.reward-modal-input.reward-modal-read-only:focus {
+    border-color: var(--theme-grey-light);
+    box-shadow: none;
+}
+
+/* Number input specific styling */
+.reward-modal-input[type="number"] {
+    text-align: center;
+}
+
+/* Action buttons container */
+.reward-modal-actions {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 18px;
-    margin-top: 18px;
+    gap: 20px;
+    margin-top: 10px;
 }
 
-.confirm-button {
-    background-color: #f7931e;
-    color: #fff;
+/* Confirm button styling */
+.reward-modal-confirm-button {
+    background-color: var(--theme-orange);
+    color: #ffffff;
     border: none;
-    border-radius: 6px;
-    padding: 12px 28px;
-    font-size: 1.08em;
+    border-radius: 25px;
+    padding: 14px 28px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 8px rgba(247,147,30,0.08);
-}
-.confirm-button:hover {
-    background-color: #ffa94d;
-}
-
-.cancel-button {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(247, 149, 84, 0.3);
+    min-width: 120px;
+    letter-spacing: 0.3px;
 }
 
-.cancel-button:hover {
-    background-color: #5a6268;
+.reward-modal-confirm-button:hover {
+    background-color: var(--active-orange);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 16px rgba(247, 149, 84, 0.4);
 }
 
+.reward-modal-confirm-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(247, 149, 84, 0.3);
+}
 
+/* Cancel button styling */
+.reward-modal-cancel-button {
+    background-color: var(--theme-blue-dark);
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(30, 82, 92, 0.3);
+    min-width: 120px;
+    letter-spacing: 0.3px;
+}
 
+.reward-modal-cancel-button:hover {
+    background-color: #174046;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(30, 82, 92, 0.4);
+}
 
+.reward-modal-cancel-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(30, 82, 92, 0.3);
+}
+
+/* Disabled button state */
+.reward-modal-confirm-button:disabled,
+.reward-modal-cancel-button:disabled {
+    background-color: var(--theme-grey-light);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Form group styling for better spacing */
+.reward-modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Ensure body doesn't scroll when modal is open */
+body.reward-modal-open {
+    overflow: hidden;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .reward-modal-content {
+        max-width: 90%;
+        width: 95%;
+        padding: 30px 25px;
+        margin: 20px;
+    }
+
+    .reward-modal-title {
+        font-size: 20px;
+    }
+
+    .reward-modal-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .reward-modal-label {
+        flex: none;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+
+    .reward-modal-input {
+        flex: none;
+        min-width: auto;
+        width: 100%;
+        text-align: left;
+    }
+
+    .reward-modal-input-right {
+        text-align: left;
+    }
+
+    .reward-modal-actions {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .reward-modal-confirm-button,
+    .reward-modal-cancel-button {
+        width: 100%;
+        min-width: auto;
+        padding: 12px 20px;
+    }
+
+    .reward-modal-close-button {
+        font-size: 24px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .reward-modal-content {
+        padding: 25px 20px;
+        border-radius: 15px;
+    }
+
+    .reward-modal-title {
+        font-size: 18px;
+    }
+
+    .reward-modal-label,
+    .reward-modal-input {
+        font-size: 14px;
+    }
+
+    .reward-modal-input {
+        padding: 10px 14px;
+    }
+
+    .reward-modal-confirm-button,
+    .reward-modal-cancel-button {
+        font-size: 14px;
+        padding: 10px 18px;
+    }
+}
+
+/* Focus trap styling for accessibility */
+.reward-modal-overlay:focus {
+    outline: none;
+}
+
+/* Loading state for buttons */
+.reward-modal-confirm-button.reward-modal-loading,
+.reward-modal-cancel-button.reward-modal-loading {
+    position: relative;
+    color: transparent;
+}
+
+.reward-modal-confirm-button.reward-modal-loading::after,
+.reward-modal-cancel-button.reward-modal-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: rewardModalSpin 1s linear infinite;
+}
+
+@keyframes rewardModalSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

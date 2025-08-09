@@ -44,7 +44,7 @@ const AdminProfile = observer(() => {
   return (
     <div className="my-profile-content">
       <header className="admin-header">
-        <h1 className="admin-page-title">MY PROFILE</h1>
+        <h1 className="admin-profile-page-title">MY PROFILE</h1>
       </header>
       <div className="profile-card">
         <div className="profile-avatar-section">
@@ -83,7 +83,7 @@ const AdminProfile = observer(() => {
         <div className="profile-details">
           <h2 className="section-title">Basic Information</h2>
           <div className="form-row">
-            <div className="form-group">
+            <div className="admin-profile-form-group">
               <label htmlFor="firstName">First Name</label>
               <input
                 type="text"
@@ -92,7 +92,7 @@ const AdminProfile = observer(() => {
                 onChange={(e) => vm.setProfileField('firstName', e.target.value)}
               />
             </div>
-            <div className="form-group">
+            <div className="admin-profile-form-group">
               <label htmlFor="lastName">Last Name</label>
               <input
                 type="text"
@@ -113,15 +113,7 @@ const AdminProfile = observer(() => {
                 onChange={(e) => vm.setProfileField('email', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label htmlFor="contactNumber">Contact Number</label>
-              <input
-                type="text"
-                id="contactNumber"
-                value={profile.contactNumber || ''}
-                onChange={(e) => vm.setProfileField('contactNumber', e.target.value)}
-              />
-            </div>
+            
           </div>
 
           {/* <div className="form-group full-width">

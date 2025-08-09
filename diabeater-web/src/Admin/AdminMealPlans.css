@@ -1,577 +1,1266 @@
-/* src/Admin/AdminMealPlans.css */
+/* ==============================================
+   ADMIN MEAL PLANS - MODERN STYLING
+   Consistent with Nutritionist Dashboard
+   ============================================== */
+
+/* CSS Variables for consistent theming */
+:root {
+  /* Brand Colors */
+  --primary-orange: #ff9800;
+  --primary-orange-hover: #e65100;
+  --primary-orange-light: #ffe0b2;
+  --secondary-teal: #1e525c;
+  --secondary-teal-light: #2d6975;
+  
+  /* Neutral Colors */
+  --background-cream: #fffaf3;
+  --surface-white: #ffffff;
+  --surface-light: #f8f9fa;
+  --border-light: #e9ecef;
+  --border-medium: #dee2e6;
+  --text-primary: #2d3436;
+  --text-secondary: #636e72;
+  --text-light: #b2bec3;
+  
+  /* Status Colors */
+  --success-green: #00b894;
+  --success-green-light: #e8f5f1;
+  --warning-yellow: #fdcb6e;
+  --warning-yellow-light: #fef7e6;
+  --error-red: #e74c3c;
+  --error-red-light: #fdeaea;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 50px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.16);
+  
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+}
+
+/* ==============================================
+   BASE LAYOUT
+   ============================================== */
 
 .admin-meal-plans-container {
-    padding: 24px;
-    margin-top: -20px;
-    margin-left: 50px;
-    position: relative; /* Needed for positioning the search controls */
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--background-cream) 0%, #fff8f0 100%);
+  min-height: 100vh;
+  font-family: var(--font-family);
+  color: var(--text-primary);
 }
 
 .admin-meal-plans-header {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    margin-bottom: 30px;
-    margin-right: 20px;
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    gap: 20px; /* Space between header items if they wrap */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
 }
 
 .admin-meal-plans-title {
-    font-size: 28px;
-    color: #ff9800;
-    margin-left: 20px;
-    flex-shrink: 0; /* Prevent title from shrinking */
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  background: #f79554;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-shrink: 0;
 }
 
-/* --- New Tab Navigation Styling --- */
-.admin-status-tabs {
-    display: flex;
-    /* Use gap for spacing between tabs, or adjust margin-left/right on buttons */
-    gap: 20px; 
-    margin-bottom: 20px; /* Space below tabs before content */
-    border-bottom: 2px solid #f0f0f0; /* Light line below tabs */
-    padding-bottom: 5px; /* Space between tab text and underline */
-    flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+.admin-meal-plans-title i {
+  background: #f79554;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.admin-status-tabs .tab-button {
-    background-color: transparent;
-    border: none;
-    padding: 10px 15px; /* Adjust padding for tab buttons */
-    font-size: 16px;
-    font-weight: 600;
-    color: #555;
-    cursor: pointer;
-    position: relative; /* For the orange underline */
-    transition: color 0.3s ease;
-    white-space: nowrap; /* Prevent tab text from wrapping */
-}
-
-.admin-status-tabs .tab-button:hover {
-    color: #000;
-}
-
-.admin-status-tabs .tab-button.active {
-    color: #fffaf3; /* Orange for the active tab */
-}
-
-.admin-status-tabs .tab-button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -7px; /* Position the underline precisely below the button and on the border */
-    left: 0;
-    width: 100%;
-    height: 3px; /* Thickness of the orange underline */
-    background-color: #ff9800; /* Orange color for the underline */
-    border-radius: 2px 2px 0 0; /* Slightly rounded corners for the underline */
-}
-/* --- End New Tab Navigation Styling --- */
-
+/* ==============================================
+   SEARCH CONTROLS
+   ============================================== */
 
 .search-controls {
-    display: flex;
-    gap: 15px; /* Space between search input and category button */
-    align-items: center;
-    flex-wrap: wrap; /* Allow search controls to wrap */
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  font-size: var(--font-size-sm);
 }
 
 .search-input {
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    font-size: 16px;
-    width: 250px; /* Adjust width as needed */
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 40px;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-base);
+  background: var(--surface-white);
+  transition: all 0.3s ease;
+  outline: none;
+  width: 280px;
 }
 
 .search-input:focus {
-    border-color: #ff9800;
-    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-light);
 }
 
 .category-dropdown-container {
-    position: relative;
-    display: inline-block;
+  position: relative;
 }
 
 .category-button {
-    background-color: #ff9800;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 20px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    white-space: nowrap; /* Prevent text wrapping */
+  background: linear-gradient(135deg, var(--secondary-teal) 0%, var(--secondary-teal-light) 100%);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
 }
 
 .category-button:hover {
-    background-color: #e65100;
+  background: linear-gradient(135deg, var(--secondary-teal-light) 0%, #3a7a87 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
-.category-dropdown-menu { /* Renamed from .category-dropdown-content for consistency with previous example */
-    position: absolute;
-    background-color: #fff;
-    min-width: 200px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 100; /* Ensure it's above other content */
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 5px; /* Space below the button */
-    right: 0; /* Align dropdown to the right of the button */
+.category-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 200px;
 }
 
 .dropdown-item {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-size: 15px;
-    transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
 }
 
 .dropdown-item:hover {
-    background-color: #f1f1f1;
+  background: var(--primary-orange-light);
+  color: var(--primary-orange);
 }
 
-.dropdown-item.selected { /* Changed from .active to .selected for clarity with the tab buttons */
-    background-color: #ffe0b2; /* Lighter orange for active category */
-    font-weight: bold;
-    color: #ff9800;
+.dropdown-item.selected {
+  background: var(--primary-orange);
+  color: white;
+  font-weight: 500;
 }
 
-/* Responsive adjustments */
-@media (max-width: 900px) {
-    .admin-meal-plans-header {
-        flex-direction: column; /* Stack title and search controls */
-        align-items: flex-start; /* Align stacked items to the left */
-        gap: 20px; /* Space between stacked elements */
-    }
-
-    .admin-status-tabs {
-        width: 100%; /* Make tabs take full width when stacked */
-        justify-content: center; /* Center the tab buttons if they wrap */
-        gap: 10px; /* Smaller gap for wrapped tabs */
-    }
-
-    .search-controls {
-        flex-direction: column; /* Stack search input and category button */
-        width: 100%;
-        gap: 10px;
-        align-items: flex-start;
-    }
-
-    .search-input {
-        width: 100%; /* Full width for input on small screens */
-        max-width: 300px; /* Limit max width even when stacked */
-    }
-
-    .category-button {
-        width: 100%; /* Full width for button on small screens */
-        max-width: 300px;
-        text-align: left;
-    }
-
-    .category-dropdown-menu {
-        left: 0; /* Align dropdown to the left when controls are stacked */
-        right: auto;
-        min-width: 100%;
-        max-width: 300px;
-    }
+.manage-categories-button {
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
 }
+
+.manage-categories-button:hover {
+  background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #e64a19 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ==============================================
+   TAB NAVIGATION
+   ============================================== */
+
+.admin-status-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
+  background: var(--surface-white);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  min-width: fit-content;
+}
+
+.tab-button:hover {
+  background: var(--primary-orange-light);
+  color: var(--primary-orange);
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff7043 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+/* ==============================================
+   POPULAR SECTIONS
+   ============================================== */
+
+.popular-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.popular-section {
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.popular-section-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.popular-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  max-width: 100%;
+}
+
+.popular-meal-card {
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.popular-meal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-teal));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.popular-meal-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+
+.popular-meal-card:hover::before {
+  opacity: 0.03;
+}
+
+.popular-meal-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.popular-meal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.popular-meal-card:hover .popular-meal-image {
+  transform: scale(1.05);
+}
+
+.popular-meal-overlay {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-pill);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.popular-meal-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.saves-count {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.saves-count i {
+  color: #4ecdc4;
+}
+
+.popular-meal-info {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  position: relative;
+  z-index: 2;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.popular-meal-name {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.popular-meal-author {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.popular-meal-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  justify-content: center;
+  margin-top: var(--spacing-sm);
+}
+
+.category-tag {
+  background: var(--primary-orange-light);
+  color: var(--primary-orange);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  border: 1px solid var(--primary-orange);
+}
+
+/* Empty card styling */
+.empty-card {
+  border: 2px dashed var(--border-medium);
+  background: var(--surface-light);
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-card::before {
+  display: none;
+}
+
+.empty-content {
+  text-align: center;
+  color: var(--text-light);
+}
+
+.empty-icon {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* ==============================================
+   REGULAR MEAL PLANS GRID
+   ============================================== */
 
 .meal-plans-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); /* or 360px */
-    gap: 40px 30px; /* more vertical gap */
-    justify-content: center;
-    align-items: stretch; /* ensure items fill the same height */
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-xl);
+  padding: var(--spacing-md);
 }
 
 .meal-plan-card {
-    background-color: #fff;
-    border-radius: 12px;
-    overflow: hidden; /* Ensures image corners are rounded */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    height: 100%;
-    flex-direction: column;
-    align-items: center; 
-    justify-content: space-between;
-    padding: 12px;
-    transition: transform 0.2s ease-in-out;
-    gap: 10px;
-    border-radius: 12px;
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+}
+
+.meal-plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-orange), var(--secondary-teal));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
 .meal-plan-card:hover {
-    transform: translateY(-5px); /* Subtle lift effect on hover */
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+
+.meal-plan-card:hover::before {
+  opacity: 0.03;
+}
+
+.meal-plan-image-container {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
 }
 
 .meal-plan-card-image {
-    width: 400px;
-    height: 200px; /* Fixed height for consistent image size */
-    object-fit: cover; /* Ensures images cover the area without distortion */
-    cursor: pointer; /* Indicates it's clickable */
-    border-bottom: 1px solid #eee; /* Separator for image and info */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.meal-plan-card:hover .meal-plan-card-image {
+  transform: scale(1.05);
+}
+
+.status-badge {
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  z-index: 2;
+}
+
+.status-indicator {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+}
+
+.status-pending-approval {
+  background: rgba(253, 203, 110, 0.9);
+  color: #b8860b;
+  border: 1px solid var(--warning-yellow);
+}
+
+.status-approved {
+  background: rgba(0, 184, 148, 0.9);
+  color: white;
+  border: 1px solid var(--success-green);
+}
+
+.status-rejected {
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+  border: 1px solid var(--error-red);
+}
+
+.meal-plan-card-content {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  position: relative;
+  z-index: 2;
+  flex-grow: 1;
 }
 
 .meal-plan-card-info {
-    padding: 15px;
-    text-align: center;
-    width: 100%; /* Occupy full width of card */
+  text-align: center;
+  flex-grow: 1;
 }
 
 .meal-plan-card-name {
-    font-size: 20px;
-    color: #333;
-    margin-bottom: 5px;
-    font-weight: bold;
-    margin-top: 5px;
-    text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 1.3;
 }
 
 .meal-plan-card-author {
-    font-size: 14px;
-    color: #777;
-    margin-bottom: 15px;
-    margin-top: 5px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.meal-plan-save-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.meal-plan-save-count i {
+  color:rgba(0, 184, 148, 0.9);
 }
 
 .meal-plan-card-actions {
-    display: flex;
-    gap: 10px;
-    padding: 0 15px; /* Match padding of info */
-    width: 100%;
-    justify-content: center;
-    margin-top: auto;
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  margin-top: auto;
 }
 
 .approve-button,
 .reject-button {
-    padding: 15px 50px; 
-    font-size: 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    flex: none; /* Make them only take up the space their content and padding needs */
-    width: auto;
+  background: none;
+  border: 2px solid;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
 }
+
 .approve-button {
-    background-color: #4CAF50; /* Green */
-    color: white;
-    border: none;
+  border-color: var(--success-green);
+  color: var(--success-green);
 }
 
 .approve-button:hover {
-    background-color: #388E3C; /* Darker green */
-    transform: translateY(-1px);
+  background: var(--success-green);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .reject-button {
-    background-color: #F44336; /* Red */
-    color: white;
-    border: none;
+  border-color: var(--error-red);
+  color: var(--error-red);
 }
 
 .reject-button:hover {
-    background-color: #D32F2F; /* Darker red */
-    transform: translateY(-1px);
+  background: var(--error-red);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.rejection-info-container {
+  background: var(--error-red-light);
+  border: 1px solid var(--error-red);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.rejection-info {
+  font-size: var(--font-size-xs);
+  color: var(--error-red);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.rejection-label {
+  font-weight: 600;
+  margin-right: var(--spacing-xs);
+}
+
+/* ==============================================
+   EMPTY STATES AND LOADING
+   ============================================== */
+
+.no-plans-container {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xxl);
+  background: var(--surface-white);
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--border-medium);
+}
+
+.no-plans-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
 }
 
 .no-pending-plans-message {
-    text-align: center;
-    font-size: 18px;
-    color: #888;
-    margin-top: 50px;
-    grid-column: 1 / -1; /* Make it span all columns in the grid */
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin: 0;
 }
 
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+  gap: var(--spacing-lg);
+}
 
-/* MODAL STYLING */
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-light);
+  border-top: 4px solid var(--primary-orange);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.error-container {
+  background: var(--error-red-light);
+  border: 1px solid var(--error-red);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--error-red);
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ==============================================
+   MODAL STYLING
+   ============================================== */
+
+/* ==============================================
+   ENHANCED REJECTION MODAL STYLING
+   ============================================== */
+
 .reject-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    padding: 16px;
-}
-.other-reason-input{
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ff9800;
-    border-radius: 8px;
-    resize: vertical;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-.other-reason-input::placeholder{
-    color: #555;
-}
-.approve-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; /* Ensure it's above other content */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(45, 52, 54, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--spacing-lg);
+  backdrop-filter: blur(8px);
+  animation: overlayFadeIn 0.3s ease-out;
 }
 
-.approve-modal-content {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 350px; /* Smaller max-width for confirmation */
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
 }
 
-.approve-modal-content .modal-title {
-    font-size: 24px;
-    color: #ff9800; /* Orange color */
-    margin-bottom: 10px;
-}
-
-.approve-modal-content .modal-actions { /* Reusing modal-actions for layout */
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 10px;
-}
-
-.no-button,
-.yes-button {
-    padding: 12px 30px; /* Adjust padding to match image */
-    border-radius: 25px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    flex: 1; /* Make them take equal space like in your image */
-}
-
-.no-button {
-    background-color: #ccc; /* Grey for "No" */
-    color: #333;
-    border: none;
-}
-
-.no-button:hover {
-    background-color: #bbb;
-}
-
-.yes-button {
-    background-color: #2b825c; /* Orange for "Yes" */
-    color: white;
-    border: none;
-}
-
-.yes-button:hover {
-    background-color: #10ae4d; /* Darker orange */
-}
-
-/* Responsive adjustments for the new modal */
-@media (max-width: 768px) {
-    .approve-modal-content {
-        padding: 20px;
-    }
-    .approve-modal-content .modal-title {
-        font-size: 20px;
-    }
-    .no-button,
-    .yes-button {
-        padding: 10px 20px;
-        font-size: 14px;
-    }
-}
 .reject-modal-content {
-    background-color: #fff;
-    padding: 24px;
-    border-radius: 16px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 500px; /* Adjust max-width as per your image */
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-sizing: border-box;
+  background: var(--surface-white);
+  padding: 0;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  position: relative;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid var(--border-light);
 }
 
-.modal-title {
-    text-align: center;
-    font-size: 24px;
-    color: #ff9800; /* Orange color */
-    margin-bottom: 8px;
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Header */
+.reject-modal-header {
+  background: #f79554;
+  color: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.reject-modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="0.5" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="0.5" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="50" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="30" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+}
+
+.reject-modal-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin: 0;
+  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.modal-title::before {
+  content: '⚠️';
+  font-size: var(--font-size-2xl);
+}
+
+.modal-subtitle {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+  margin-top: var(--spacing-sm);
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
+
+/* Modal Body */
+.reject-modal-body {
+  padding: var(--spacing-xl);
+}
+
+.reasons-section-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  text-align: center;
 }
 
 .reasons-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* Space between reason buttons */
+  display: grid;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
 .reason-button {
-    background-color: #f5f5f5; /* Light grey for inactive */
-    color: #555;
-    border: 1px solid #ddd;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-    text-align: left; /* Align text to the left */
+  background: var(--surface-white);
+  color: var(--text-primary);
+  border: 2px solid var(--border-light);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.reason-button::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-medium);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.reason-button::after {
+  content: '';
+  position: absolute;
+  left: var(--spacing-lg);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: var(--error-red);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s ease;
 }
 
 .reason-button:hover {
-    background-color: #ffe0b2; /* Lighter orange on hover */
-    border-color: #ff9800;
-    border: 1px solid #ff9800;
+  background: var(--error-red-light);
+  border-color: var(--error-red);
+  color: var(--error-red);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.reason-button:hover::before {
+  border-color: var(--error-red);
 }
 
 .reason-button.active {
-    background-color: #ff9800; /* Orange for active reason */
-    color: white;
-    border-color: #ff9800;
-    font-weight: bold;
+  background: linear-gradient(135deg, var(--error-red) 0%, #c0392b 100%);
+  color: white;
+  border-color: var(--error-red);
+  font-weight: 600;
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.reason-button.active::before {
+  background: white;
+  border-color: white;
+}
+
+.reason-button.active::after {
+  background: var(--error-red);
+  opacity: 1;
+}
+
+/* Other Reason Input */
+.other-reason-container {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--surface-light);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--border-medium);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding: 0 var(--spacing-lg);
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    padding: var(--spacing-lg);
+  }
+}
+
+.other-reason-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.other-reason-input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  font-size: var(--font-size-base);
+  box-sizing: border-box;
+  font-family: var(--font-family);
+  transition: all 0.3s ease;
+  background: var(--surface-white);
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.other-reason-input:focus {
+  outline: none;
+  border-color: var(--error-red);
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+  background: var(--surface-white);
+}
+
+.other-reason-input::placeholder {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* Modal Footer */
+.reject-modal-footer {
+  padding: var(--spacing-xl);
+  background: var(--surface-light);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-top: 1px solid var(--border-light);
 }
 
 .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  margin: 0;
 }
 
-.cancel-button,
-.submit-button {
-    width: 120px; 
-    display: inline-flex; 
-    justify-content: center; 
-    align-items: center; 
-    padding: 12px 24px; 
-    border-radius: 25px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+
+
+.reject-cancel-button {
+  background: #f79554;
+  color: #ffffff;
+  border: 2px solid var(--border-medium);
+  margin-left: 30px;
+}
+
+.reject-cancel-button:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.reject-submit-button {
+  background: linear-gradient(135deg, var(--error-red) 0%, #c0392b 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid var(--error-red);
+}
+
+.reject-submit-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.reject-submit-button:disabled {
+  background: var(--border-medium);
+  color: var(--text-light);
+  cursor: not-allowed;
+  border-color: var(--border-medium);
+}
+
+.reject-submit-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reject-submit-button.loading::before {
+  opacity: 1;
+}
+
+.reject-submit-button.loading {
+  color: transparent;
+}
+
+/* Character Counter */
+.character-counter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-light);
+}
+
+.character-count {
+  color: var(--text-secondary);
+}
+
+.character-count.warning {
+  color: var(--warning-yellow);
+}
+
+.character-count.error {
+  color: var(--error-red);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .reject-modal-overlay {
+    padding: var(--spacing-md);
+  }
+
+  .reject-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .reject-modal-header,
+  .reject-modal-body,
+  .reject-modal-footer {
+    padding: var(--spacing-lg);
+  }
+
+  .modal-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cancel-button,
+  .submit-button {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .reason-button {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+@media (max-width: 1200px) {
+  .popular-section-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-meal-plans-header {
+    flex-direction: column;
+    align-items: stretch;
     text-align: center;
-    white-space: nowrap;
-}
+  }
 
-
-.cancel-button {
-    background-color: #ccc; /* Grey for cancel */
-    color: #333;
-    border: none;
-}
-
-.cancel-button:hover {
-    background-color: #bbb;
-}
-
-.submit-button {
-    background-color: #ff9800; /* Orange for submit */
-    color: white;
-    border: none;
-    padding: 16px 24px;
-    margin-top: 13px;
-}
-
-.submit-button:hover {
-    background-color: #e65100; /* Darker orange */
-}
-
-/* Status text styling */
-.meal-plan-card-status {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
+  .admin-meal-plans-title {
     justify-content: center;
-    gap: 5px; /* Space between dot and text */
+  }
+
+  .search-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .admin-status-tabs {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .tab-button {
+    flex: none;
+    min-width: auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .popular-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .meal-plans-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
 }
 
-.status-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+@media (max-width: 600px) {
+  .admin-meal-plans-container {
+    padding: var(--spacing-md);
+  }
+
+  .admin-meal-plans-header {
+    padding: var(--spacing-md);
+  }
+
+  .admin-meal-plans-title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .search-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-dropdown-menu {
+    left: 0;
+    right: 0;
+  }
+
+  .reject-modal-content,
+  .approve-modal-content {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+
+  .modal-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .cancel-button,
+  .submit-button,
+  .no-button,
+  .yes-button {
+    width: 100%;
+  }
 }
-
-.status-dot.pending_approval {
-    background-color: #FFC107; /* Yellow for pending */
-}
-
-.status-dot.approved {
-    background-color: #4CAF50; /* Green for approved */
-}
-
-.status-dot.rejected {
-    background-color: #F44336; /* Red for rejected */
-}
-
-@media (max-width: 1024px) {
-    .meal-plans-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Responsive adjustments for the grid and modal */
-@media (max-width: 768px) {
-    .meal-plans-grid {
-        grid-template-columns: repeat(1, 1fr);
-        padding: 0 15px; /* Add some horizontal padding */
-    }
-
-    .meal-plan-card {
-        margin: 0 auto; /* Center single cards */
-    }
-
-    .reject-modal-content {
-        padding: 20px;
-    }
-
-    .modal-title {
-        font-size: 20px;
-    }
-
-    .reason-button {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
-
-     .modal-actions button { /* This affects modal buttons, but good to check if it applies elsewhere */
-        padding: 8px 12px; /* Adjust padding for smaller screens if needed */
-        font-size: 12px;   /* Adjust font size for smaller screens if needed */
-    } /* This is the closing brace for .modal-actions button */
-} 
