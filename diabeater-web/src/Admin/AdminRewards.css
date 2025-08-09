@@ -1,203 +1,578 @@
+/* src/AdminRewards.css */
+
+/* Main Container */
 .admin-rewards-container {
-    padding: 20px;
-    background-color: #f8f8f8;
-    min-height: calc(100vh - 80px); /* Adjust based on your actual header/footer height */
+    padding: 32px;
+    background: #fffaf3;
+    min-height: 100vh;
     width: 100%;
-    box-sizing: border-box; /* Include padding in the element's total width and height */
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
 
-.admin-rewards-container .admin-header {
-    margin-bottom: 30px;
+/* Header Section */
+.admin-header {
+    margin-bottom: 40px;
+    text-align: center;
 }
 
-.admin-rewards-container .admin-page-title {
-    color: #333;
-    font-size: 2em;
-    font-weight: 600;
+.admin-page-title {
+    color: #f7931e;
+    font-size: 2.5em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+    background: #f79554;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+   
+    position: relative;
 }
 
+
+/* Main Content Container */
 .rewards-content {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 30px;
+    background: linear-gradient(135deg, #ffffff, #fffef7);
+    border-radius: 24px;
+    box-shadow: 
+        0 16px 64px rgba(0, 0, 0, 0.08),
+        0 8px 32px rgba(247, 147, 30, 0.05);
+    padding: 40px;
+    border: 2px solid rgba(247, 147, 30, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.rewards-content::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #f7931e, #ffb347, #ffd700, #ffb347, #f7931e);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
 }
 
 .rewards-section-title {
-    color: #f7931e; /* Orange color from the image */
-    font-size: 1.5em;
-    margin-bottom: 25px;
+    color: #f7931e;
+    font-size: 1.8em;
+    margin-bottom: 35px;
     text-transform: uppercase;
     font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+    background: linear-gradient(135deg, #f7931e, #ffb347);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.reward-category-card {
-    border: 1px solid #eee;
-    border-radius: 8px;
+/* Status Messages */
+.loading-message {
+    text-align: center;
+    color: #2196f3;
+    font-weight: 600;
+    padding: 20px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    border: 2px solid #2196f3;
     margin-bottom: 20px;
-    overflow: hidden; /* Ensures borders are rounded correctly */
+    animation: pulse 2s infinite;
+}
+
+.error-message {
+    text-align: center;
+    color: #d32f2f;
+    font-weight: 600;
+    padding: 20px;
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-radius: 12px;
+    border: 2px solid #f44336;
+    margin-bottom: 20px;
+}
+
+/* Reward Category Cards */
+.reward-category-card {
+    border: 2px solid rgba(247, 147, 30, 0.15);
+    border-radius: 16px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    margin-top: 40px;
+    background: #ffffff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.reward-category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+    border-color: rgba(247, 147, 30, 0.3);
 }
 
 .reward-category-header {
     display: flex;
     align-items: center;
-    padding: 15px 20px;
-    background-color: #fdfdfd;
+    padding: 20px 25px;
+    background: linear-gradient(135deg, #f7931e, #ffb347);
     cursor: pointer;
-    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.reward-category-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.reward-category-header:hover::before {
+    left: 100%;
 }
 
 .reward-category-header h3 {
     margin: 0;
-    color: #333;
-    font-size: 1.2em;
-    font-weight: 600;
-    flex-grow: 1; /* Allows h3 to take available space */
+    color: white;
+    font-size: 1.3em;
+    font-weight: 700;
+    flex-grow: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .reward-category-header .add-rewards-text {
-    color: #666;
-    font-size: 0.9em;
-    margin-left: auto; /* Pushes text to the left of the icon */
-    margin-right: 15px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95em;
+    margin-right: 20px;
+    font-weight: 500;
 }
 
-.reward-category-header i { /* Chevron icon */
-    color: #555;
-    font-size: 1em;
+.reward-category-header i {
+    color: white;
+    font-size: 1.2em;
     transition: transform 0.3s ease;
 }
 
-/* Rotate chevron when expanded */
 .reward-category-header i.fa-chevron-up {
     transform: rotate(0deg);
 }
+
 .reward-category-header i.fa-chevron-down {
     transform: rotate(180deg);
 }
 
 .reward-category-body {
-    padding: 15px 20px;
-    background-color: #fff;
+    padding: 25px;
+    background: linear-gradient(135deg, #ffffff, #fffef7);
 }
 
+/* Subheaders */
 .rewards-subheader {
+    font-size: 1.2em;
+    color: #555;
+    margin: 30px 0 20px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px dashed rgba(247, 147, 30, 0.3);
+    font-weight: 600;
+    position: relative;
+}
+
+.rewards-subheader::before {
+    content: "🎁";
+    margin-right: 10px;
     font-size: 1.1em;
-    color: #666;
-    margin-top: 25px;
-    margin-bottom: 15px;
-    padding-bottom: 5px;
-    border-bottom: 1px dashed #ddd;
 }
 
-.rewards-subheader.configured-rewards-header {
-    margin-top: 35px; /* More space before configured list */
+.configured-rewards-header {
+    margin-top: 40px;
 }
 
+.configured-rewards-header::before {
+    content: "⚙️";
+}
+
+/* No Data Messages */
 .no-data-message {
     color: #999;
     font-style: italic;
     text-align: center;
-    padding: 10px;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #f9f9f9, #f0f0f0);
+    border-radius: 12px;
+    border: 2px dashed #d0d0d0;
+    font-size: 16px;
+    position: relative;
 }
 
-/* Styles for the Available Rewards list items (not configured yet) */
+.no-data-message::before {
+    content: "📝";
+    display: block;
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+/* Available Rewards Items */
 .reward-item.clickable-reward-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
-    background-color: #fcfcfc; /* Light background */
-    border: 1px solid #eee;
-    border-radius: 5px;
-    margin-bottom: 5px;
-    color: #555;
-    transition: background-color 0.2s ease;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #ffffff, #fffef7);
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    color: #333;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .reward-item.clickable-reward-item:hover {
-    background-color: #f5f5f5; /* Subtle hover effect */
+    background: linear-gradient(135deg, #fff8f0, #fffef7);
+    border-color: rgba(247, 147, 30, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* Styling for the Add (+) button within the available rewards list */
+.reward-item.clickable-reward-item span {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    flex-grow: 1;
+}
+
+/* Add Reward Button */
 .add-reward-button {
-    background-color: #f7931e; /* Orange background as per wireframe */
+    background: linear-gradient(135deg, #f7931e, #ffb347);
     color: white;
     border: none;
-    border-radius: 50%; /* Makes it round */
-    width: 30px;
-    height: 30px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    font-size: 1.2em;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    flex-shrink: 0; /* Prevents the button from shrinking if text is long */
+    font-size: 16px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(247, 147, 30, 0.3);
 }
 
 .add-reward-button:hover {
-    background-color: #e0851c;
-    transform: scale(1.05);
+    background: linear-gradient(135deg, #e0851c, #f7931e);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(247, 147, 30, 0.4);
 }
 
 .add-reward-button i {
-    color: white; /* Plus icon color */
+    color: white;
 }
 
-/* Styles for the Configured Rewards tables */
+/* Configured Rewards Tables */
 .rewards-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
-}
-
-.rewards-table th,
-.rewards-table td {
-    border: 1px solid #eee;
-    padding: 12px 15px;
-    text-align: left;
-    color: #333;
+    margin-top: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    border: 2px solid rgba(247, 147, 30, 0.1);
 }
 
 .rewards-table th {
-    background-color: #f2f2f2;
-    font-weight: 600;
-    color: #555;
+    background: linear-gradient(135deg, #f7931e, #ffb347);
+    color: white;
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 3px solid rgba(247, 147, 30, 0.3);
 }
 
 .rewards-table td {
-    font-size: 0.95em;
+    border: 1px solid #f0f0f0;
+    padding: 16px 20px;
+    color: #333;
+    font-size: 15px;
+    transition: background-color 0.2s ease;
+}
+
+.rewards-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.rewards-table tbody tr:hover {
+    background: linear-gradient(135deg, #fafafa, #fff8f0);
+    transform: scale(1.001);
+}
+
+.rewards-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .rewards-table td:last-child {
-    white-space: nowrap; /* Prevent icons from wrapping */
-    text-align: center; /* Center action icons */
-    width: 80px; /* Give actions column a fixed width for consistent alignment */
+    white-space: nowrap;
+    text-align: center;
+    width: 100px;
+    padding: 16px 10px;
 }
 
-/* Action icons styling within tables */
+/* Action Icons */
 .edit-icon,
 .delete-icon {
-    font-size: 1.1em;
-    margin: 0 5px;
+    font-size: 18px;
+    margin: 0 8px;
     cursor: pointer;
-    transition: color 0.2s ease;
-    vertical-align: middle; /* Align icons with text if any */
+    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .edit-icon {
-    color: #6c757d; /* Grey color for edit icon as in wireframe */
+    color: #6c757d;
+    background: rgba(108, 117, 125, 0.1);
 }
 
 .edit-icon:hover {
-    color: #5a6268;
+    color: #495057;
+    background: rgba(108, 117, 125, 0.2);
+    transform: scale(1.1);
 }
 
 .delete-icon {
-    color: #dc3545; /* Red color as per wireframe */
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
 }
 
 .delete-icon:hover {
     color: #c82333;
+    background: rgba(220, 53, 69, 0.2);
+    transform: scale(1.1);
+}
+
+/* Enhanced Responsive Design */
+@media (max-width: 1200px) {
+    .admin-rewards-container {
+        padding: 24px;
+    }
+    
+    .rewards-content {
+        padding: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-rewards-container {
+        padding: 16px;
+    }
+
+    .admin-page-title {
+        font-size: 2em;
+    }
+
+    .rewards-content {
+        padding: 24px;
+    }
+
+    .rewards-section-title {
+        font-size: 1.5em;
+    }
+
+    .reward-category-header {
+        padding: 16px 20px;
+        flex-wrap: wrap;
+    }
+
+    .reward-category-header h3 {
+        font-size: 1.1em;
+    }
+
+    .reward-category-header .add-rewards-text {
+        font-size: 0.85em;
+        margin-right: 12px;
+    }
+
+    .reward-category-body {
+        padding: 20px;
+    }
+
+    .rewards-table {
+        font-size: 14px;
+    }
+
+    .rewards-table th,
+    .rewards-table td {
+        padding: 12px 8px;
+    }
+
+    .edit-icon,
+    .delete-icon {
+        font-size: 16px;
+        margin: 0 4px;
+        padding: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-page-title {
+        font-size: 1.8em;
+        letter-spacing: 1px;
+    }
+
+    .rewards-content {
+        padding: 20px;
+    }
+
+    .reward-category-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 16px;
+    }
+
+    .reward-category-header .add-rewards-text {
+        margin-right: 0;
+        align-self: flex-end;
+    }
+
+    .reward-item.clickable-reward-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .add-reward-button {
+        align-self: center;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    /* Make table horizontally scrollable */
+    .rewards-table-container {
+        overflow-x: auto;
+        margin: 0 -20px;
+        padding: 0 20px;
+    }
+
+    .rewards-table {
+        min-width: 500px;
+        font-size: 13px;
+    }
+
+    .rewards-table th,
+    .rewards-table td {
+        padding: 10px 6px;
+    }
+}
+
+/* Loading and Animation States */
+.reward-category-card.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Enhanced Animations */
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+    50% { 
+        opacity: 0.8; 
+        transform: scale(1.02); 
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reward-category-card {
+    animation: slideInUp 0.5s ease-out;
+}
+
+.reward-category-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.reward-category-card:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+/* Custom Scrollbar */
+.admin-rewards-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+.admin-rewards-container::-webkit-scrollbar-track {
+    background: rgba(247, 147, 30, 0.1);
+    border-radius: 6px;
+}
+
+.admin-rewards-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #f7931e, #ffb347);
+    border-radius: 6px;
+}
+
+.admin-rewards-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #e0851c, #f7931e);
+}
+
+/* Focus States for Accessibility */
+.reward-category-header:focus,
+.add-reward-button:focus,
+.edit-icon:focus,
+.delete-icon:focus {
+    outline: 3px solid rgba(247, 147, 30, 0.5);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .admin-rewards-container {
+        background: white !important;
+        box-shadow: none !important;
+        padding: 20px !important;
+    }
+    
+    .reward-category-header {
+        background: #f7931e !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .add-reward-button,
+    .edit-icon,
+    .delete-icon {
+        display: none !important;
+    }
 }

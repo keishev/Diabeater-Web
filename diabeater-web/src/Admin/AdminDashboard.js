@@ -171,8 +171,52 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     );
 });
 
+// Pagination Component with dynamic calculation
+const Pagination = observer(({ currentData, itemsPerPage = 10 }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    const totalItems = currentData?.length || 0;
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    
+    // Reset to page 1 when data changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [currentData]);
+    
+    const handlePrevious = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+    
+    const handleNext = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+    
+    return (
+        <div className="pagination">
+            <button 
+                onClick={handlePrevious} 
+                disabled={currentPage <= 1}
+                className={currentPage <= 1 ? 'disabled' : ''}
+            >
+                &lt;
+            </button>
+            <span>Page {currentPage}/{totalPages}</span>
+            <button 
+                onClick={handleNext} 
+                disabled={currentPage >= totalPages}
+                className={currentPage >= totalPages ? 'disabled' : ''}
+            >
+                &gt;
+            </button>
+        </div>
+    );
+});
 
-// User Accounts Content Component (no changes for this specific task)
+// User Accounts Content Component (updated with pagination logic)
 const UserAccountsContent = observer(() => {
     const {
         activeTab,
@@ -260,6 +304,11 @@ const UserAccountsContent = observer(() => {
         }
     };
 
+    // Get current data based on active tab for pagination
+    const getCurrentData = () => {
+        return activeTab === 'ALL_ACCOUNTS' ? filteredAllAccounts : filteredPendingAccounts;
+    };
+
     return (
         <>
             <div className="admin-dashboard-main-content-area">
@@ -344,11 +393,9 @@ const UserAccountsContent = observer(() => {
                         )}
                     </tbody>
                 </table>
-                <div className="pagination">
-                    <button>&lt;</button>
-                    <span>Page 1/5</span>
-                    <button>&gt;</button>
-                </div>
+                
+                {/* Dynamic Pagination */}
+                <Pagination currentData={getCurrentData()} itemsPerPage={10} />
             </div>
 
             {/* Render UserDetailModal using states from AdminDashboardViewModel */}

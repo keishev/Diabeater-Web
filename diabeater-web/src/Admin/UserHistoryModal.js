@@ -1,10 +1,9 @@
-// src/Components/Modals/UserHistoryModal.js - Debug Version
+// src/Components/Modals/UserHistoryModal.js
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import moment from 'moment';
 import './UserHistoryModal.css';
 
-// Props received from parent (e.g., PremiumPage) which gets them from PremiumStatViewModel
 const UserHistoryModal = observer(({
     user, // The selected user object
     history, // The array of subscription history records
@@ -22,30 +21,19 @@ const UserHistoryModal = observer(({
     });
 
     if (!user) {
-        // This case should ideally not happen if parent manages state well,
-        // but it's a defensive check.
         console.warn("[UserHistoryModal] User prop is null or undefined. Not rendering modal content.");
         return (
-            <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(255, 0, 0, 0.5)', // Red background to make it obvious
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 9999
-            }}>
-                <div style={{
-                    backgroundColor: 'white',
-                    padding: '20px',
-                    borderRadius: '8px'
-                }}>
-                    <h3>Debug: No User Prop</h3>
-                    <p>UserHistoryModal received no user prop</p>
-                    <button onClick={onClose}>Close</button>
+            <div className="user-history-modal-overlay" onClick={onClose}>
+                <div className="user-history-modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="user-history-modal-header">
+                        <button className="user-history-modal-close" onClick={onClose}>&times;</button>
+                        <h2 className="user-history-modal-title">Debug: No User Prop</h2>
+                    </div>
+                    <div className="user-history-modal-body">
+                        <div className="user-history-error">
+                            UserHistoryModal received no user prop
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -53,142 +41,184 @@ const UserHistoryModal = observer(({
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
-        // Ensure it's a JS Date object before formatting
         const date = timestamp.toDate && typeof timestamp.toDate === 'function' ? timestamp.toDate() : timestamp;
         return moment(date).format('DD/MM/YYYY hh:mm A');
+    };
+
+    const formatDateShort = (timestamp) => {
+        if (!timestamp) return 'N/A';
+        const date = timestamp.toDate && typeof timestamp.toDate === 'function' ? timestamp.toDate() : timestamp;
+        return moment(date).format('DD/MM/YYYY');
     };
 
     const getUserDisplayName = (user) => {
         return user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
     };
 
-    const userName = getUserDisplayName(user); // Now 'user' is guaranteed to be present if we reach here
+    const userName = getUserDisplayName(user);
 
-    const getStatusColor = (status) => {
+    const getStatusClass = (status) => {
         const statusLower = status ? status.toLowerCase() : '';
         switch(statusLower) {
             case 'active':
-                return '#28a745'; // Green
+                return 'user-history-status-active';
             case 'cancelled':
             case 'canceled':
-                return '#ffc107'; // Yellow/Orange
+                return 'user-history-status-cancelled';
             case 'expired':
-                return '#dc3545'; // Red
+                return 'user-history-status-expired';
             case 'pending':
-                return '#17a2b8'; // Blue
+                return 'user-history-status-pending';
+            case 'failed':
+                return 'user-history-status-failed';
             default:
-                return '#6c757d'; // Gray
+                return 'user-history-status-unknown';
         }
-    };
-
-    // Temporary simple styling to make sure modal is visible
-    const modalOverlayStyle = {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
-    };
-
-    const modalContentStyle = {
-        backgroundColor: 'white',
-        padding: '30px',
-        borderRadius: '8px',
-        maxWidth: '800px',
-        maxHeight: '80vh',
-        overflow: 'auto',
-        position: 'relative'
-    };
-
-    const closeButtonStyle = {
-        position: 'absolute',
-        top: '10px',
-        right: '15px',
-        background: 'none',
-        border: 'none',
-        fontSize: '24px',
-        cursor: 'pointer'
     };
 
     console.log("[UserHistoryModal] About to render modal with user:", userName);
 
     return (
-        <div style={modalOverlayStyle} onClick={onClose}>
-            <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-                <button style={closeButtonStyle} onClick={onClose}>&times;</button>
-                <h2>Complete Subscription History</h2>
-                <h3 style={{ margin: '0 0 20px 0', color: '#666' }}>for {userName}</h3>
+        <div className="user-history-modal-overlay" onClick={onClose}>
+            <div className="user-history-modal-content" onClick={(e) => e.stopPropagation()}>
                 
-                <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f8ff', border: '1px solid #ccc' }}>
-                    <strong>Debug Info:</strong>
-                    <p>User ID: {user._id}</p>
-                    <p>Loading: {loading ? 'Yes' : 'No'}</p>
-                    <p>Error: {error || 'None'}</p>
-                    <p>History Records: {history?.length || 0}</p>
+                {/* Modal Header */}
+                <div className="user-history-modal-header">
+                    <button className="user-history-modal-close" onClick={onClose}>&times;</button>
+                    <h2 className="user-history-modal-title">Subscription History</h2>
+                    <p className="user-history-modal-subtitle">for {userName}</p>
                 </div>
-
-                {loading && <p style={{ color: 'blue' }}>Loading subscription history...</p>}
-                {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-
-                {!loading && !error && history.length === 0 && (
-                    <div>
-                        <p>No subscription history found for this user.</p>
-                        <p style={{ fontSize: '14px', color: '#666' }}>This user may not have had any premium subscriptions yet.</p>
+                
+                {/* Modal Body */}
+                <div className="user-history-modal-body">
+                    
+                    {/* Debug Info */}
+                    <div className="user-history-debug-info">
+                        <strong>Debug Info:</strong>
+                        <p>User ID: {user._id}</p>
+                        <p>Loading: {loading ? 'Yes' : 'No'}</p>
+                        <p>Error: {error || 'None'}</p>
+                        <p>History Records: {history?.length || 0}</p>
                     </div>
-                )}
 
-                {!loading && !error && history.length > 0 && (
-                    <div>
-                        <div>
-                            <p><strong>Total Subscriptions:</strong> {history.length}</p>
-                            <p><strong>Account Email:</strong> {user.email}</p>
+                    {/* Loading State */}
+                    {loading && (
+                        <div className="user-history-loading">
+                            <div className="user-history-loading-spinner"></div>
+                            Loading subscription history...
                         </div>
-                        
-                        <div>
-                            {history.map((sub, index) => (
-                                <div key={sub._id || index} style={{ 
-                                    border: '1px solid #ddd', 
-                                    margin: '10px 0', 
-                                    padding: '15px',
-                                    borderRadius: '5px'
-                                }}>
-                                    <h4>Subscription #{history.length - index}</h4>
-                                    <div style={{ marginTop: '10px' }}>
-                                        <div style={{ 
-                                            display: 'inline-block',
-                                            backgroundColor: getStatusColor(sub.status),
-                                            color: 'white',
-                                            padding: '4px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px'
-                                        }}>
-                                            {sub.status || 'Unknown'}
+                    )}
+
+                    {/* Error State */}
+                    {error && (
+                        <div className="user-history-error">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+
+                    {/* No History State */}
+                    {!loading && !error && history.length === 0 && (
+                        <div className="user-history-no-data">
+                            <p>No subscription history found</p>
+                            <p>This user may not have had any premium subscriptions yet.</p>
+                        </div>
+                    )}
+
+                    {/* History Data */}
+                    {!loading && !error && history.length > 0 && (
+                        <div className="user-history-fade-in">
+                            
+                            {/* Summary Section */}
+                            <div className="user-history-summary">
+                                <div className="user-history-summary-item">
+                                    <strong>Total Subscriptions</strong>
+                                    <span>{history.length}</span>
+                                </div>
+                                <div className="user-history-summary-item">
+                                    <strong>Account Email</strong>
+                                    <span>{user.email}</span>
+                                </div>
+                                <div className="user-history-summary-item">
+                                    <strong>Total Spent</strong>
+                                    <span>${history.reduce((sum, sub) => sum + (sub.price || 0), 0).toFixed(2)}</span>
+                                </div>
+                            </div>
+                            
+                            {/* History List */}
+                            <div className="user-history-list">
+                                {history.map((sub, index) => (
+                                    <div key={sub._id || index} className="user-history-item">
+                                        
+                                        {/* Item Header */}
+                                        <div className="user-history-item-header">
+                                            <div className="user-history-item-number">
+                                                Subscription #{history.length - index}
+                                            </div>
+                                            <div className="user-history-item-price">
+                                                ${sub.price ? sub.price.toFixed(2) : '0.00'}
+                                            </div>
+                                        </div>
+
+                                        {/* Plan Name */}
+                                        <div className="user-history-plan-name">
+                                            {sub.plan || 'Premium Plan'}
+                                        </div>
+
+                                        {/* Date Range */}
+                                        <div className="user-history-date-range">
+                                            {formatDateShort(sub.startDate)} → {formatDateShort(sub.endDate)}
+                                        </div>
+
+                                        {/* Status */}
+                                        <div className="user-history-item-status">
+                                            <div className={`user-history-status-dot ${getStatusClass(sub.status)}`}></div>
+                                            <div className={`user-history-status-text ${getStatusClass(sub.status)}`}>
+                                                {sub.status || 'Unknown'}
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Details Grid */}
+                                        <div className="user-history-item-details">
+                                            
+                                            <div className="user-history-detail-row">
+                                                <span className="user-history-detail-label">Payment Method</span>
+                                                <span className="user-history-detail-value">{sub.paymentMethod || 'N/A'}</span>
+                                            </div>
+
+                                            <div className="user-history-detail-row">
+                                                <span className="user-history-detail-label">Purchase Date</span>
+                                                <span className="user-history-detail-value">{formatDate(sub.createdAt)}</span>
+                                            </div>
+
+                                            <div className="user-history-detail-row">
+                                                <span className="user-history-detail-label">Start Date</span>
+                                                <span className="user-history-detail-value">{formatDate(sub.startDate)}</span>
+                                            </div>
+
+                                            <div className="user-history-detail-row">
+                                                <span className="user-history-detail-label">End Date</span>
+                                                <span className="user-history-detail-value">{formatDate(sub.endDate)}</span>
+                                            </div>
+
+                                            {sub.cancelReason && (
+                                                <div className="user-history-detail-row">
+                                                    <span className="user-history-detail-label">Cancel Reason</span>
+                                                    <span className="user-history-detail-value">{sub.cancelReason}</span>
+                                                </div>
+                                            )}
+
+                                            <div className="user-history-detail-row">
+                                                <span className="user-history-detail-label">Subscription ID</span>
+                                                <span className="user-history-detail-value">{sub.subscriptionId || 'N/A'}</span>
+                                            </div>
+                                            
                                         </div>
                                     </div>
-                                    
-                                    <div style={{ marginTop: '10px' }}>
-                                        <p><strong>Plan:</strong> {sub.plan || 'N/A'}</p>
-                                        <p><strong>Price:</strong> ${sub.price ? sub.price.toFixed(2) : 'N/A'}</p>
-                                        <p><strong>Payment Method:</strong> {sub.paymentMethod || 'N/A'}</p>
-                                        <p><strong>Period:</strong> {formatDate(sub.startDate)} → {formatDate(sub.endDate)}</p>
-                                        <p><strong>Purchased:</strong> {formatDate(sub.createdAt)}</p>
-                                        
-                                        {sub.cancelReason && (
-                                            <p><strong>Cancellation Reason:</strong> {sub.cancelReason}</p>
-                                        )}
-                                        
-                                        <p><strong>Subscription ID:</strong> {sub.subscriptionId || 'N/A'}</p>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

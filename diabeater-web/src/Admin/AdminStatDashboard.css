@@ -2,7 +2,6 @@
 
 /* Specific styling for the main content area of the AdminStatDashboard */
 .admin-dashboard-main-content-area {
-    margin-left: 70px;
     /* This class is used in AdminStatDashboard.js as a wrapper.
        No specific styles needed here if admin-main-content already provides padding etc.
        It's more for logical grouping. */
