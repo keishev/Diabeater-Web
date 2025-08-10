@@ -1054,7 +1054,11 @@
 .reject-cancel-button {
   background: #f79554;
   color: #ffffff;
+  font-size: 24px;
+  width: 130px;
+  height: 50px;
   border: 2px solid var(--border-medium);
+  border-radius: 24px;
   margin-left: 30px;
 }
 
@@ -1069,7 +1073,11 @@
   background: linear-gradient(135deg, var(--error-red) 0%, #c0392b 100%);
   color: white;
   box-shadow: var(--shadow-sm);
-  border: 2px solid var(--error-red);
+  font-size: 20px;
+  width: 150px;
+  height: 50px;
+  border: 2px solid var(--border-medium);
+  border-radius: 24px;
 }
 
 .reject-submit-button:hover:not(:disabled) {

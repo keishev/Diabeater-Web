@@ -241,10 +241,10 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                     {/* Admin Action buttons */}
                     {mealPlan.status === 'PENDING_APPROVAL' && (
                         <div className="detail-actions admin-actions">
-                            <button className="button-base approve-button" onClick={handleApprove} disabled={localLoading}>
+                            <button className="button-base meal-detail-approve-button" onClick={handleApprove} disabled={localLoading}>
                                 APPROVE
                             </button>
-                            <button className="button-base reject-button" onClick={handleRejectClick} disabled={localLoading}>
+                            <button className="button-base meal-detail-reject-button" onClick={handleRejectClick} disabled={localLoading}>
                                 REJECT
                             </button>
                         </div>
