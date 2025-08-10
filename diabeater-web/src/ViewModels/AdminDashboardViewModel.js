@@ -3,7 +3,7 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import { getAuth } from 'firebase/auth';
 import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
 import userAccountsViewModel from './UserAccountsViewModel';
-import premiumAccountsViewModelInstance from './PremiumAccountsViewModel'; // <--- Corrected import name
+import premiumAccountsViewModelInstance from './PremiumAccountsViewModel';
 
 class AdminDashboardViewModel {
     // State for pending nutritionist applications
@@ -24,10 +24,47 @@ class AdminDashboardViewModel {
     error = '';
 
     userAccountsVM = userAccountsViewModel;
-    premiumAccountsVM = premiumAccountsViewModelInstance; // <--- Assigned the correctly imported instance
+    premiumAccountsVM = premiumAccountsViewModelInstance;
 
     constructor() {
-        makeAutoObservable(this); // Makes all properties observable and methods actionable
+        makeAutoObservable(this);
+    }
+
+    // Helper method to format dates consistently
+    formatDate(timestamp, format = 'short') {
+        if (!timestamp) return 'N/A';
+        
+        let date;
+        if (timestamp && typeof timestamp.toDate === 'function') {
+            // Firestore Timestamp
+            date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+            date = timestamp;
+        } else if (typeof timestamp === 'string') {
+            date = new Date(timestamp);
+        } else {
+            return 'N/A';
+        }
+
+        if (isNaN(date.getTime())) {
+            return 'N/A';
+        }
+
+        if (format === 'short') {
+            return date.toLocaleDateString('en-SG', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        } else if (format === 'long') {
+            return date.toLocaleDateString('en-SG', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+        
+        return date.toLocaleDateString('en-SG');
     }
 
     // --- State Setters ---
@@ -43,7 +80,7 @@ class AdminDashboardViewModel {
         this.currentView = view;
         if (view === 'userAccounts') {
             this.userAccountsVM.fetchAccounts();
-        } else if (view === 'premiumAccounts') { // <--- Added logic for premiumAccounts view
+        } else if (view === 'premiumAccounts') {
             this.premiumAccountsVM.fetchPremiumUsers();
         }
     }
@@ -102,14 +139,16 @@ class AdminDashboardViewModel {
             const allNutritionistsFromFirestore = await nutritionistApplicationRepository.getAllNutritionists() || [];
 
             runInAction(() => {
-                const pending = allNutritionistsFromFirestore.filter(n => n.status === 'pending').map(n => ({
-                    ...n,
-                    id: n.id,
-                    name: `${n.firstName} ${n.lastName}`,
-                    appliedDate: n.createdAt ?
-                                 (new Date(n.createdAt)).toLocaleDateString('en-SG', { year: 'numeric', month: 'short', day: 'numeric' }) :
-                                 'N/A',
-                }));
+                const pending = allNutritionistsFromFirestore
+                    .filter(n => n.status === 'pending')
+                    .map(n => ({
+                        ...n,
+                        id: n.id,
+                        name: `${n.firstName} ${n.lastName}`,
+                        // Use appliedDate first, then fallback to createdAt
+                        appliedDate: this.formatDate(n.appliedDate || n.createdAt, 'short'),
+                        signedUpAt: this.formatDate(n.appliedDate || n.createdAt, 'long') // For display in modal
+                    }));
                 this.setPendingAccounts(pending);
             });
 

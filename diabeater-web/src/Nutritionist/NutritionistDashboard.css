@@ -114,7 +114,7 @@
 .logo-text {
   font-size: var(--font-size-2xl);
   font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-orange) 0%, #ff6b35 100%);
+  background: #1e525c;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

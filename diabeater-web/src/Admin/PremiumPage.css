@@ -190,6 +190,12 @@
 .premium-status-cancelled {
     color: #ff9800;
 }
+.premium-status-indicator.premium-status-active {
+    color: #4CAF50;
+}
+.premium-status-indicator.premium-status-cancelled {
+    color: #ff9800;
+}
 
 .premium-status-expired {
     color: #F44336;

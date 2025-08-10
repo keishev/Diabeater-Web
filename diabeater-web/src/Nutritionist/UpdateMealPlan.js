@@ -1,19 +1,19 @@
-// src/components/UpdateMealPlan.js (or wherever you keep it)
+// src/components/UpdateMealPlan.js
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
-import './UpdateMealPlan.css'; // Assuming you have a CSS file for styling
+import './UpdateMealPlan.css';
 
 const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     // Initialize form state with existing meal plan data
     const [mealName, setMealName] = useState('');
-    const [category, setCategory] = useState(''); // Assuming single category selection for simplicity
+    const [categories, setCategories] = useState([]); // Changed to array for multiple categories
     const [imageFile, setImageFile] = useState(null);
-    const [imageUrl, setImageUrl] = useState(''); // To display current image or new preview
+    const [imageUrl, setImageUrl] = useState('');
     const [description, setDescription] = useState('');
-    const [recipe, setRecipe] = useState(''); // Assuming recipe is multiline text - for 'Ingredients' field
-    const [preparationSteps, setPreparationSteps] = useState(''); // For 'Preparation Steps' field
-    const [generalNotes, setGeneralNotes] = useState(''); // For 'General Description & Notes' field
+    const [recipe, setRecipe] = useState('');
+    const [preparationSteps, setPreparationSteps] = useState('');
+    const [generalNotes, setGeneralNotes] = useState('');
 
     // Basic Nutrients
     const [calories, setCalories] = useState('');
@@ -21,7 +21,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     const [carbohydrates, setCarbohydrates] = useState('');
     const [fats, setFats] = useState('');
 
-    // Advanced Nutrients (Optional) - NEW FIELDS
+    // Advanced Nutrients
     const [sugar, setSugar] = useState('');
     const [saturatedFat, setSaturatedFat] = useState('');
     const [unsaturatedFat, setUnsaturatedFat] = useState('');
@@ -29,74 +29,116 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     const [sodium, setSodium] = useState('');
     const [potassium, setPotassium] = useState('');
 
+    // Loading state for form initialization
+    const [isInitialized, setIsInitialized] = useState(false);
+
     // Effect to populate form fields when mealPlan prop changes
     useEffect(() => {
-        if (mealPlan) {
+        if (mealPlan && !isInitialized) {
+            console.log('Initializing form with meal plan data:', mealPlan);
+            
             setMealName(mealPlan.name || '');
-            setCategory(mealPlan.category || '');
-            // Prioritize imageUrl if available, otherwise construct from imageFileName
-            setImageUrl(mealPlan.imageUrl || (mealPlan.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : ''));
-            setDescription(mealPlan.description || ''); // This now maps to 'General Description & Notes'
-            setRecipe(mealPlan.recipe || ''); // This maps to 'Ingredients'
-            setPreparationSteps(mealPlan.preparationSteps || ''); // Assuming this field exists in your data
-            setGeneralNotes(mealPlan.generalNotes || ''); // Assuming this field exists in your data
+            
+            // Handle categories - convert to array if it's a string
+            if (mealPlan.category) {
+                if (Array.isArray(mealPlan.category)) {
+                    setCategories(mealPlan.category);
+                } else {
+                    // If category is a string, convert to array
+                    setCategories([mealPlan.category]);
+                }
+            } else if (mealPlan.categories) {
+                setCategories(mealPlan.categories);
+            } else {
+                setCategories([]);
+            }
+            
+            // Set image URL
+            const existingImageUrl = mealPlan.imageUrl || 
+                (mealPlan.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : '');
+            setImageUrl(existingImageUrl);
+            
+            // Set text fields
+            setDescription(mealPlan.description || '');
+            setRecipe(mealPlan.recipe || '');
+            setPreparationSteps(mealPlan.preparationSteps || '');
+            setGeneralNotes(mealPlan.generalNotes || mealPlan.description || ''); // Fallback to description if generalNotes doesn't exist
 
             // Basic Nutrients
-            setCalories(mealPlan.nutrients?.calories || '');
-            setProtein(mealPlan.nutrients?.protein || '');
-            setCarbohydrates(mealPlan.nutrients?.carbohydrates || '');
-            setFats(mealPlan.nutrients?.fats || '');
+            const nutrients = mealPlan.nutrients || {};
+            setCalories(nutrients.calories?.toString() || '');
+            setProtein(nutrients.protein?.toString() || '');
+            setCarbohydrates(nutrients.carbohydrates?.toString() || '');
+            setFats(nutrients.fats?.toString() || '');
 
-            // Advanced Nutrients - Initialization
-            setSugar(mealPlan.nutrients?.sugar || '');
-            setSaturatedFat(mealPlan.nutrients?.saturatedFat || '');
-            setUnsaturatedFat(mealPlan.nutrients?.unsaturatedFat || '');
-            setCholesterol(mealPlan.nutrients?.cholesterol || '');
-            setSodium(mealPlan.nutrients?.sodium || '');
-            setPotassium(mealPlan.nutrients?.potassium || '');
+            // Advanced Nutrients
+            setSugar(nutrients.sugar?.toString() || '');
+            setSaturatedFat(nutrients.saturatedFat?.toString() || '');
+            setUnsaturatedFat(nutrients.unsaturatedFat?.toString() || '');
+            setCholesterol(nutrients.cholesterol?.toString() || '');
+            setSodium(nutrients.sodium?.toString() || '');
+            setPotassium(nutrients.potassium?.toString() || '');
 
-            // Clear any previously selected image file when a new mealPlan is loaded
+            // Clear any previously selected image file
             setImageFile(null);
+            setIsInitialized(true);
         }
-    }, [mealPlan]);
+    }, [mealPlan, isInitialized]);
+
+    // Handle category checkbox changes
+    const handleCategoryChange = (categoryName, isChecked) => {
+        setCategories(prevCategories => {
+            if (isChecked) {
+                // Add category if not already present
+                return prevCategories.includes(categoryName) 
+                    ? prevCategories 
+                    : [...prevCategories, categoryName];
+            } else {
+                // Remove category
+                return prevCategories.filter(cat => cat !== categoryName);
+            }
+        });
+    };
 
     // Handle image file selection
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             setImageFile(file);
-            setImageUrl(URL.createObjectURL(file)); // For image preview
+            setImageUrl(URL.createObjectURL(file));
         } else {
             setImageFile(null);
-            // Revert to original image if user clears selection
-            setImageUrl(mealPlan?.imageUrl || (mealPlan?.imageFileName ? `/assetscopy/${mealPlan?.imageFileName}` : ''));
+            // Revert to original image
+            const originalImageUrl = mealPlan?.imageUrl || 
+                (mealPlan?.imageFileName ? `/assetscopy/${mealPlan?.imageFileName}` : '');
+            setImageUrl(originalImageUrl);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Basic validation for required fields (adjust as per your actual requirements)
-        if (!mealName || !category || !description || !recipe || !preparationSteps || !calories || !protein || !carbohydrates || !fats) {
-            mealPlanViewModel.setError('Please fill in all required fields (Meal Name, Category, Meal Details, Nutrients Information).');
+        // Validation
+        if (!mealName || categories.length === 0 || !generalNotes || !recipe || !preparationSteps || !calories || !protein || !carbohydrates || !fats) {
+            mealPlanViewModel.setError('Please fill in all required fields (Meal Name, at least one Category, Meal Details, and Basic Nutrients).');
             return;
         }
 
         const updatedMealPlanData = {
-            _id: mealPlan._id, // Crucial: Send the ID for the update operation
+            _id: mealPlan._id,
             name: mealName,
-            category: category,
-            description: description, // General Description & Notes
-            recipe: recipe, // Ingredients
-            preparationSteps: preparationSteps, // New field for Preparation Steps
-            generalNotes: generalNotes, // New field for General Notes
+            category: categories, // Send as array
+            categories: categories, // Also send as categories for compatibility
+            description: generalNotes, // Map generalNotes to description for backend compatibility
+            recipe: recipe,
+            preparationSteps: preparationSteps,
+            generalNotes: generalNotes,
 
             nutrients: {
-                calories: Number(calories),
-                protein: Number(protein),
-                carbohydrates: Number(carbohydrates),
-                fats: Number(fats),
-                // Advanced Nutrients - Include them, even if empty/0
+                calories: Number(calories) || 0,
+                protein: Number(protein) || 0,
+                carbohydrates: Number(carbohydrates) || 0,
+                fats: Number(fats) || 0,
                 sugar: Number(sugar) || 0,
                 saturatedFat: Number(saturatedFat) || 0,
                 unsaturatedFat: Number(unsaturatedFat) || 0,
@@ -104,10 +146,8 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                 sodium: Number(sodium) || 0,
                 potassium: Number(potassium) || 0,
             },
-            // The ViewModel's updateMealPlan method will handle the image file and status.
         };
 
-        // Call the ViewModel's update method
         const success = await mealPlanViewModel.updateMealPlan({
             ...updatedMealPlanData,
             imageFile: imageFile,
@@ -115,25 +155,25 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
         });
 
         if (success) {
-            // ViewModel already sets success message. Navigate back.
-            onBack(); // Go back to the meal plans list
-        } else {
-            // Error message already set by ViewModel if update failed
-            // Stay on the form to allow user to correct issues
+            onBack();
         }
     };
 
-    // Access ViewModel's state for loading/error/success messages
     const { loading, error, success, allCategories } = mealPlanViewModel;
 
     if (!mealPlan) {
         return <p>Loading meal plan details for update...</p>;
     }
 
+    if (!isInitialized) {
+        return <p>Initializing form with existing data...</p>;
+    }
+
     return (
         <div className="update-meal-plan-container">
             <header className="update-meal-plan-header">
                 <h1 className="update-meal-plan-page-title">UPDATE MEAL PLAN</h1>
+                <p className="update-meal-plan-subtitle">Editing: {mealPlan.name}</p>
             </header>
 
             {loading && <p className="update-meal-plan-form-message update-meal-plan-loading-message">Updating meal plan...</p>}
@@ -142,34 +182,43 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
 
             <form onSubmit={handleSubmit} className="update-meal-plan-form">
                 <div className="update-meal-plan-sections-wrapper">
-                    {/* Left Section: Meal Name, Category, Photo */}
+                    {/* Left Section */}
                     <div className="update-meal-plan-section-left">
                         <div className="update-meal-plan-form-group">
-                            <label htmlFor="mealName">Meal Name</label>
+                            <label htmlFor="mealName">Meal Name *</label>
                             <input
                                 type="text"
                                 id="mealName"
                                 value={mealName}
                                 onChange={(e) => setMealName(e.target.value)}
                                 className="update-meal-plan-form-input"
+                                placeholder="Enter meal name"
                                 required
                             />
                         </div>
 
                         <div className="update-meal-plan-form-group">
-                            <label htmlFor="category">Category</label>
-                            <select
-                                id="category"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                                className="update-meal-plan-form-input"
-                                required
-                            >
-                                <option value="">Select a category</option>
-                                {allCategories.map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                            <label>Categories * (Select at least one)</label>
+                            <div className="update-meal-plan-categories-container">
+                                {allCategories.map((categoryName) => (
+                                    <div key={categoryName} className="update-meal-plan-category-item">
+                                        <label className="update-meal-plan-category-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={categories.includes(categoryName)}
+                                                onChange={(e) => handleCategoryChange(categoryName, e.target.checked)}
+                                                className="update-meal-plan-category-checkbox"
+                                            />
+                                            <span className="update-meal-plan-category-text">{categoryName}</span>
+                                        </label>
+                                    </div>
                                 ))}
-                            </select>
+                            </div>
+                            {categories.length > 0 && (
+                                <div className="update-meal-plan-selected-categories">
+                                    <strong>Selected:</strong> {categories.join(', ')}
+                                </div>
+                            )}
                         </div>
 
                         <div className="update-meal-plan-form-group update-meal-plan-upload-photo-group">
@@ -185,16 +234,15 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                 <div className="update-meal-plan-image-preview">
                                     <img src={imageUrl} alt="Meal Plan Preview" />
                                     <p className="update-meal-plan-image-filename">
-                                        {imageFile ? imageFile.name : (mealPlan.imageFileName || 'Existing image')}
+                                        {imageFile ? `New: ${imageFile.name}` : 'Current image'}
                                     </p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Meal Details section - Ingredients, Preparation Steps, General Description & Notes */}
                         <h3 className="update-meal-plan-section-title">Meal Details</h3>
                         <div className="update-meal-plan-form-group">
-                            <label htmlFor="recipe">Ingredients</label>
+                            <label htmlFor="recipe">Ingredients *</label>
                             <textarea
                                 id="recipe"
                                 value={recipe}
@@ -207,7 +255,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                         </div>
 
                         <div className="update-meal-plan-form-group">
-                            <label htmlFor="preparationSteps">Preparation Steps</label>
+                            <label htmlFor="preparationSteps">Preparation Steps *</label>
                             <textarea
                                 id="preparationSteps"
                                 value={preparationSteps}
@@ -220,70 +268,82 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                         </div>
 
                         <div className="update-meal-plan-form-group">
-                            <label htmlFor="generalNotes">General Description & Notes</label>
+                            <label htmlFor="generalNotes">General Description & Notes *</label>
                             <textarea
                                 id="generalNotes"
                                 value={generalNotes}
                                 onChange={(e) => setGeneralNotes(e.target.value)}
                                 className="update-meal-plan-form-textarea"
                                 rows="4"
-                                placeholder="Add allergen warnings (e.g., contains dairy), portion size, storage notes, or a general overview of the meal."
+                                placeholder="Add allergen warnings, portion size, storage notes, or general meal overview."
                                 required
                             ></textarea>
                         </div>
                     </div>
 
-                    {/* Right Section: Nutrients Information */}
+                    {/* Right Section */}
                     <div className="update-meal-plan-section-right">
-                        <h3 className="update-meal-plan-section-title">Nutrients Information</h3>
+                        <h3 className="update-meal-plan-section-title">Basic Nutrients Information *</h3>
                         <div className="update-meal-plan-nutrients-grid update-meal-plan-basic-nutrients">
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
-                                <label htmlFor="calories">Calories</label>
+                                <label htmlFor="calories">Calories *</label>
                                 <input
                                     type="number"
                                     id="calories"
                                     value={calories}
                                     onChange={(e) => setCalories(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                     required
                                 />
                                 <span className="update-meal-plan-nutrient-unit">kcal</span>
                             </div>
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
-                                <label htmlFor="protein">Protein</label>
+                                <label htmlFor="protein">Protein *</label>
                                 <input
                                     type="number"
                                     id="protein"
                                     value={protein}
                                     onChange={(e) => setProtein(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                     required
                                 />
-                                <span className="update-meal-plan-nutrient-unit">grams</span>
+                                <span className="update-meal-plan-nutrient-unit">g</span>
                             </div>
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
-                                <label htmlFor="carbohydrates">Carbohydrates</label>
+                                <label htmlFor="carbohydrates">Carbohydrates *</label>
                                 <input
                                     type="number"
                                     id="carbohydrates"
                                     value={carbohydrates}
                                     onChange={(e) => setCarbohydrates(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                     required
                                 />
-                                <span className="update-meal-plan-nutrient-unit">grams</span>
+                                <span className="update-meal-plan-nutrient-unit">g</span>
                             </div>
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
-                                <label htmlFor="fats">Fats</label>
+                                <label htmlFor="fats">Fats *</label>
                                 <input
                                     type="number"
                                     id="fats"
                                     value={fats}
                                     onChange={(e) => setFats(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                     required
                                 />
-                                <span className="update-meal-plan-nutrient-unit">grams</span>
+                                <span className="update-meal-plan-nutrient-unit">g</span>
                             </div>
                         </div>
 
@@ -299,8 +359,11 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                     value={sugar}
                                     onChange={(e) => setSugar(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                 />
-                                <span className="update-meal-plan-nutrient-unit">grams</span>
+                                <span className="update-meal-plan-nutrient-unit">g</span>
                             </div>
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
                                 <label htmlFor="saturatedFat">Saturated Fat</label>
@@ -310,8 +373,11 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                     value={saturatedFat}
                                     onChange={(e) => setSaturatedFat(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                 />
-                                <span className="update-meal-plan-nutrient-unit">grams</span>
+                                <span className="update-meal-plan-nutrient-unit">g</span>
                             </div>
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
                                 <label htmlFor="unsaturatedFat">Unsaturated Fat</label>
@@ -321,8 +387,11 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                     value={unsaturatedFat}
                                     onChange={(e) => setUnsaturatedFat(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                 />
-                                <span className="update-meal-plan-nutrient-unit">grams</span>
+                                <span className="update-meal-plan-nutrient-unit">g</span>
                             </div>
                             <div className="update-meal-plan-form-group update-meal-plan-nutrient-group">
                                 <label htmlFor="cholesterol">Cholesterol</label>
@@ -332,6 +401,9 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                     value={cholesterol}
                                     onChange={(e) => setCholesterol(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                 />
                                 <span className="update-meal-plan-nutrient-unit">mg</span>
                             </div>
@@ -343,6 +415,9 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                     value={sodium}
                                     onChange={(e) => setSodium(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                 />
                                 <span className="update-meal-plan-nutrient-unit">mg</span>
                             </div>
@@ -354,27 +429,33 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                                     value={potassium}
                                     onChange={(e) => setPotassium(e.target.value)}
                                     className="update-meal-plan-form-input-short"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.1"
                                 />
                                 <span className="update-meal-plan-nutrient-unit">mg</span>
                             </div>
                         </div>
-                        <div className="update-meal-plan-form-actions">
-                    <button type="submit" className="update-meal-plan-button-base update-meal-plan-save-button">
-                        SAVE
-                    </button>
-                    <button 
-                        type="button" 
-                        className="update-meal-plan-button-base update-meal-plan-cancel-button" 
-                        onClick={onBack}
-                    >
-                        CANCEL
-                    </button>
-                </div>
-                    </div>
-                    
-                </div>
 
-                
+                        <div className="update-meal-plan-form-actions">
+                            <button 
+                                type="submit" 
+                                className="update-meal-plan-button-base update-meal-plan-save-button"
+                                disabled={loading}
+                            >
+                                {loading ? 'SAVING...' : 'SAVE CHANGES'}
+                            </button>
+                            <button 
+                                type="button" 
+                                className="update-meal-plan-button-base update-meal-plan-cancel-button" 
+                                onClick={onBack}
+                                disabled={loading}
+                            >
+                                CANCEL
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     );

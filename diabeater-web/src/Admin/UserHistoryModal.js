@@ -91,15 +91,6 @@ const UserHistoryModal = observer(({
                 
                 {/* Modal Body */}
                 <div className="user-history-modal-body">
-                    
-                    {/* Debug Info */}
-                    <div className="user-history-debug-info">
-                        <strong>Debug Info:</strong>
-                        <p>User ID: {user._id}</p>
-                        <p>Loading: {loading ? 'Yes' : 'No'}</p>
-                        <p>Error: {error || 'None'}</p>
-                        <p>History Records: {history?.length || 0}</p>
-                    </div>
 
                     {/* Loading State */}
                     {loading && (

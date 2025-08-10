@@ -1,6 +1,6 @@
 // src/Services/NutritionistApplicationService.js
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../firebase';
 import { db } from "../firebase";
@@ -11,6 +11,9 @@ class NutritionistApplicationService {
         try {
             // Use a batch write to ensure both documents are created atomically
             const batch = writeBatch(db);
+
+            // Create current timestamp for both documents
+            const currentTimestamp = Timestamp.now();
 
             // First, create user account data (this must exist for permission checks)
             const userAccountData = {
@@ -27,7 +30,7 @@ class NutritionistApplicationService {
                 profileCompleted: false,
                 status: 'Suspended', // Suspended until approved
                 username: "",
-                createdAt: new Date().toISOString()
+                createdAt: currentTimestamp // Use Firestore Timestamp
             };
 
             // Add user account to batch
@@ -38,7 +41,8 @@ class NutritionistApplicationService {
             const applicationData = {
                 ...data,
                 status: 'pending', // For application tracking
-                appliedDate: new Date().toISOString()
+                appliedDate: currentTimestamp, // Use Firestore Timestamp for application date
+                createdAt: currentTimestamp    // Also keep createdAt for consistency
             };
 
             const applicationRef = doc(db, "nutritionist_application", userId);
@@ -83,16 +87,17 @@ class NutritionistApplicationService {
 
             const applicationData = applicationSnap.data();
 
-            // Update the user account status to Active
+            // Update the user account status to Active and preserve createdAt
             const userAccountRef = doc(db, "user_accounts", userId);
             await updateDoc(userAccountRef, {
                 status: 'Active'
+                // Don't update createdAt - it should remain the original signup date
             });
 
             // Update application status
             await updateDoc(applicationRef, {
                 status: "approved",
-                approvedAt: new Date().toISOString(), 
+                approvedAt: Timestamp.now(), // Use Firestore Timestamp
             });
 
             // Send approval email
@@ -127,7 +132,7 @@ class NutritionistApplicationService {
             batch.update(applicationRef, {
                 status: "rejected",
                 rejectionReason: reason || "", 
-                rejectedAt: new Date().toISOString(), 
+                rejectedAt: Timestamp.now(), // Use Firestore Timestamp
             });
 
             // Delete the user account since application is rejected
@@ -150,6 +155,39 @@ class NutritionistApplicationService {
             console.error("Service: Error rejecting nutritionist:", error);
             throw error;
         }
+    }
+
+    // Helper method to format dates consistently
+    formatDate(timestamp, format = 'short') {
+        if (!timestamp) return 'N/A';
+        
+        let date;
+        if (timestamp.toDate) {
+            // Firestore Timestamp
+            date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+            date = timestamp;
+        } else if (typeof timestamp === 'string') {
+            date = new Date(timestamp);
+        } else {
+            return 'N/A';
+        }
+
+        if (format === 'short') {
+            return date.toLocaleDateString('en-SG', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        } else if (format === 'long') {
+            return date.toLocaleDateString('en-SG', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+        
+        return date.toLocaleDateString('en-SG');
     }
 }
 

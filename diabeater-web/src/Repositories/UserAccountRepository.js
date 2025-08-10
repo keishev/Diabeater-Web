@@ -13,21 +13,52 @@ class UserAccountRepository {
         return await currentUser.getIdToken();
     }
 
+    // Helper method to format dates consistently
+    formatDate(timestamp, format = 'long') {
+        if (!timestamp) return 'N/A';
+        
+        let date;
+        if (timestamp && typeof timestamp.toDate === 'function') {
+            // Firestore Timestamp
+            date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+            date = timestamp;
+        } else if (typeof timestamp === 'string') {
+            date = new Date(timestamp);
+        } else {
+            return 'N/A';
+        }
+
+        if (isNaN(date.getTime())) {
+            return 'N/A';
+        }
+
+        if (format === 'short') {
+            return date.toLocaleDateString('en-SG', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        } else if (format === 'long') {
+            return date.toLocaleDateString('en-SG', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+        
+        return date.toLocaleDateString('en-SG');
+    }
+
     async getAllUsers() {
         try {
             const usersSnapshot = await getDocs(collection(db, 'user_accounts'));
             const users = usersSnapshot.docs.map(doc => {
                 const data = doc.data();
-                let userSince = 'N/A';
-                if (data.createdAt && data.createdAt.toDate) {
-                    // Convert Firebase Timestamp to a Date object, then format it
-                    const date = data.createdAt.toDate();
-                    userSince = date.toLocaleDateString('en-SG', { // 'en-SG' for Singapore date format, adjust as needed
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                }
+                
+                // Format the userSince date properly
+                const userSince = this.formatDate(data.createdAt, 'long');
+                
                 return {
                     id: doc.id,
                     ...data,
