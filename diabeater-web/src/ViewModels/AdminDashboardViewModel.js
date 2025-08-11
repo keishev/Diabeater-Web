@@ -166,12 +166,19 @@ class AdminDashboardViewModel {
 
     /**
      * Approves a pending nutritionist.
-     * Updates Firestore, sets custom claims, and revokes tokens.
+     * Updates Firestore, sets custom claims, and sends approval email.
      */
     approveNutritionist = async (userId) => {
+        if (!userId) {
+            this.setError("Invalid user ID");
+            return;
+        }
+
         this.setLoading(true);
         this.setError('');
+        
         try {
+            // Check admin authentication
             const auth = getAuth();
             const user = auth.currentUser;
 
@@ -182,6 +189,7 @@ class AdminDashboardViewModel {
                 return;
             }
 
+            // Verify admin privileges
             const idTokenResult = await user.getIdTokenResult(true);
             if (idTokenResult.claims.admin !== true) {
                 console.warn("APPROVE_NUTRITIONIST_CALL: User is not an admin. Access denied.");
@@ -190,14 +198,29 @@ class AdminDashboardViewModel {
                 return;
             }
 
+            console.log(`Admin ${user.uid} attempting to approve nutritionist ${userId}`);
+
+            // Call the repository method which handles database updates and email sending
             const result = await nutritionistApplicationRepository.approveNutritionist(userId);
+            
             runInAction(() => {
+                // Remove from pending accounts
                 this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
+                // Refresh all accounts to show the updated status
                 this.userAccountsVM.fetchAccounts();
+                // Close modals
                 this.setShowUserDetailModal(false);
-                alert("Nutritionist account has been approved!");
+                this.setSelectedUser(null);
             });
-            console.log("Approved nutritionist:", userId, result);
+
+            // Show success message
+            const successMessage = result.emailSent 
+                ? "Nutritionist account has been approved and notification email sent!"
+                : "Nutritionist account has been approved! (Note: Email notification may have failed)";
+            alert(successMessage);
+            
+            console.log("Nutritionist approved successfully:", userId, result);
+            
         } catch (error) {
             console.error("Error approving nutritionist:", error);
             this.setError(`Failed to approve: ${error.message}`);
@@ -211,12 +234,25 @@ class AdminDashboardViewModel {
 
     /**
      * Rejects a pending nutritionist.
-     * Updates Firestore, removes/modifies custom claims, and revokes tokens.
+     * Updates Firestore, removes user account, and sends rejection email.
      */
     rejectNutritionist = async (userId) => {
+        if (!userId) {
+            this.setError("Invalid user ID");
+            return;
+        }
+
+        if (!this.rejectionReason.trim()) {
+            this.setError("Please provide a reason for rejection");
+            alert("Please provide a reason for rejection");
+            return;
+        }
+
         this.setLoading(true);
         this.setError('');
+        
         try {
+            // Check admin authentication
             const auth = getAuth();
             const user = auth.currentUser;
 
@@ -227,6 +263,7 @@ class AdminDashboardViewModel {
                 return;
             }
 
+            // Verify admin privileges
             const idTokenResult = await user.getIdTokenResult(true);
             if (idTokenResult.claims.admin !== true) {
                 console.warn("REJECT_NUTRITIONIST_CALL: User is not an admin. Access denied.");
@@ -235,16 +272,31 @@ class AdminDashboardViewModel {
                 return;
             }
 
+            console.log(`Admin ${user.uid} attempting to reject nutritionist ${userId} with reason: ${this.rejectionReason}`);
+
+            // Call the repository method which handles database updates and email sending
             const result = await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason);
+            
             runInAction(() => {
+                // Remove from pending accounts
                 this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
+                // Refresh all accounts (though the user should be deleted)
                 this.userAccountsVM.fetchAccounts();
+                // Close modals and reset form
                 this.setShowRejectionReasonModal(false);
                 this.setShowUserDetailModal(false);
                 this.setRejectionReason('');
-                alert("Nutritionist account has been rejected!");
+                this.setSelectedUser(null);
             });
-            console.log("Rejected nutritionist:", userId, result);
+
+            // Show success message
+            const successMessage = result.emailSent 
+                ? "Nutritionist account has been rejected and notification email sent!"
+                : "Nutritionist account has been rejected! (Note: Email notification may have failed)";
+            alert(successMessage);
+            
+            console.log("Nutritionist rejected successfully:", userId, result);
+            
         } catch (error) {
             console.error("Error rejecting nutritionist:", error);
             this.setError(`Failed to reject: ${error.message}`);
@@ -260,8 +312,14 @@ class AdminDashboardViewModel {
      * Fetches a signed URL for a nutritionist's certificate from Firebase Storage.
      */
     viewCertificate = async (userId) => {
+        if (!userId) {
+            this.setError("Invalid user ID");
+            return;
+        }
+
         this.setLoading(true);
         this.setError('');
+        
         try {
             const auth = getAuth();
             const user = auth.currentUser;

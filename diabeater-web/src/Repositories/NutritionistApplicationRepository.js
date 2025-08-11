@@ -45,7 +45,7 @@ class NutritionistApplicationRepository {
 
             console.log('Proceeding with userId:', userId);
 
-            // Upload the certificate and get the URL
+            // Upload the certificate using userId (matches your Storage Rules)
             const certificateUrl = await this.storageService.uploadCertificate(userId, certificateFile);
 
             // Create the application data

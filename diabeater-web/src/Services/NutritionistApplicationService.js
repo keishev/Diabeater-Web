@@ -77,6 +77,8 @@ class NutritionistApplicationService {
 
     async approveNutritionist(userId) {
         try {
+            console.log(`Starting approval process for nutritionist: ${userId}`);
+            
             // Get the application document
             const applicationRef = doc(db, "nutritionist_application", userId);
             const applicationSnap = await getDoc(applicationRef);
@@ -86,28 +88,46 @@ class NutritionistApplicationService {
             }
 
             const applicationData = applicationSnap.data();
+            console.log("Application data found:", applicationData);
 
-            // Update the user account status to Active and preserve createdAt
+            // Use batch to ensure atomic updates
+            const batch = writeBatch(db);
+
+            // Update the user account status to Active
             const userAccountRef = doc(db, "user_accounts", userId);
-            await updateDoc(userAccountRef, {
+            batch.update(userAccountRef, {
                 status: 'Active'
-                // Don't update createdAt - it should remain the original signup date
             });
 
             // Update application status
-            await updateDoc(applicationRef, {
+            batch.update(applicationRef, {
                 status: "approved",
-                approvedAt: Timestamp.now(), // Use Firestore Timestamp
+                approvedAt: Timestamp.now(),
             });
 
-            // Send approval email
-            await EmailService.sendApprovalEmail(
-                applicationData.email,
-                `${applicationData.firstName} ${applicationData.lastName}`
-            );
+            // Execute the batch
+            await batch.commit();
+            console.log("Database updates completed successfully");
 
-            console.log(`Nutritionist ${userId} approved and activation email sent.`);
-            return { success: true, message: "Nutritionist approved successfully" };
+            // Send approval email
+            try {
+                await EmailService.sendApprovalEmail(
+                    applicationData.email,
+                    `${applicationData.firstName} ${applicationData.lastName}`
+                );
+                console.log("Approval email sent successfully");
+            } catch (emailError) {
+                console.error("Error sending approval email:", emailError);
+                // Don't throw here - the approval was successful even if email failed
+                console.warn("Nutritionist approved but email notification failed");
+            }
+
+            console.log(`Nutritionist ${userId} approved successfully.`);
+            return { 
+                success: true, 
+                message: "Nutritionist approved successfully",
+                emailSent: true // You could track this if needed
+            };
         } catch (error) {
             console.error("Service: Error approving nutritionist:", error);
             throw error;
@@ -116,6 +136,8 @@ class NutritionistApplicationService {
 
     async rejectNutritionist(userId, reason) {
         try {
+            console.log(`Starting rejection process for nutritionist: ${userId}`);
+            
             const applicationRef = doc(db, "nutritionist_application", userId);
             const applicationSnap = await getDoc(applicationRef);
 
@@ -124,6 +146,7 @@ class NutritionistApplicationService {
             }
 
             const applicationData = applicationSnap.data();
+            console.log("Application data found:", applicationData);
 
             // Use batch to update application and delete user account atomically
             const batch = writeBatch(db);
@@ -131,8 +154,8 @@ class NutritionistApplicationService {
             // Update application status
             batch.update(applicationRef, {
                 status: "rejected",
-                rejectionReason: reason || "", 
-                rejectedAt: Timestamp.now(), // Use Firestore Timestamp
+                rejectionReason: reason || "No reason provided", 
+                rejectedAt: Timestamp.now(),
             });
 
             // Delete the user account since application is rejected
@@ -141,16 +164,28 @@ class NutritionistApplicationService {
 
             // Execute the batch
             await batch.commit();
+            console.log("Database updates completed successfully");
 
             // Send rejection email
-            await EmailService.sendRejectionEmail(
-                applicationData.email,
-                `${applicationData.firstName} ${applicationData.lastName}`,
-                reason
-            );
+            try {
+                await EmailService.sendRejectionEmail(
+                    applicationData.email,
+                    `${applicationData.firstName} ${applicationData.lastName}`,
+                    reason || "No specific reason provided"
+                );
+                console.log("Rejection email sent successfully");
+            } catch (emailError) {
+                console.error("Error sending rejection email:", emailError);
+                // Don't throw here - the rejection was successful even if email failed
+                console.warn("Nutritionist rejected but email notification failed");
+            }
 
-            console.log(`Application for ${userId} marked as rejected and rejection email sent.`);
-            return { success: true, message: "Nutritionist rejected successfully" };
+            console.log(`Application for ${userId} marked as rejected successfully.`);
+            return { 
+                success: true, 
+                message: "Nutritionist rejected successfully",
+                emailSent: true
+            };
         } catch (error) {
             console.error("Service: Error rejecting nutritionist:", error);
             throw error;

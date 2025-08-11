@@ -1,5 +1,6 @@
 // src/Admin/RejectionReasonModal.js
 import React, { useState } from 'react';
+import './RejectionReasonModal.css';
 
 const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
     const [selectedReason, setSelectedReason] = useState('');
@@ -40,10 +41,27 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
         return selectedReason === 'custom' ? customReason : selectedReason;
     };
 
+    const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    };
+
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h3>Select Rejection Reason</h3>
+        <div 
+            className="modal-overlay" 
+            onClick={handleOverlayClick}
+            onKeyDown={handleKeyDown}
+            tabIndex={-1}
+        >
+            <div className="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+                <h3 id="modal-title">Select Rejection Reason</h3>
                 
                 <div className="rejection-reasons-container">
                     {predefinedReasons.map((reasonOption, index) => (
@@ -75,47 +93,28 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
 
                 {selectedReason === 'custom' && (
                     <textarea
+                        className="custom-reason-textarea"
                         value={customReason}
                         onChange={(e) => handleCustomReasonChange(e.target.value)}
                         placeholder="Please specify the reason for rejection..."
                         rows="4"
-                        style={{ 
-                            width: '100%', 
-                            marginTop: '10px',
-                            padding: '8px',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            fontSize: '14px'
-                        }}
+                        aria-label="Custom rejection reason"
                     />
                 )}
 
-                <div className="modal-actions" style={{ marginTop: '15px' }}>
+                <div className="modal-actions">
                     <button 
+                        className="confirm-btn"
                         onClick={handleConfirm} 
                         disabled={!getFinalReason().trim()}
-                        style={{
-                            backgroundColor: getFinalReason().trim() ? '#dc3545' : '#ccc',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: '4px',
-                            cursor: getFinalReason().trim() ? 'pointer' : 'not-allowed',
-                            marginRight: '10px'
-                        }}
+                        aria-label={`Confirm rejection${getFinalReason().trim() ? `: ${getFinalReason()}` : ''}`}
                     >
                         Confirm Rejection
                     </button>
                     <button 
+                        className="cancel-btn"
                         onClick={onClose}
-                        style={{
-                            backgroundColor: '#6c757d',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
+                        aria-label="Cancel rejection"
                     >
                         Cancel
                     </button>

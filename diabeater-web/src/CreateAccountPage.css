@@ -199,14 +199,18 @@ body {
 }
 
 .create-account-terms-link {
-    color: #1e525c;
+    color: #667eea;
     text-decoration: underline;
+    font-weight: 500;
     cursor: pointer;
+    transition: color 0.2s ease;
 }
 
 .create-account-terms-link:hover {
-    color: #0056b3;
+    color: #764ba2;
+    text-decoration: underline;
 }
+
 
 
 .create-account-submit-button {
@@ -286,6 +290,18 @@ body {
 
 .create-account-modal-button:hover {
     background-color: #45a049;
+}
+
+.create-account-modal-button-secondary { 
+    color: white; 
+    background-color: #1e525c;
+    border-radius: 5px;
+    border-color: #1e525c;
+    border-width: 2px;
+    border-style: solid;
+    margin-top: 15px;
+    height: 40px;
+    margin-right: 10px;
 }
 
 

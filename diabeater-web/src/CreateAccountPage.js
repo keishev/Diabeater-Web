@@ -1,17 +1,17 @@
 // src/CreateAccountPage.js
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import NutritionistApplicationViewModel from './ViewModels/NutritionistApplicationViewModel';
+import TermsAndConditionsModal from './Nutritionist/TermsAndConditionsModal';
 import bloodDropLogo from './assets/blood_drop_logo.png';
-import './CreateAccountPage.css'; // Link to the CSS file
+import './CreateAccountPage.css';
 
 // Instantiate the ViewModel outside the component to persist its state
-// or within a React Context if you need to pass it down the component tree.
-// For this single page, a direct import is fine.
 const viewModel = new NutritionistApplicationViewModel();
 
 function CreateAccountPage({ onBackToLogin }) {
     const fileInputRef = useRef(null);
+    const [showTermsModal, setShowTermsModal] = useState(false);
 
     // Use useEffect to react to changes in viewModel's state for modal visibility
     useEffect(() => {
@@ -41,6 +41,16 @@ function CreateAccountPage({ onBackToLogin }) {
         // Application is now submitted automatically after email verification
         // This handler is only used for the initial email verification
         viewModel.sendEmailVerification();
+    };
+
+    const handleTermsClick = (e) => {
+        e.preventDefault();
+        setShowTermsModal(true);
+    };
+
+    const handleAcceptTerms = () => {
+        viewModel.setAgreedToTerms(true);
+        setShowTermsModal(false);
     };
 
     return (
@@ -185,7 +195,16 @@ function CreateAccountPage({ onBackToLogin }) {
                             onChange={(e) => viewModel.setAgreedToTerms(e.target.checked)}
                             disabled={viewModel.isEmailVerified}
                         />
-                        <label htmlFor="terms-checkbox">I agree to the <span className="create-account-terms-link">Terms and Conditions</span></label>
+                        <label htmlFor="terms-checkbox">
+                            I agree to the{' '}
+                            <span 
+                                className="create-account-terms-link"
+                                onClick={handleTermsClick}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                Terms and Conditions
+                            </span>
+                        </label>
                     </div>
 
                     {viewModel.isEmailVerified && (
@@ -211,6 +230,7 @@ function CreateAccountPage({ onBackToLogin }) {
                     </button>
                 </form>
 
+                {/* Certificate Requirements Modal */}
                 {viewModel.showInfoModal && (
                     <div className="create-account-modal-overlay">
                         <div className="create-account-modal-content">
@@ -224,6 +244,7 @@ function CreateAccountPage({ onBackToLogin }) {
                     </div>
                 )}
 
+                {/* Email Verification Modal */}
                 {viewModel.showEmailVerificationModal && (
                     <div className="create-account-modal-overlay">
                         <div className="create-account-modal-content">
@@ -263,6 +284,7 @@ function CreateAccountPage({ onBackToLogin }) {
                     </div>
                 )}
 
+                {/* Application Success Modal */}
                 {viewModel.showPendingApprovalModal && (
                     <div className="create-account-modal-overlay">
                         <div className="create-account-modal-content">
@@ -275,6 +297,13 @@ function CreateAccountPage({ onBackToLogin }) {
                         </div>
                     </div>
                 )}
+
+                {/* Terms and Conditions Modal */}
+                <TermsAndConditionsModal
+                    isOpen={showTermsModal}
+                    onClose={() => setShowTermsModal(false)}
+                    onAccept={handleAcceptTerms}
+                />
             </div>
         </div>
     );
