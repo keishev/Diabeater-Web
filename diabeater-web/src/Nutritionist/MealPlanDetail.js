@@ -1,15 +1,13 @@
 import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
-import './MealPlanDetail.css'; // Ensure this CSS file is correctly linked
+import './MealPlanDetail.css';
 
 const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
-    // When the component mounts or mealPlanId changes, load the details
     useEffect(() => {
         if (mealPlanId) {
             mealPlanViewModel.loadMealPlanDetails(mealPlanId);
         }
-        // Clean up when component unmounts or mealPlanId changes
         return () => mealPlanViewModel.clearSelectedMealPlans();
     }, [mealPlanId]);
 
@@ -27,11 +25,10 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
         return <p className="detail-message">Select a meal plan to see details.</p>;
     }
 
-    const mealPlan = selectedMealPlanForDetail; // Use a shorter alias for convenience
+    const mealPlan = selectedMealPlanForDetail;
 
     // Helper to render nutrient boxes
     const NutrientBox = ({ label, value, unit, type = 'square' }) => {
-        // Only render if value is a valid number and not empty/null
         const numericValue = Number(value);
         if (isNaN(numericValue) || value === null || value === '') {
             return null;
@@ -40,8 +37,6 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
         const displayValue = numericValue % 1 === 0 ? numericValue.toFixed(0) : numericValue.toFixed(1);
 
         if (type === 'circle') {
-            // For the calories circle, you might want to dynamically set the conic-gradient percentage
-            // based on a max daily value, but for now, it's a static visual.
             return (
                 <div className="nutrient-circle">
                     <span className="nutrient-value">{displayValue} {unit}</span>
@@ -59,16 +54,24 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
 
     return (
         <div className="meal-plan-detail-container">
-                <div className="back-button-wrapper">
-                    <button onClick={onBack} className="back-button">← Back to Dashboard</button>
-                </div>
+            <div className="back-button-wrapper">
+                <button onClick={onBack} className="back-button">← Back to Dashboard</button>
+            </div>
 
             <div className="detail-main-layout">
                 {/* Left Column */}
                 <div className="detail-left-column">
                     <div className="meal-header">
                         <h1 className="meal-title">{mealPlan.name}</h1>
-                        <p className="meal-author">By {mealPlan.author || 'Unknown Author'}</p>
+                        <p className="meal-author">
+                            By {mealPlan.author && !mealPlan.author.includes('@') 
+                                ? mealPlan.author 
+                                : mealPlan.author 
+                                    ? mealPlan.author.split('@')[0].split(/[._-]/).map(part => 
+                                        part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+                                    : 'Unknown Author'
+                            }
+                        </p>
                     </div>
 
                     <div className="detail-image-wrapper">
@@ -82,51 +85,54 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                     <div className="detail-section general-description-section">
                         <h2>General Description & Notes</h2>
                         <p className="pre-formatted-text">
-                            {mealPlan.generalNotes || 'No general notes available.'}
+                            {/* Fixed: Use description instead of generalNotes */}
+                            {mealPlan.description || 'No general notes available.'}
                         </p>
                     </div>
-                </div>
 
-                {/* Right Column */}
-                <div className="detail-right-column">
                     <div className="detail-section ingredients-section">
                         <h2>Ingredients</h2>
                         <p className="pre-formatted-text">
-                            {mealPlan.recipe || 'No ingredients listed.'}
+                            {/* Fixed: Use ingredients instead of recipe */}
+                            {mealPlan.ingredients || 'No ingredients listed.'}
                         </p>
                     </div>
 
                     <div className="detail-section preparation-section">
                         <h2>Preparation Steps</h2>
                         <p className="pre-formatted-text">
-                            {mealPlan.preparationSteps || 'No preparation steps provided.'}
+                            {/* Fixed: Use steps instead of preparationSteps */}
+                            {mealPlan.steps || 'No preparation steps provided.'}
                         </p>
                     </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="detail-right-column">
 
                     <div className="detail-section nutrients-section">
                         <h2>Nutrient Information</h2>
                         <div className="nutrients-display-grid">
-                            <NutrientBox label="Calories" value={mealPlan.nutrients?.calories} unit="kcal" type="circle" />
-                            {/* Basic Nutrients (squares) */}
-                            <NutrientBox label="Protein" value={mealPlan.nutrients?.protein} unit="g" />
-                            <NutrientBox label="Carbs" value={mealPlan.nutrients?.carbohydrates} unit="g" />
-                            <NutrientBox label="Fats" value={mealPlan.nutrients?.fats} unit="g" />
-                            {/* Advanced Nutrients (more squares) */}
-                            <NutrientBox label="Sugar" value={mealPlan.nutrients?.sugar} unit="g" />
-                            <NutrientBox label="Sat. Fat" value={mealPlan.nutrients?.saturatedFat} unit="g" />
-                            <NutrientBox label="Unsat. Fat" value={mealPlan.nutrients?.unsaturatedFat} unit="g" />
-                            <NutrientBox label="Cholesterol" value={mealPlan.nutrients?.cholesterol} unit="mg" />
-                            <NutrientBox label="Sodium" value={mealPlan.nutrients?.sodium} unit="mg" />
-                            <NutrientBox label="Potassium" value={mealPlan.nutrients?.potassium} unit="mg" />
+                            {/* Fixed: Access nutrients directly from mealPlan instead of nested object */}
+                            <NutrientBox label="Calories" value={mealPlan.calories} unit="kcal" type="circle" />
+                            <NutrientBox label="Protein" value={mealPlan.protein} unit="g" />
+                            <NutrientBox label="Carbs" value={mealPlan.carbohydrates} unit="g" />
+                            <NutrientBox label="Fats" value={mealPlan.fats} unit="g" />
+                            <NutrientBox label="Sugar" value={mealPlan.sugar} unit="g" />
+                            <NutrientBox label="Sat. Fat" value={mealPlan.saturatedFat} unit="g" />
+                            <NutrientBox label="Unsat. Fat" value={mealPlan.unsaturatedFat} unit="g" />
+                            <NutrientBox label="Cholesterol" value={mealPlan.cholesterol} unit="mg" />
+                            <NutrientBox label="Sodium" value={mealPlan.sodium} unit="mg" />
+                            <NutrientBox label="Potassium" value={mealPlan.potassium} unit="mg" />
                         </div>
                     </div>
 
                     <div className="detail-section category-buttons-section">
                         <h2>Category</h2>
                         <div className="category-buttons">
-                            {/* Assuming category can be a single string or an array for futureproofing */}
-                            {Array.isArray(mealPlan.category) ? (
-                                mealPlan.category.map((cat, index) => (
+                            {/* Fixed: Use categories array instead of category */}
+                            {Array.isArray(mealPlan.categories) ? (
+                                mealPlan.categories.map((cat, index) => (
                                     <span key={index} className="category-tag">{cat}</span>
                                 ))
                             ) : mealPlan.category ? (
@@ -137,27 +143,21 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                         </div>
                     </div>
 
-                    {/* Action buttons at the bottom right */}
                     <div className="detail-actions">
                         <button className="button-base delete-plan-button" onClick={() => {
                             if (window.confirm("Are you sure you want to delete this meal plan? This action cannot be undone.")) {
                                 mealPlanViewModel.deleteMealPlan(mealPlan._id, mealPlan.imageFileName)
                                     .then(success => {
-                                        if (success) onBack(); // Go back if deletion is successful
+                                        if (success) onBack();
                                     })
                                     .catch(err => {
                                         console.error("Error deleting meal plan:", err);
-                                        // ViewModel should handle error message, but can add local feedback too
                                     });
                             }
                         }}>DELETE PLAN</button>
                     </div>
                 </div>
             </div>
-            {/* Log Out button, if it's meant to be consistently at the bottom left */}
-            {/* <div className="bottom-logout-button-wrapper">
-                <button className="button-base bottom-logout-button">LOG OUT</button>
-            </div> */}
         </div>
     );
 });

@@ -1,18 +1,14 @@
 // src/Admin/AdminMealPlanDetail.js
 import React, { useState, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
-import mealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the ViewModel
-import './AdminMealPlanDetail.css'; // Make sure this CSS file is used for admin styling
+import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
+import './AdminMealPlanDetail.css';
 
 const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
-    // This component receives the full mealPlan object directly from AdminMealPlans.js
-    // No need for useEffect to load details here, as it's pre-loaded into ViewModel.selectedMealPlanForDetail
-    // and passed as prop.
-
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedRejectReason, setSelectedRejectReason] = useState('');
     const [otherReasonText, setOtherReasonText] = useState('');
-    const [localLoading, setLocalLoading] = useState(false); // For modal specific loading
+    const [localLoading, setLocalLoading] = useState(false);
 
     const rejectionReasons = [
         'Incomplete information provided',
@@ -23,7 +19,6 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         'Other (please specify)'
     ];
 
-    // Handle cases where mealPlan might not be passed or is null
     if (!mealPlan) {
         return (
             <div className="meal-detail-container">
@@ -35,11 +30,10 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         );
     }
 
-    // ⭐ Helper to render nutrient boxes - copied from your provided MealPlanDetail ⭐
     const NutrientBox = ({ label, value, unit, type = 'square' }) => {
         const numericValue = Number(value);
         if (isNaN(numericValue) || value === null || value === '') {
-            return null; // Don't render if value is invalid
+            return null;
         }
 
         const displayValue = numericValue % 1 === 0 ? numericValue.toFixed(0) : numericValue.toFixed(1);
@@ -60,7 +54,6 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         );
     };
 
-    // --- APPROVE LOGIC (similar to AdminMealPlans) ---
     const handleApprove = useCallback(async () => {
         if (!window.confirm(`Are you sure you want to approve "${mealPlan.name}"?`)) {
             return;
@@ -71,14 +64,13 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                 mealPlan._id,
                 'APPROVED',
                 mealPlan.authorId,
-                mealPlanViewModel.currentUserName, // Admin's name
-                mealPlanViewModel.currentUserId     // Admin's ID
+                mealPlanViewModel.currentUserName,
+                mealPlanViewModel.currentUserId
             );
             if (success) {
-                onClose(); // Close the detail view after successful approval
+                onClose();
             }
         } catch (err) {
-            // Error handled by ViewModel, but can add local alert if needed
             console.error("Failed to approve meal plan from detail view:", err);
             alert(mealPlanViewModel.error || 'Failed to approve meal plan.');
         } finally {
@@ -86,7 +78,6 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         }
     }, [mealPlan, onClose]);
 
-    // --- REJECT MODAL LOGIC (similar to AdminMealPlans) ---
     const handleRejectClick = useCallback(() => {
         setSelectedRejectReason('');
         setOtherReasonText('');
@@ -122,12 +113,12 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                 mealPlan._id,
                 'REJECTED',
                 mealPlan.authorId,
-                mealPlanViewModel.currentUserName, // Admin's name
-                mealPlanViewModel.currentUserId,     // Admin's ID
+                mealPlanViewModel.currentUserName,
+                mealPlanViewModel.currentUserId,
                 finalReason
             );
             if (success) {
-                onClose(); // Close the detail view after successful rejection
+                onClose();
             }
             setShowRejectModal(false);
         } catch (err) {
@@ -144,18 +135,14 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         setOtherReasonText('');
     }, []);
 
-    // --- Safeguards for data consistency (from previous fix) ---
-    const ingredientsToDisplay = Array.isArray(mealPlan.ingredients) ? mealPlan.ingredients : [];
-    // Ensure categories are treated as array for map, or single string
+    // Fixed: Remove the ingredients array safeguard since ingredients is now a string
     const categoriesToDisplay = Array.isArray(mealPlan.categories)
         ? mealPlan.categories
         : (typeof mealPlan.category === 'string' ? [mealPlan.category] : []);
 
-
     return (
         <div className="meal-plan-detail-container">
             <div className="back-button-wrapper">
-                {/* Close button for the detail view */}
                 <button onClick={onClose} className="back-button">← Back to Meal Plans</button>
             </div>
 
@@ -182,46 +169,44 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                     <div className="detail-section general-description-section">
                         <h2>General Description & Notes</h2>
                         <p className="pre-formatted-text">
+                            {/* Fixed: Use description instead of generalNotes */}
                             {mealPlan.description || 'No general description available.'}
+                        </p>
+                    </div>
+
+                    <div className="detail-section ingredients-section">
+                        <h2>Ingredients</h2>
+                        <p className="pre-formatted-text">
+                            {mealPlan.ingredients || 'No ingredients listed.'}
+                        </p>
+                    </div>
+
+                    <div className="detail-section preparation-section">
+                        <h2>Preparation Steps</h2>
+                        <p className="pre-formatted-text">
+                            {/* Fixed: Use steps instead of preparationSteps */}
+                            {mealPlan.steps || 'No preparation steps provided.'}
                         </p>
                     </div>
                 </div>
 
                 {/* Right Column */}
                 <div className="detail-right-column">
-                    <div className="detail-section ingredients-section">
-                        <h2>Ingredients</h2>
-                        <ul className="ingredients-list">
-                            {ingredientsToDisplay.length > 0 ? (
-                                ingredientsToDisplay.map((item, index) => (
-                                    <li key={index}>{item}</li>
-                                ))
-                            ) : (
-                                <li>No ingredients listed.</li>
-                            )}
-                        </ul>
-                    </div>
-
-                    <div className="detail-section preparation-section">
-                        <h2>Preparation Steps</h2>
-                        <p className="pre-formatted-text">
-                            {mealPlan.preparationSteps || 'No preparation steps provided.'}
-                        </p>
-                    </div>
 
                     <div className="detail-section nutrients-section">
                         <h2>Nutrient Information</h2>
                         <div className="nutrients-display-grid">
-                            <NutrientBox label="Calories" value={mealPlan.nutrients?.calories} unit="kcal" type="circle" />
-                            <NutrientBox label="Protein" value={mealPlan.nutrients?.protein} unit="g" />
-                            <NutrientBox label="Carbs" value={mealPlan.nutrients?.carbohydrates} unit="g" />
-                            <NutrientBox label="Fats" value={mealPlan.nutrients?.fats} unit="g" />
-                            <NutrientBox label="Sugar" value={mealPlan.nutrients?.sugar} unit="g" />
-                            <NutrientBox label="Sat. Fat" value={mealPlan.nutrients?.saturatedFat} unit="g" />
-                            <NutrientBox label="Unsat. Fat" value={mealPlan.nutrients?.unsaturatedFat} unit="g" />
-                            <NutrientBox label="Cholesterol" value={mealPlan.nutrients?.cholesterol} unit="mg" />
-                            <NutrientBox label="Sodium" value={mealPlan.nutrients?.sodium} unit="mg" />
-                            <NutrientBox label="Potassium" value={mealPlan.nutrients?.potassium} unit="mg" />
+                            {/* Fixed: Access nutrients directly instead of nested object */}
+                            <NutrientBox label="Calories" value={mealPlan.calories} unit="kcal" type="circle" />
+                            <NutrientBox label="Protein" value={mealPlan.protein} unit="g" />
+                            <NutrientBox label="Carbs" value={mealPlan.carbohydrates} unit="g" />
+                            <NutrientBox label="Fats" value={mealPlan.fats} unit="g" />
+                            <NutrientBox label="Sugar" value={mealPlan.sugar} unit="g" />
+                            <NutrientBox label="Sat. Fat" value={mealPlan.saturatedFat} unit="g" />
+                            <NutrientBox label="Unsat. Fat" value={mealPlan.unsaturatedFat} unit="g" />
+                            <NutrientBox label="Cholesterol" value={mealPlan.cholesterol} unit="mg" />
+                            <NutrientBox label="Sodium" value={mealPlan.sodium} unit="mg" />
+                            <NutrientBox label="Potassium" value={mealPlan.potassium} unit="mg" />
                         </div>
                     </div>
 
@@ -249,7 +234,7 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                             </button>
                         </div>
                     )}
-                     {/* Show delete button for approved and rejected meal plans for admin */}
+                    
                     {(mealPlan.status === 'APPROVED' || mealPlan.status === 'REJECTED') && (
                         <div className="detail-actions admin-actions">
                              <button className="button-base delete-plan-button" onClick={() => {
@@ -257,7 +242,7 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                                     setLocalLoading(true);
                                     mealPlanViewModel.deleteMealPlan(mealPlan._id, mealPlan.imageFileName)
                                         .then(success => {
-                                            if (success) onClose(); // Go back if deletion is successful
+                                            if (success) onClose();
                                         })
                                         .catch(err => {
                                             console.error("Error deleting meal plan from admin detail:", err);
