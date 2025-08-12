@@ -1,8 +1,14 @@
 // functions/index.js
 
-const functions = require('firebase-functions');
+// Import Firebase Functions using Gen 2 modular syntax
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { defineString, defineSecret } = require('firebase-functions/params');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getStorage } = require('firebase-admin/storage');
+const { getAuth } = require('firebase-admin/auth');
 const admin = require('firebase-admin');
-const Filter = require('bad-words');
+const filter = require('leo-profanity'); // Updated to use leo-profanity
 const nodemailer = require('nodemailer');
 
 // Ensure Firebase Admin SDK is initialized only once
@@ -10,127 +16,157 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 
-const db = admin.firestore();
-const storage = admin.storage();
-const filter = new Filter();
+// Use the new modular SDK references
+const db = getFirestore();
+const storage = getStorage();
+const auth = getAuth();
+
+// Define parameters for email configuration
+const gmailEmail = defineString('GMAIL_EMAIL');
+const gmailPassword = defineSecret('GMAIL_PASSWORD');
+
+let cachedTransporter;
+function getTransporter() {
+    if (!cachedTransporter) {
+        cachedTransporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: gmailEmail.value(),
+                pass: gmailPassword.value()
+            }
+        });
+    }
+    return cachedTransporter;
+}
 
 // Configure nodemailer with your email service
-const transporter = nodemailer.createTransporter({
-    service: 'gmail',
-    auth: {
-        user: functions.config().gmail.email,
-        pass: functions.config().gmail.password
-    }
-});
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     auth: {
+//         user: gmailEmail.value(),
+//         pass: gmailPassword.value()
+//     }
+// });
 
 // Helper to check if a user has the 'admin' custom claim
 const isAdmin = async (context) => {
     if (!context.auth) {
         console.warn("Attempt to call admin function by unauthenticated user.");
-        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+        throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
     const uid = context.auth.uid;
     try {
-        const userRecord = await admin.auth().getUser(uid);
+        const userRecord = await auth.getUser(uid);
         if (userRecord.customClaims && userRecord.customClaims.admin === true) {
             return true;
         }
         console.warn(`User ${uid} attempted to call admin function without admin claim.`);
-        throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
+        throw new HttpsError('permission-denied', 'You do not have permission to perform this action.');
     } catch (error) {
         console.error(`Error checking admin status for UID ${uid}:`, error);
-        throw new functions.https.HttpsError('permission-denied', 'Authentication failed or user not authorized.', error.message);
+        throw new HttpsError('permission-denied', 'Authentication failed or user not authorized.', error.message);
     }
 };
 
 /**
  * Cloud Function to process new user feedback.
  */
-exports.processNewFeedback = functions.firestore
-    .document("user_feedbacks/{feedbackId}")
-    .onCreate(async (snap, context) => {
-        const feedbackData = snap.data();
-        const feedbackId = context.params.feedbackId;
+exports.processNewFeedback = onDocumentCreated({
+    document: "user_feedbacks/{feedbackId}",
+    region: "us-central1",
+    memory: "256MiB"
+}, async (event) => {
+    const snap = event.data;
+    if (!snap) {
+        console.log("No data associated with the event");
+        return;
+    }
+    
+    const feedbackData = snap.data();
+    const feedbackId = event.params.feedbackId;
 
-        console.log(`Processing new feedback: ${feedbackId} with data:`, feedbackData);
+    console.log(`Processing new feedback: ${feedbackId} with data:`, feedbackData);
 
-        if (feedbackData.rating !== 5) {
-            console.log(`Feedback ${feedbackId} is not 5-star (rating: ${feedbackData.rating}). Setting status to 'NotApprovedForMarketing'.`);
-            await db.collection("user_feedbacks").doc(feedbackId).update({
-                status: "NotApprovedForMarketing",
-                displayOnMarketing: false
-            });
-            return null;
-        }
+    if (feedbackData.rating !== 5) {
+        console.log(`Feedback ${feedbackId} is not 5-star (rating: ${feedbackData.rating}). Setting status to 'NotApprovedForMarketing'.`);
+        await db.collection("user_feedbacks").doc(feedbackId).update({
+            status: "NotApprovedForMarketing",
+            displayOnMarketing: false
+        });
+        return;
+    }
 
-        let cleanedMessage = feedbackData.message;
-        let containsProfanity = false;
+    let cleanedMessage = feedbackData.message;
+    let containsProfanity = false;
 
-        if (typeof feedbackData.message === 'string' && filter.isProfane(feedbackData.message)) {
-            containsProfanity = true;
-            cleanedMessage = filter.clean(feedbackData.message);
-            console.log(`Feedback ${feedbackId} contains profanity.`);
-        }
+    if (typeof feedbackData.message === 'string' && filter.check(feedbackData.message)) {
+        containsProfanity = true;
+        cleanedMessage = filter.clean(feedbackData.message);
+        console.log(`Feedback ${feedbackId} contains profanity.`);
+    }
 
-        if (containsProfanity) {
-            console.log(`Feedback ${feedbackId} flagged due to profanity. Setting status to 'FlaggedForReview'.`);
-            await db.collection("user_feedbacks").doc(feedbackId).update({
-                status: "FlaggedForReview",
-                displayOnMarketing: false,
-            });
-            return null;
-        }
+    if (containsProfanity) {
+        console.log(`Feedback ${feedbackId} flagged due to profanity. Setting status to 'FlaggedForReview'.`);
+        await db.collection("user_feedbacks").doc(feedbackId).update({
+            status: "FlaggedForReview",
+            displayOnMarketing: false,
+        });
+        return;
+    }
 
-        try {
-            await db.collection("feedbacks").doc(feedbackId).set({
-                ...feedbackData,
-                message: cleanedMessage,
-                status: "Approved",
-                displayOnMarketing: true,
-                processedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-            console.log(`Feedback ${feedbackId} (5-star, clean) copied to 'feedbacks' collection.`);
-            await db.collection("user_feedbacks").doc(feedbackId).update({
-                status: "ApprovedAutomated"
-            });
-            return null;
-        } catch (error) {
-            console.error(`Error copying feedback ${feedbackId} to 'feedbacks' collection:`, error);
-            await db.collection("user_feedbacks").doc(feedbackId).update({
-                status: "ErrorProcessing"
-            });
-            return null;
-        }
-    });
+    try {
+        await db.collection("feedbacks").doc(feedbackId).set({
+            ...feedbackData,
+            message: cleanedMessage,
+            status: "Approved",
+            displayOnMarketing: true,
+            processedAt: FieldValue.serverTimestamp()
+        });
+        console.log(`Feedback ${feedbackId} (5-star, clean) copied to 'feedbacks' collection.`);
+        await db.collection("user_feedbacks").doc(feedbackId).update({
+            status: "ApprovedAutomated"
+        });
+    } catch (error) {
+        console.error(`Error copying feedback ${feedbackId} to 'feedbacks' collection:`, error);
+        await db.collection("user_feedbacks").doc(feedbackId).update({
+            status: "ErrorProcessing"
+        });
+    }
+});
 
 /**
  * Callable Cloud Function to get a signed URL for a nutritionist's certificate.
  */
-exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, context) => {
+exports.getNutritionistCertificateUrl = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1'
+}, async (request) => {
     try {
-        await isAdmin(context);
+        const { data, auth } = request;
+        await isAdmin({ auth });
         const userId = data.userId;
         if (!userId) {
-            throw new functions.https.HttpsError('invalid-argument', 'User ID is required.');
+            throw new HttpsError('invalid-argument', 'User ID is required.');
         }
 
         const nutritionistDoc = await db.collection('nutritionists').doc(userId).get();
         if (!nutritionistDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Nutritionist not found.');
+            throw new HttpsError('not-found', 'Nutritionist not found.');
         }
 
         const nutritionistData = nutritionistDoc.data();
         const certificateStoragePath = nutritionistData.certificateUrl;
 
         if (!certificateStoragePath) {
-            throw new functions.https.HttpsError('not-found', 'Certificate URL (storage path) not found for this nutritionist in Firestore. Please ensure the "certificateUrl" field exists and is populated.');
+            throw new HttpsError('not-found', 'Certificate URL (storage path) not found for this nutritionist in Firestore. Please ensure the "certificateUrl" field exists and is populated.');
         }
 
         const fileRef = storage.bucket().file(certificateStoragePath);
         const [exists] = await fileRef.exists();
         if (!exists) {
             console.warn(`Certificate file not found in storage for path: ${certificateStoragePath} (User ID: ${userId})`);
-            throw new functions.https.HttpsError('not-found', 'Certificate file not found in storage. It might have been deleted or the path is incorrect.');
+            throw new HttpsError('not-found', 'Certificate file not found in storage. It might have been deleted or the path is incorrect.');
         }
 
         const [url] = await fileRef.getSignedUrl({
@@ -141,11 +177,11 @@ exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, cont
         return { success: true, certificateUrl: url };
 
     } catch (error) {
-        console.error(`Error in getNutritionistCertificateUrl function for userId ${data?.userId || 'unknown'}:`, error);
-        if (error instanceof functions.https.HttpsError) {
+        console.error(`Error in getNutritionistCertificateUrl function:`, error);
+        if (error instanceof HttpsError) {
             throw error;
         }
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'internal',
             `An unexpected error occurred while processing your request: ${error.message}`,
             { originalError: error.message, stack: error.stack }
@@ -156,19 +192,24 @@ exports.getNutritionistCertificateUrl = functions.https.onCall(async (data, cont
 /**
  * Callable Cloud Function to approve a nutritionist account.
  */
-exports.approveNutritionist = functions.https.onCall(async (data, context) => {
+exports.approveNutritionist = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1'
+}, async (request) => {
     try {
-        await isAdmin(context);
+        const { data, auth: authContext } = request;
+        await isAdmin({ auth: authContext });
         const userId = data.userId;
         if (!userId) {
-            throw new functions.https.HttpsError('invalid-argument', 'User ID is required for approval.');
+            throw new HttpsError('invalid-argument', 'User ID is required for approval.');
         }
 
         const nutritionistRef = db.collection('nutritionists').doc(userId);
         const nutritionistDoc = await nutritionistRef.get();
 
         if (!nutritionistDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Nutritionist account not found in Firestore.');
+            throw new HttpsError('not-found', 'Nutritionist account not found in Firestore.');
         }
 
         const currentData = nutritionistDoc.data();
@@ -182,22 +223,22 @@ exports.approveNutritionist = functions.https.onCall(async (data, context) => {
 
         await nutritionistRef.update({
             status: 'approved',
-            approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+            approvedAt: FieldValue.serverTimestamp(),
             customClaims: updatedClaims
         });
 
-        await admin.auth().setCustomUserClaims(userId, updatedClaims);
-        await admin.auth().revokeRefreshTokens(userId);
+        await auth.setCustomUserClaims(userId, updatedClaims);
+        await auth.revokeRefreshTokens(userId);
         console.log(`Successfully approved nutritionist ${userId} and set claims. Tokens revoked.`);
 
         return { success: true, message: `Nutritionist ${userId} has been approved. They will need to re-login to see changes.` };
 
     } catch (error) {
-        console.error(`Error approving nutritionist ${data?.userId || 'unknown'}:`, error);
-        if (error instanceof functions.https.HttpsError) {
+        console.error(`Error approving nutritionist:`, error);
+        if (error instanceof HttpsError) {
             throw error;
         }
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'internal',
             `An unexpected error occurred during approval: ${error.message}`,
             { originalError: error.message, stack: error.stack }
@@ -208,20 +249,25 @@ exports.approveNutritionist = functions.https.onCall(async (data, context) => {
 /**
  * Callable Cloud Function to reject a nutritionist account.
  */
-exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
+exports.rejectNutritionist = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1'
+}, async (request) => {
     try {
-        await isAdmin(context);
+        const { data, auth: authContext } = request;
+        await isAdmin({ auth: authContext });
         const userId = data.userId;
         const rejectionReason = data.rejectionReason || 'No reason provided.';
         if (!userId) {
-            throw new functions.https.HttpsError('invalid-argument', 'User ID is required for rejection.');
+            throw new HttpsError('invalid-argument', 'User ID is required for rejection.');
         }
 
         const nutritionistRef = db.collection('nutritionists').doc(userId);
         const nutritionistDoc = await nutritionistRef.get();
 
         if (!nutritionistDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Nutritionist account not found in Firestore.');
+            throw new HttpsError('not-found', 'Nutritionist account not found in Firestore.');
         }
 
         const currentData = nutritionistDoc.data();
@@ -233,23 +279,23 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
 
         await nutritionistRef.update({
             status: 'rejected',
-            rejectedAt: admin.firestore.FieldValue.serverTimestamp(),
+            rejectedAt: FieldValue.serverTimestamp(),
             rejectionReason: rejectionReason,
             customClaims: updatedClaims
         });
 
-        await admin.auth().setCustomUserClaims(userId, updatedClaims);
-        await admin.auth().revokeRefreshTokens(userId);
+        await auth.setCustomUserClaims(userId, updatedClaims);
+        await auth.revokeRefreshTokens(userId);
         console.log(`Successfully rejected nutritionist ${userId} and removed claims. Tokens revoked.`);
 
         return { success: true, message: `Nutritionist ${userId} has been rejected. They will need to re-login to see changes.` };
 
     } catch (error) {
-        console.error(`Error rejecting nutritionist ${data?.userId || 'unknown'}:`, error);
-        if (error instanceof functions.https.HttpsError) {
+        console.error(`Error rejecting nutritionist:`, error);
+        if (error instanceof HttpsError) {
             throw error;
         }
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'internal',
             `An unexpected error occurred during rejection: ${error.message}`,
             { originalError: error.message, stack: error.stack }
@@ -260,16 +306,24 @@ exports.rejectNutritionist = functions.https.onCall(async (data, context) => {
 /**
  * Callable Cloud Function to send an approval email.
  */
-exports.sendApprovalEmail = functions.https.onCall(async (data, context) => {
-    await isAdmin(context);
+exports.sendApprovalEmail = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1',
+    secrets: [gmailPassword]
+}, async (request) => {
+    const { data, auth: authContext } = request;
+    await isAdmin({ auth: authContext });
+
+    const transporter = getTransporter();
 
     const { email, name } = data;
     if (!email || !name) {
-        throw new functions.https.HttpsError('invalid-argument', 'Email and name are required.');
+        throw new HttpsError('invalid-argument', 'Email and name are required.');
     }
 
     const mailOptions = {
-        from: functions.config().gmail.email,
+        from: gmailEmail.value(),
         to: email,
         subject: 'Nutritionist Application Approved - DiaBeater',
         html: `
@@ -310,23 +364,31 @@ exports.sendApprovalEmail = functions.https.onCall(async (data, context) => {
         return { success: true, message: 'Approval email sent successfully' };
     } catch (error) {
         console.error('Error sending approval email:', error);
-        throw new functions.https.HttpsError('internal', 'Failed to send approval email');
+        throw new HttpsError('internal', 'Failed to send approval email');
     }
 });
 
 /**
  * Callable Cloud Function to send a rejection email.
  */
-exports.sendRejectionEmail = functions.https.onCall(async (data, context) => {
-    await isAdmin(context);
+exports.sendRejectionEmail = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1',
+    secrets: [gmailPassword]
+}, async (request) => {
+    const { data, auth: authContext } = request;
+    await isAdmin({ auth: authContext });
+
+    const transporter = getTransporter();
 
     const { email, name, reason } = data;
     if (!email || !name) {
-        throw new functions.https.HttpsError('invalid-argument', 'Email and name are required.');
+        throw new HttpsError('invalid-argument', 'Email and name are required.');
     }
 
     const mailOptions = {
-        from: functions.config().gmail.email,
+        from: gmailEmail.value(),
         to: email,
         subject: 'Nutritionist Application Update - DiaBeater',
         html: `
@@ -373,22 +435,27 @@ exports.sendRejectionEmail = functions.https.onCall(async (data, context) => {
         return { success: true, message: 'Rejection email sent successfully' };
     } catch (error) {
         console.error('Error sending rejection email:', error);
-        throw new functions.https.HttpsError('internal', 'Failed to send rejection email');
+        throw new HttpsError('internal', 'Failed to send rejection email');
     }
 });
 
 /**
  * Callable Cloud Function to suspend a user.
  */
-exports.suspendUser = functions.https.onCall(async (data, context) => {
+exports.suspendUser = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1'
+}, async (request) => {
     try {
-        await isAdmin(context);
+        const { data, auth: authContext } = request;
+        await isAdmin({ auth: authContext });
         const userId = data.userId;
         if (!userId) {
-            throw new functions.https.HttpsError('invalid-argument', 'User ID is required to suspend a user.');
+            throw new HttpsError('invalid-argument', 'User ID is required to suspend a user.');
         }
 
-        await admin.auth().updateUser(userId, { disabled: true });
+        await auth.updateUser(userId, { disabled: true });
         console.log(`Firebase Auth user ${userId} disabled.`);
 
         const userAccountRef = db.collection('user_accounts').doc(userId);
@@ -401,17 +468,17 @@ exports.suspendUser = functions.https.onCall(async (data, context) => {
             console.warn(`User account document not found in Firestore for ID: ${userId}. Auth user still disabled.`);
         }
 
-        await admin.auth().revokeRefreshTokens(userId);
+        await auth.revokeRefreshTokens(userId);
         console.log(`Refresh tokens revoked for user ${userId}.`);
 
         return { success: true, message: `User ${userId} has been suspended.` };
 
     } catch (error) {
-        console.error(`Error suspending user ${data?.userId || 'unknown'}:`, error);
-        if (error instanceof functions.https.HttpsError) {
+        console.error(`Error suspending user:`, error);
+        if (error instanceof HttpsError) {
             throw error;
         }
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'internal',
             `An unexpected error occurred during user suspension: ${error.message}`,
             { originalError: error.message, stack: error.stack }
@@ -422,15 +489,20 @@ exports.suspendUser = functions.https.onCall(async (data, context) => {
 /**
  * Callable Cloud Function to unsuspend a user.
  */
-exports.unsuspendUser = functions.https.onCall(async (data, context) => {
+exports.unsuspendUser = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1'
+}, async (request) => {
     try {
-        await isAdmin(context);
+        const { data, auth: authContext } = request;
+        await isAdmin({ auth: authContext });
         const userId = data.userId;
         if (!userId) {
-            throw new functions.https.HttpsError('invalid-argument', 'User ID is required to unsuspend a user.');
+            throw new HttpsError('invalid-argument', 'User ID is required to unsuspend a user.');
         }
 
-        await admin.auth().updateUser(userId, { disabled: false });
+        await auth.updateUser(userId, { disabled: false });
         console.log(`Firebase Auth user ${userId} enabled.`);
 
         const userAccountRef = db.collection('user_accounts').doc(userId);
@@ -443,17 +515,17 @@ exports.unsuspendUser = functions.https.onCall(async (data, context) => {
             console.warn(`User account document not found in Firestore for ID: ${userId}. Auth user still enabled.`);
         }
 
-        await admin.auth().revokeRefreshTokens(userId);
+        await auth.revokeRefreshTokens(userId);
         console.log(`Refresh tokens revoked for user ${userId}.`);
 
         return { success: true, message: `User ${userId} has been unsuspended.` };
 
     } catch (error) {
-        console.error(`Error unsuspending user ${data?.userId || 'unknown'}:`, error);
-        if (error instanceof functions.https.HttpsError) {
+        console.error(`Error unsuspending user:`, error);
+        if (error instanceof HttpsError) {
             throw error;
         }
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'internal',
             `An unexpected error occurred during user unsuspension: ${error.message}`,
             { originalError: error.message, stack: error.stack }
@@ -461,36 +533,46 @@ exports.unsuspendUser = functions.https.onCall(async (data, context) => {
     }
 });
 
-// Your existing addAdminRole function
-exports.addAdminRole = functions.https.onCall(async (data, context) => {
-    if (!context.auth || context.auth.token.admin !== true) {
-        throw new functions.https.HttpsError(
+/**
+ * Callable Cloud Function to add admin role.
+ */
+exports.addAdminRole = onCall({
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1'
+}, async (request) => {
+    const { data, auth: authContext } = request;
+    
+    if (!authContext || authContext.token.admin !== true) {
+        throw new HttpsError(
             'permission-denied',
             'Only administrators can add new admin roles.'
         );
     }
+    
     const email = data.email;
     if (!email) {
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'invalid-argument',
             'The function must be called with an email.'
         );
     }
+    
     try {
-        const user = await admin.auth().getUserByEmail(email);
-        await admin.auth().setCustomUserClaims(user.uid, { admin: true });
-        await admin.auth().revokeRefreshTokens(user.uid);
+        const user = await auth.getUserByEmail(email);
+        await auth.setCustomUserClaims(user.uid, { admin: true });
+        await auth.revokeRefreshTokens(user.uid);
         console.log(`Successfully granted admin role and revoked tokens for ${email}`);
         return { success: true, message: `Admin role granted to ${email}. User needs to re-login.` };
     } catch (error) {
         console.error("Error in addAdminRole function:", error);
         if (error.code === 'auth/user-not-found') {
-            throw new functions.https.HttpsError(
+            throw new HttpsError(
                 'not-found',
                 `User with email ${email} not found.`
             );
         }
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             'internal',
             `An error occurred: ${error.message}`,
             error
