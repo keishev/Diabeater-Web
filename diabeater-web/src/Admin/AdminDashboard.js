@@ -1,10 +1,10 @@
-// src/AdminDashboard.js
+// src/AdminDashboard.js - Fixed Version
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Ensure this path is correct
-import AdminViewModel from '../ViewModels/AdminViewModel'; // Ensure this path is correct
-import UserDetailModal from './UserDetailModal'; // Ensure this path is correct
-import RejectionReasonModal from './RejectionReasonModal'; // Ensure this path is correct
+import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel';
+import AdminViewModel from '../ViewModels/AdminViewModel';
+import UserDetailModal from './UserDetailModal';
+import RejectionReasonModal from './RejectionReasonModal';
 import AdminProfile from './AdminProfile';
 import AdminStatDashboard from './AdminStatDashboard';
 import AdminMealPlans from './AdminMealPlans';
@@ -13,7 +13,8 @@ import MarketingWebsiteEditorPage from './MarketingWebsiteEditorPage';
 import UserFeedbacksPage from './UserFeedbacksPage';
 import AdminRewards from './AdminRewards';
 import adminStatViewModel from '../ViewModels/AdminStatViewModel';
-import PremiumPage from './PremiumPage'; // Corrected import to use the actual component name
+import PremiumPage from './PremiumPage';
+import premiumStatViewModel from '../ViewModels/PremiumStatViewModel'; // Add this import
 
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
@@ -57,7 +58,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                     className={`nav-item ${currentView === 'premiumAccounts' ? 'active' : ''}`}
                     onClick={() => onNavigate('premiumAccounts')}
                 >
-                    <i className="fas fa-star"></i> {/* You can choose an appropriate icon */}
+                    <i className="fas fa-star"></i>
                     <span>Premium</span>
                 </div>
                 <div
@@ -158,7 +159,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                     <button
                         className="action-button reject-button"
                         onClick={() => {
-                            AdminDashboardViewModel.setSelectedUser(user); // Still used for RejectionReasonModal
+                            AdminDashboardViewModel.setSelectedUser(user);
                             AdminDashboardViewModel.setShowRejectionReasonModal(true);
                         }}
                         disabled={AdminDashboardViewModel.isLoading}
@@ -216,7 +217,7 @@ const Pagination = observer(({ currentData, itemsPerPage = 10 }) => {
     );
 });
 
-// User Accounts Content Component (updated with pagination logic)
+// User Accounts Content Component (FIXED VERSION)
 const UserAccountsContent = observer(() => {
     const {
         activeTab,
@@ -245,9 +246,61 @@ const UserAccountsContent = observer(() => {
         AdminDashboardViewModel.fetchAccounts();
     }, [activeTab]);
 
-    const handleOpenModal = (user) => {
-        setSelectedUser(user);
-        setShowUserDetailModal(true);
+    // FIXED: Enhanced handleOpenModal to fetch premium data like PremiumPage does
+    const handleOpenModal = async (user) => {
+        console.log("[AdminDashboard] Opening user detail modal for:", user);
+        
+        try {
+            // First set the basic user data
+            setSelectedUser(user);
+            
+            // Try to enrich the user with premium subscription data
+            if (user.id || user._id) {
+                const userId = user.id || user._id;
+                
+                // Check if premiumStatViewModel has the required methods
+                if (typeof premiumStatViewModel.loadPremiumData === 'function') {
+                    // Load premium data if not already loaded
+                    if (premiumStatViewModel.allPremiumUserAccounts.length === 0) {
+                        await premiumStatViewModel.loadPremiumData();
+                    }
+                    
+                    // Find the user in premium accounts
+                    const premiumUser = premiumStatViewModel.allPremiumUserAccounts.find(
+                        premiumAccount => premiumAccount._id === userId || premiumAccount.id === userId
+                    );
+                    
+                    if (premiumUser) {
+                        console.log("[AdminDashboard] Found premium user data:", premiumUser);
+                        setSelectedUser(premiumUser);
+                    } else {
+                        console.log("[AdminDashboard] No premium data found for user, using basic data");
+                        // Enrich basic user data with default premium structure
+                        const enrichedUser = {
+                            ...user,
+                            _id: userId,
+                            displayName: user.firstName && user.lastName 
+                                ? `${user.firstName} ${user.lastName}` 
+                                : (user.name || user.email),
+                            displayStatus: 'inactive',
+                            displayRenewalDate: 'N/A',
+                            currentSubscription: null
+                        };
+                        setSelectedUser(enrichedUser);
+                    }
+                } else {
+                    console.log("[AdminDashboard] PremiumStatViewModel methods not available, using basic user data");
+                }
+            }
+            
+            // Open the modal
+            setShowUserDetailModal(true);
+            
+        } catch (error) {
+            console.error("[AdminDashboard] Error enriching user data:", error);
+            // Still open the modal with basic user data even if premium data fetch fails
+            setShowUserDetailModal(true);
+        }
     };
 
     const handleCloseModal = () => {
@@ -433,7 +486,6 @@ const UserAccountsContent = observer(() => {
     );
 });
 
-
 // AdminDashboard Main Component
 const AdminDashboard = observer(({ onLogout }) => {
     const { currentView } = AdminDashboardViewModel;
@@ -450,7 +502,6 @@ const AdminDashboard = observer(({ onLogout }) => {
         checkAccess();
     }, []);
 
-
     return (
         <div className="admin-dashboard-page">
             <AdminSidebar
@@ -462,7 +513,7 @@ const AdminDashboard = observer(({ onLogout }) => {
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
                 {currentView === 'userAccounts' && <UserAccountsContent />}
-                {currentView === 'premiumAccounts' && <PremiumPage />} {/* RENDER NEW PREMIUM PAGE */}
+                {currentView === 'premiumAccounts' && <PremiumPage />}
                 {currentView === 'mealPlans' && <AdminMealPlans />}
                 {currentView === 'exportReport' && <AdminExportReport />}
                 {currentView === 'rewards' && <AdminRewards />}
