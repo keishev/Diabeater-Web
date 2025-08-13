@@ -58,6 +58,10 @@
   width: 800px;
   height: 1000px;
 }
+.update-meal-plan-section-left {
+  width: 700px;
+   margin-left: -100px;
+}
 
 /* ==============================================
    FORM ELEMENTS
@@ -453,7 +457,7 @@
 }
 
 .update-meal-plan-category-label:has(.update-meal-plan-category-checkbox:checked) {
-    background: linear-gradient(135deg, #1e525c, #f79554);
+    background:#1e525c;
     color: white;
     border-radius: 8px;
 }

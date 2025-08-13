@@ -1,15 +1,12 @@
-// repositories/AdminCreateAccountRepository.js
+// repositories/AdminCreateAccountRepository.js - SIMPLIFIED
 import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 import { db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 class AdminCreateAccountRepository {
   /**
-   * Creates a new admin account
-   * @param {Object} adminData - Admin account data
-   * @returns {Promise<Object>} - Creation result
+   * Creates admin account (sends to service)
    */
   async createAdminAccount(adminData) {
     try {
@@ -21,168 +18,70 @@ class AdminCreateAccountRepository {
   }
 
   /**
-   * Checks if email is already in use
-   * @param {string} email - Email to check
-   * @returns {Promise<boolean>} - True if email exists
+   * Creates final admin account after email verification
    */
-  async checkEmailExists(email) {
+  async createFinalAdminAccount(adminData) {
     try {
-      const usersQuery = query(
-        collection(db, 'user_accounts'),
-        where('email', '==', email)
-      );
+      console.log('Creating final admin account for:', adminData.email);
       
-      const querySnapshot = await getDocs(usersQuery);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error('Repository: Error checking email existence:', error);
-      throw new Error('Failed to check email availability');
-    }
-  }
-
-  /**
-   * Sends verification email before account creation
-   * @param {string} email - Email to send verification to
-   * @returns {Promise<Object>} - Result of sending email
-   */
-  async sendVerificationEmail(email) {
-    try {
-      console.log('Sending verification email to:', email);
-
-      // Using HTTP request instead of callable function due to CORS
-      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTIONS_URL || 'https://us-central1-diabeaters-4cf9e.cloudfunctions.net'}/sendVerificationEmail`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email })
+      const functions = getFunctions();
+      const createAdminUser = httpsCallable(functions, 'createAdminUser');
+      
+      const result = await createAdminUser({
+        email: adminData.email
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      if (result.data.success) {
+        return {
+          success: true,
+          userId: result.data.userId,
+          message: result.data.message
+        };
+      } else {
+        throw new Error(result.data.error || 'Failed to create admin account');
       }
-
-      const result = await response.json();
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send verification email');
-      }
-
-      return result;
-
     } catch (error) {
-      console.error('Repository: Error sending verification email:', error);
+      console.error('Repository: Error creating final admin account:', error);
       
-      // Provide more specific error messages
-      if (error.message.includes('CORS')) {
-        throw new Error('Network configuration error. Please contact support.');
-      } else if (error.message.includes('fetch')) {
-        throw new Error('Unable to connect to server. Please check your internet connection.');
+      if (error.code && error.message) {
+        throw new Error(error.message);
       }
       
-      throw new Error(`Failed to send verification email: ${error.message}`);
-    }
-  }
-
-  /**
-   * Resends verification email to user
-   * @param {string} email - Email to send verification to
-   * @returns {Promise<Object>} - Result of sending email
-   */
-  async resendVerificationEmail(email) {
-    try {
-      console.log('Resending verification email to:', email);
-
-      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTIONS_URL || 'https://us-central1-diabeaters-4cf9e.cloudfunctions.net'}/resendVerificationEmail`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to resend verification email');
-      }
-
-      return result;
-
-    } catch (error) {
-      console.error('Repository: Error resending verification email:', error);
-      throw new Error(`Failed to resend verification email: ${error.message}`);
+      throw error;
     }
   }
 
   /**
    * Checks email verification status
-   * @param {string} email - Email to check
-   * @returns {Promise<Object>} - Verification status
    */
-  async checkEmailVerification(email) {
+  async checkEmailVerification(email, password) {
     try {
-      console.log('Checking email verification for:', email);
-
-      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTIONS_URL || 'https://us-central1-diabeaters-4cf9e.cloudfunctions.net'}/checkEmailVerification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to check verification status');
-      }
-
-      return result;
-
+      return await AdminCreateAccountService.checkEmailVerification(email, password);
     } catch (error) {
       console.error('Repository: Error checking email verification:', error);
-      throw new Error(`Failed to check verification status: ${error.message}`);
+      throw error;
     }
   }
 
   /**
-   * Sets admin claims for verified user
-   * @param {string} userId - User ID
-   * @returns {Promise<Object>} - Result of setting claims
+   * Resends verification email
    */
-  async setAdminClaims(userId) {
+  async resendVerificationEmail(email, password) {
     try {
-      console.log('Setting admin claims for user:', userId);
-      
-      const setAdminClaimsFunction = httpsCallable(functions, 'setAdminClaims');
-      const result = await setAdminClaimsFunction({ uid: userId });
-      
-      return result.data;
-      
+      return await AdminCreateAccountService.resendVerificationEmail(email, password);
     } catch (error) {
-      console.error('Repository: Error setting admin claims:', error);
-      throw new Error(`Failed to set admin claims: ${error.message}`);
+      console.error('Repository: Error resending verification email:', error);
+      throw error;
     }
   }
 
   /**
-   * Gets pending admin accounts (those created but not yet activated)
-   * @returns {Promise<Array>} - List of pending admin accounts
+   * Gets pending admin accounts
    */
   async getPendingAdminAccounts() {
     try {
+      // Get from both temp_admin_accounts and regular user_accounts with pending status
       const pendingQuery = query(
         collection(db, 'user_accounts'),
         where('role', '==', 'admin'),
@@ -190,11 +89,23 @@ class AdminCreateAccountRepository {
       );
       
       const querySnapshot = await getDocs(pendingQuery);
-      return querySnapshot.docs.map(doc => ({
+      const regularPending = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
       }));
+
+      // Also get temp admin accounts
+      const tempQuery = query(collection(db, 'temp_admin_accounts'));
+      const tempSnapshot = await getDocs(tempQuery);
+      const tempPending = tempSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt),
+        status: 'Email Verification Pending'
+      }));
+
+      return [...regularPending, ...tempPending];
     } catch (error) {
       console.error('Repository: Error getting pending admin accounts:', error);
       throw new Error('Failed to fetch pending admin accounts');
@@ -202,9 +113,7 @@ class AdminCreateAccountRepository {
   }
 
   /**
-   * Validates form data using service
-   * @param {Object} formData - Form data to validate
-   * @returns {Object} - Validation result
+   * Validates form data
    */
   validateAdminForm(formData) {
     return AdminCreateAccountService.validateAdminForm(formData);

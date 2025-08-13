@@ -144,6 +144,11 @@ const AdminCreateAccountContent = observer(() => {
         await sendVerificationEmail();
     };
 
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Handles the action of checking email verification status.
+ * Calls the checkEmailVerification function to verify the status.
+/*******  0e126236-1bbc-4fef-9527-c688172c4bad  *******/
     const handleCheckVerification = async () => {
         await checkEmailVerification();
     };
@@ -363,35 +368,6 @@ const AdminCreateAccountContent = observer(() => {
                         >
                             Create Another Admin Account
                         </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Pending Accounts */}
-            {pendingAccounts.length > 0 && (
-                <div className="pending-accounts-section">
-                    <h3>Pending Admin Accounts</h3>
-                    <div className="pending-accounts-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Created At</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pendingAccounts.map(account => (
-                                    <tr key={account.id}>
-                                        <td>{account.firstName} {account.lastName}</td>
-                                        <td>{account.email}</td>
-                                        <td>{account.createdAt?.toLocaleDateString?.() || 'N/A'}</td>
-                                        <td>{account.status}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             )}

@@ -1,182 +1,135 @@
-// services/AdminCreateAccountService.js
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase';
+// services/AdminCreateAccountService.js - SIMPLIFIED
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const AdminCreateAccountService = {
   /**
-   * Creates a new admin account with email and password
-   * @param {Object} adminData - Contains firstName, lastName, email, password, dob
-   * @returns {Promise<Object>} - Returns success status and user info
+   * Creates admin account and gets verification link
    */
   async createAdminAccount(adminData) {
     try {
-      console.log('Creating admin account with data:', { ...adminData, password: '[HIDDEN]' });
-      
       const { firstName, lastName, email, password, dob } = adminData;
       
-      // Store current user to restore session later
-      const currentUser = auth.currentUser;
+      // Validation
+      if (!email?.trim()) throw new Error('Email is required');
+      if (!firstName?.trim()) throw new Error('First name is required');
+      if (!lastName?.trim()) throw new Error('Last name is required');
+      if (!password || password.length < 6) throw new Error('Password must be at least 6 characters');
+      if (!dob) throw new Error('Date of birth is required');
       
-      // Create user with email and password
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const newUser = userCredential.user;
+      console.log('Creating admin account via Cloud Function...');
       
-      console.log('Firebase Auth user created:', newUser.uid);
+      const functions = getFunctions();
+      const createAdminWithVerification = httpsCallable(functions, 'createAdminWithVerification');
       
-      // Send email verification
-      await sendEmailVerification(newUser);
-      console.log('Email verification sent to:', email);
+      const result = await createAdminWithVerification({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        password: password,
+        dob: dob
+      });
       
-      // Create user document in Firestore
-      const userData = {
-        firstName,
-        lastName,
-        email,
-        dob: new Date(dob),
-        role: 'admin',
-        status: 'Pending', // Will be changed to Active after email verification and admin setup
-        contactNumber: '',
-        gender: '',
-        isPremium: false,
-        points: 0,
-        profileCompleted: false,
-        profileImageURL: '',
-        profilePictureUrl: '',
-        createdAt: serverTimestamp(),
-        emailVerified: false
-      };
-      
-      await setDoc(doc(db, 'user_accounts', newUser.uid), userData);
-      console.log('User document created in Firestore');
-      
-      // Sign out the newly created user to restore previous session
-      await signOut(auth);
-      
-      // If there was a previous user, they will be restored automatically
-      console.log('Signed out new user, previous session restored');
-      
-      return {
-        success: true,
-        userId: newUser.uid,
-        email: email,
-        message: 'Admin account created successfully. Verification email sent.'
-      };
+      if (result.data.success) {
+        // You can either:
+        // 1. Return the verification link and let frontend handle email sending
+        // 2. Or just return success and let user know to check their email
+        
+        console.log('Admin account created. Verification link:', result.data.verificationLink);
+        
+        return {
+          success: true,
+          email: result.data.email,
+          uid: result.data.uid,
+          verificationLink: result.data.verificationLink,
+          message: 'Admin account created. Please check your email for verification link.'
+        };
+      } else {
+        throw new Error(result.data.error || 'Failed to create admin account');
+      }
       
     } catch (error) {
       console.error('Error creating admin account:', error);
       
-      // Provide user-friendly error messages
-      let errorMessage = error.message;
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'An account with this email already exists.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Please enter a valid email address.';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'Password should be at least 6 characters long.';
+      if (error.code && error.message) {
+        throw new Error(error.message);
       }
       
-      throw new Error(errorMessage);
+      throw new Error(error.message || 'Failed to create admin account');
     }
   },
 
   /**
-   * Checks if a user has verified their email
-   * @param {string} email - User's email address
-   * @returns {Promise<Object>} - Returns verification status and user info
+   * Checks email verification status
    */
-  async checkEmailVerification(email) {
+  async checkEmailVerification(email, password) {
     try {
-      console.log('Checking email verification for:', email);
+      if (!email?.trim()) {
+        throw new Error('Email is required');
+      }
       
-      // We need to get the user by email from Firestore since we can't access their auth record directly
-      // This is a limitation - we'll need to implement a cloud function for this
-      const checkVerificationFunction = httpsCallable(functions, 'checkEmailVerification');
-      const result = await checkVerificationFunction({ email });
+      const functions = getFunctions();
+      const checkEmailVerification = httpsCallable(functions, 'checkEmailVerification');
+      const result = await checkEmailVerification({ email: email.trim() });
       
       return result.data;
       
     } catch (error) {
       console.error('Error checking email verification:', error);
+      
+      if (error.code && error.message) {
+        throw new Error(error.message);
+      }
+      
       throw new Error(`Failed to check verification status: ${error.message}`);
     }
   },
 
   /**
-   * Sets admin claims for a verified user
-   * @param {string} userId - User's UID
-   * @returns {Promise<Object>} - Returns success status
+   * For resending, we can just regenerate the verification link
    */
-  async setAdminClaims(userId) {
+  async resendVerificationEmail(email, password) {
     try {
-      console.log('Setting admin claims for user:', userId);
-      
-      const setAdminClaimsFunction = httpsCallable(functions, 'setAdminClaims');
-      const result = await setAdminClaimsFunction({ uid: userId });
-      
-      // Update user status in Firestore
-      await setDoc(doc(db, 'user_accounts', userId), {
-        status: 'Active',
-        emailVerified: true,
-        profileCompleted: true
-      }, { merge: true });
-      
-      console.log('Admin claims set and user status updated');
-      return result.data;
-      
-    } catch (error) {
-      console.error('Error setting admin claims:', error);
-      throw new Error(`Failed to set admin claims: ${error.message}`);
-    }
-  },
-  
-  /**
-   * Resends verification email to user
-   * @param {string} email - Email to send verification to
-   * @returns {Promise<Object>} - Result of sending email
-   */
-  async resendVerificationEmail(email) {
-    try {
-      console.log('Resending verification email to:', email);
+      if (!email?.trim()) {
+        throw new Error('Email is required');
+      }
 
-      const resendVerificationFunction = httpsCallable(functions, 'resendVerificationEmail');
-      const result = await resendVerificationFunction({ email });
-
-      return result.data;
+      // For now, just tell user to check spam or use the original link
+      // You could also implement a resend function in your cloud functions if needed
+      
+      return {
+        success: true,
+        message: 'Please check your email (including spam folder) for the verification link. The link should still be valid.'
+      };
 
     } catch (error) {
-      console.error('Repository: Error resending verification email:', error);
-      throw new Error(`Failed to resend verification email: ${error.message}`);
+      console.error('Error with resend request:', error);
+      throw new Error('Please check your email for the original verification link');
     }
   },
 
   /**
-   * Validates the admin creation form data
-   * @param {Object} formData - Form data to validate
-   * @returns {Object} - Validation result
+   * Form validation
    */
   validateAdminForm(formData) {
     const errors = {};
     
-    if (!formData.firstName || formData.firstName.trim().length < 2) {
-      errors.firstName = 'First name must be at least 2 characters long';
+    if (!formData.firstName?.trim() || formData.firstName.trim().length < 2) {
+      errors.firstName = 'First name must be at least 2 characters';
     }
     
-    if (!formData.lastName || formData.lastName.trim().length < 2) {
-      errors.lastName = 'Last name must be at least 2 characters long';
+    if (!formData.lastName?.trim() || formData.lastName.trim().length < 2) {
+      errors.lastName = 'Last name must be at least 2 characters';
     }
     
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+    if (!formData.email?.trim() || !/\S+@\S+\.\S+/.test(formData.email.trim())) {
       errors.email = 'Please enter a valid email address';
     }
     
     if (!formData.password || formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters long';
+      errors.password = 'Password must be at least 6 characters';
     }
     
-    if (formData.password !== formData.confirmPassword) {
+    if (!formData.confirmPassword || formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
     

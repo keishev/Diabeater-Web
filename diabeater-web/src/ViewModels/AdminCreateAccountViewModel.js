@@ -1,6 +1,7 @@
-// ViewModels/AdminCreateAccountViewModel.js
+// ViewModels/AdminCreateAccountViewModel.js - IMPROVED VERSION
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminCreateAccountRepository from '../Repositories/AdminCreateAccountRepository';
+import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 
 class AdminCreateAccountViewModel {
   // Form data
@@ -17,7 +18,6 @@ class AdminCreateAccountViewModel {
   isLoading = false;
   isCreating = false;
   isCheckingVerification = false;
-  isSettingClaims = false;
   isSendingVerification = false;
   
   // Error handling
@@ -26,11 +26,12 @@ class AdminCreateAccountViewModel {
   successMessage = '';
 
   // Account creation flow state
+  accountCreated = false;
   emailSent = false;
   emailVerified = false;
-  accountCreated = false;
   createdAccount = null;
   pendingAccounts = [];
+  verificationLink = ''; // Store the verification link
 
   constructor() {
     makeAutoObservable(this);
@@ -39,7 +40,6 @@ class AdminCreateAccountViewModel {
   // --- Form Management ---
   setFormField = (field, value) => {
     this.formData[field] = value;
-    // Clear field error when user starts typing
     if (this.errors[field]) {
       delete this.errors[field];
     }
@@ -61,40 +61,19 @@ class AdminCreateAccountViewModel {
     this.emailVerified = false;
     this.accountCreated = false;
     this.createdAccount = null;
+    this.verificationLink = '';
   };
 
   // --- State Management ---
-  setLoading = (value) => {
-    this.isLoading = value;
-  };
-
-  setCreating = (value) => {
-    this.isCreating = value;
-  };
-
-  setCheckingVerification = (value) => {
-    this.isCheckingVerification = value;
-  };
-
-  setSettingClaims = (value) => {
-    this.isSettingClaims = value;
-  };
-
-  setSendingVerification = (value) => {
-    this.isSendingVerification = value;
-  };
-
-  setErrors = (errors) => {
-    this.errors = errors;
-  };
-
-  setGlobalError = (message) => {
-    this.globalError = message;
-  };
-
+  setLoading = (value) => { this.isLoading = value; };
+  setCreating = (value) => { this.isCreating = value; };
+  setCheckingVerification = (value) => { this.isCheckingVerification = value; };
+  setSendingVerification = (value) => { this.isSendingVerification = value; };
+  setErrors = (errors) => { this.errors = errors; };
+  setGlobalError = (message) => { this.globalError = message; };
+  
   setSuccessMessage = (message) => {
     this.successMessage = message;
-    // Clear success message after 5 seconds
     setTimeout(() => {
       runInAction(() => {
         this.successMessage = '';
@@ -102,25 +81,12 @@ class AdminCreateAccountViewModel {
     }, 5000);
   };
 
-  setCreatedAccount = (account) => {
-    this.createdAccount = account;
-  };
-
-  setPendingAccounts = (accounts) => {
-    this.pendingAccounts = accounts;
-  };
-
-  setEmailSent = (value) => {
-    this.emailSent = value;
-  };
-
-  setEmailVerified = (value) => {
-    this.emailVerified = value;
-  };
-
-  setAccountCreated = (value) => {
-    this.accountCreated = value;
-  };
+  setCreatedAccount = (account) => { this.createdAccount = account; };
+  setPendingAccounts = (accounts) => { this.pendingAccounts = accounts; };
+  setEmailSent = (value) => { this.emailSent = value; };
+  setEmailVerified = (value) => { this.emailVerified = value; };
+  setAccountCreated = (value) => { this.accountCreated = value; };
+  setVerificationLink = (link) => { this.verificationLink = link; };
 
   // --- Computed Properties ---
   get isFormValid() {
@@ -129,25 +95,24 @@ class AdminCreateAccountViewModel {
   }
 
   get canSendVerificationEmail() {
-    // Can send if form is valid and email hasn't been sent yet
     return this.isFormValid && 
            !this.emailSent && 
+           !this.accountCreated &&
            !this.isSendingVerification && 
            !this.isCheckingVerification && 
            !this.isCreating;
   }
 
   get canCheckVerification() {
-    // Can check if email was sent but not yet verified
     return this.emailSent && 
            !this.emailVerified && 
+           !this.accountCreated &&
            !this.isCheckingVerification && 
            !this.isSendingVerification && 
            !this.isCreating;
   }
 
   get canCreateAccount() {
-    // Can create account only after email is verified
     return this.emailVerified && 
            !this.accountCreated && 
            !this.isCreating && 
@@ -158,7 +123,7 @@ class AdminCreateAccountViewModel {
   // --- Actions ---
 
   /**
-   * Step 1: Send verification email (without creating account yet)
+   * Step 1: Send verification email (simplified)
    */
   sendVerificationEmail = async () => {
     this.setGlobalError('');
@@ -176,31 +141,40 @@ class AdminCreateAccountViewModel {
     this.setSendingVerification(true);
     
     try {
-      // Check if email already exists
-      const emailExists = await AdminCreateAccountRepository.checkEmailExists(this.formData.email);
-      if (emailExists) {
-        runInAction(() => {
-          this.setErrors({ email: 'An account with this email already exists' });
-        });
-        return;
-      }
-
-      // Send verification email without creating account
-      const result = await AdminCreateAccountRepository.sendVerificationEmail(this.formData.email);
+      console.log('Creating admin account and sending verification email...');
+      const result = await AdminCreateAccountRepository.createAdminAccount(this.formData);
       
       runInAction(() => {
         if (result.success) {
           this.setEmailSent(true);
-          this.setSuccessMessage(`Verification email sent to ${this.formData.email}. Please check your email and click the verification link.`);
+          this.setVerificationLink(result.verificationLink);
+          this.setSuccessMessage(
+            `Admin account created! A verification email should be sent to ${this.formData.email}. ` +
+            `Please check your email and click the verification link to continue.`
+          );
+          console.log('Admin account created successfully');
         } else {
-          this.setGlobalError('Failed to send verification email');
+          this.setGlobalError('Failed to create admin account');
         }
       });
 
     } catch (error) {
-      console.error('Error sending verification email:', error);
+      console.error('Error creating admin account:', error);
       runInAction(() => {
-        this.setGlobalError(error.message || 'Failed to send verification email');
+        let errorMessage = error.message || 'Failed to create admin account';
+        
+        // Handle common Firebase errors
+        if (error.message?.includes('email-already-in-use')) {
+          errorMessage = 'This email is already in use. Please use a different email address.';
+        } else if (error.message?.includes('invalid-email')) {
+          errorMessage = 'Please enter a valid email address.';
+        } else if (error.message?.includes('weak-password')) {
+          errorMessage = 'Password should be at least 6 characters long.';
+        } else if (error.message?.includes('permission-denied')) {
+          errorMessage = 'You do not have permission to create admin accounts.';
+        }
+        
+        this.setGlobalError(errorMessage);
       });
     } finally {
       runInAction(() => {
@@ -218,7 +192,10 @@ class AdminCreateAccountViewModel {
     this.setCheckingVerification(true);
 
     try {
-      const result = await AdminCreateAccountRepository.checkEmailVerification(this.formData.email);
+      const result = await AdminCreateAccountService.checkEmailVerification(
+        this.formData.email, 
+        this.formData.password
+      );
       
       runInAction(() => {
         if (result.success && result.isVerified) {
@@ -242,7 +219,7 @@ class AdminCreateAccountViewModel {
   };
 
   /**
-   * Step 3: Create admin account (only after email is verified)
+   * Step 3: Complete admin account creation
    */
   createAdminAccount = async () => {
     this.setGlobalError('');
@@ -250,17 +227,21 @@ class AdminCreateAccountViewModel {
     this.setCreating(true);
     
     try {
-      // Create the account
-      const result = await AdminCreateAccountRepository.createAdminAccount(this.formData);
+      const result = await AdminCreateAccountRepository.createFinalAdminAccount(this.formData);
       
       runInAction(() => {
-        this.setCreatedAccount(result);
-        this.setAccountCreated(true);
-        this.setSuccessMessage('Admin account created successfully! The account is now active and ready to use.');
-        this.clearForm();
+        if (result.success) {
+          this.setAccountCreated(true);
+          this.setCreatedAccount({
+            userId: result.userId,
+            email: this.formData.email
+          });
+          this.setSuccessMessage('Admin account created successfully! The account is now active and ready to use.');
+        } else {
+          this.setGlobalError('Failed to create admin account');
+        }
       });
 
-      // Refresh pending accounts list
       await this.fetchPendingAccounts();
 
     } catch (error) {
@@ -276,27 +257,30 @@ class AdminCreateAccountViewModel {
   };
 
   /**
-   * Resend verification email for the current form email
+   * Resend verification - simplified approach
    */
   resendVerificationEmail = async () => {
     this.setSendingVerification(true);
     this.setGlobalError('');
 
     try {
-      const result = await AdminCreateAccountRepository.resendVerificationEmail(this.formData.email);
+      const result = await AdminCreateAccountService.resendVerificationEmail(
+        this.formData.email,
+        this.formData.password
+      );
       
       runInAction(() => {
         if (result.success) {
-          this.setSuccessMessage('Verification email resent successfully to ' + this.formData.email);
+          this.setSuccessMessage(result.message);
         } else {
-          this.setGlobalError('Failed to resend verification email');
+          this.setGlobalError(result.message || 'Failed to resend verification email');
         }
       });
 
     } catch (error) {
       console.error('Error resending verification email:', error);
       runInAction(() => {
-        this.setGlobalError(error.message || 'Failed to resend verification email');
+        this.setGlobalError(error.message || 'Please check your email for the original verification link');
       });
     } finally {
       runInAction(() => {
@@ -306,7 +290,16 @@ class AdminCreateAccountViewModel {
   };
 
   /**
-   * Fetches pending admin accounts
+   * Open verification link in new tab (for testing/convenience)
+   */
+  openVerificationLink = () => {
+    if (this.verificationLink) {
+      window.open(this.verificationLink, '_blank');
+    }
+  };
+
+  /**
+   * Fetch pending accounts
    */
   fetchPendingAccounts = async () => {
     this.setLoading(true);
@@ -327,25 +320,12 @@ class AdminCreateAccountViewModel {
     }
   };
 
-  /**
-   * Clears all messages and errors
-   */
   clearMessages = () => {
     this.globalError = '';
     this.successMessage = '';
     this.errors = {};
   };
 
-  /**
-   * Helper method to get email for verification
-   */
-  getEmailForVerification = () => {
-    return this.formData.email || null;
-  };
-
-  /**
-   * Reset the entire flow to start over
-   */
   resetFlow = () => {
     this.clearForm();
     this.setEmailSent(false);
