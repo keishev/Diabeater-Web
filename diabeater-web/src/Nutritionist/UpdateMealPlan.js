@@ -7,7 +7,7 @@ import './UpdateMealPlan.css';
 const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     // Initialize form state with existing meal plan data
     const [mealName, setMealName] = useState('');
-    const [categories, setCategories] = useState([]); // Changed to array for multiple categories
+    const [categories, setCategories] = useState([]);
     const [imageFile, setImageFile] = useState(null);
     const [imageUrl, setImageUrl] = useState('');
     const [description, setDescription] = useState('');
@@ -29,61 +29,97 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     const [sodium, setSodium] = useState('');
     const [potassium, setPotassium] = useState('');
 
-    // Loading state for form initialization
-    const [isInitialized, setIsInitialized] = useState(false);
-
-    // Effect to populate form fields when mealPlan prop changes
+    // FIXED: More robust initialization logic
     useEffect(() => {
-        if (mealPlan && !isInitialized) {
-            console.log('Initializing form with meal plan data:', mealPlan);
+        if (mealPlan) {
+            console.log('Initializing UpdateMealPlan with data:', mealPlan);
+            console.log('🔍 Available properties:', Object.keys(mealPlan));
+            console.log('📋 Full meal plan object:', mealPlan);
+            console.log('📝 Recipe data:', mealPlan.recipe);
+            console.log('👨‍🍳 Preparation steps:', mealPlan.preparationSteps);
+            console.log('📋 Description:', mealPlan.description);
+            console.log('📄 General notes:', mealPlan.generalNotes);
             
+            // Check for alternative property names
+            console.log('🔍 Checking alternatives:');
+            console.log('ingredients:', mealPlan.ingredients);
+            console.log('steps:', mealPlan.steps);
+            console.log('instructions:', mealPlan.instructions);
+            console.log('cookingSteps:', mealPlan.cookingSteps);
+            console.log('recipeSteps:', mealPlan.recipeSteps);
+            
+            // Set basic info - always update when mealPlan changes
             setMealName(mealPlan.name || '');
             
-            // Handle categories - convert to array if it's a string
+            // Handle categories - support both formats
+            let categoryArray = [];
             if (mealPlan.category) {
                 if (Array.isArray(mealPlan.category)) {
-                    setCategories(mealPlan.category);
-                } else {
-                    // If category is a string, convert to array
-                    setCategories([mealPlan.category]);
+                    categoryArray = mealPlan.category;
+                } else if (typeof mealPlan.category === 'string') {
+                    categoryArray = [mealPlan.category];
                 }
-            } else if (mealPlan.categories) {
-                setCategories(mealPlan.categories);
-            } else {
-                setCategories([]);
+            } else if (mealPlan.categories && Array.isArray(mealPlan.categories)) {
+                categoryArray = mealPlan.categories;
             }
+            setCategories(categoryArray);
             
-            // Set image URL
+            // Set image URL with fallbacks
             const existingImageUrl = mealPlan.imageUrl || 
                 (mealPlan.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : '');
             setImageUrl(existingImageUrl);
             
-            // Set text fields
+            // Set text fields with fallbacks - FIXED: Use correct property names
             setDescription(mealPlan.description || '');
-            setRecipe(mealPlan.recipe || '');
-            setPreparationSteps(mealPlan.preparationSteps || '');
-            setGeneralNotes(mealPlan.generalNotes || mealPlan.description || ''); // Fallback to description if generalNotes doesn't exist
+            setRecipe(mealPlan.ingredients || '');  // ✅ Changed from recipe to ingredients
+            setPreparationSteps(mealPlan.steps || '');  // ✅ Changed from preparationSteps to steps
+            setGeneralNotes(mealPlan.generalNotes || mealPlan.description || '');
 
-            // Basic Nutrients
-            const nutrients = mealPlan.nutrients || {};
-            setCalories(nutrients.calories?.toString() || '');
-            setProtein(nutrients.protein?.toString() || '');
-            setCarbohydrates(nutrients.carbohydrates?.toString() || '');
-            setFats(nutrients.fats?.toString() || '');
+            // Handle nutrients - support both old and new format
+            let nutrientsData = {};
+            if (mealPlan.nutrients && typeof mealPlan.nutrients === 'object') {
+                // New format: nutrients object
+                nutrientsData = mealPlan.nutrients;
+            } else {
+                // Old format: direct properties
+                nutrientsData = {
+                    calories: mealPlan.calories,
+                    protein: mealPlan.protein,
+                    carbohydrates: mealPlan.carbohydrates,
+                    fats: mealPlan.fats,
+                    sugar: mealPlan.sugar,
+                    saturatedFat: mealPlan.saturatedFat,
+                    unsaturatedFat: mealPlan.unsaturatedFat,
+                    cholesterol: mealPlan.cholesterol,
+                    sodium: mealPlan.sodium,
+                    potassium: mealPlan.potassium
+                };
+            }
+
+            // Basic Nutrients - ensure they're strings for input fields
+            setCalories(nutrientsData.calories?.toString() || '');
+            setProtein(nutrientsData.protein?.toString() || '');
+            setCarbohydrates(nutrientsData.carbohydrates?.toString() || '');
+            setFats(nutrientsData.fats?.toString() || '');
 
             // Advanced Nutrients
-            setSugar(nutrients.sugar?.toString() || '');
-            setSaturatedFat(nutrients.saturatedFat?.toString() || '');
-            setUnsaturatedFat(nutrients.unsaturatedFat?.toString() || '');
-            setCholesterol(nutrients.cholesterol?.toString() || '');
-            setSodium(nutrients.sodium?.toString() || '');
-            setPotassium(nutrients.potassium?.toString() || '');
+            setSugar(nutrientsData.sugar?.toString() || '');
+            setSaturatedFat(nutrientsData.saturatedFat?.toString() || '');
+            setUnsaturatedFat(nutrientsData.unsaturatedFat?.toString() || '');
+            setCholesterol(nutrientsData.cholesterol?.toString() || '');
+            setSodium(nutrientsData.sodium?.toString() || '');
+            setPotassium(nutrientsData.potassium?.toString() || '');
 
             // Clear any previously selected image file
             setImageFile(null);
-            setIsInitialized(true);
+            
+            console.log('Form initialized with:', {
+                name: mealPlan.name,
+                categories: categoryArray,
+                nutrients: nutrientsData
+            });
         }
-    }, [mealPlan, isInitialized]);
+    }, [mealPlan]); // Re-run whenever mealPlan changes
 
     // Handle category checkbox changes
     const handleCategoryChange = (categoryName, isChecked) => {
@@ -105,7 +141,9 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
         const file = e.target.files[0];
         if (file) {
             setImageFile(file);
-            setImageUrl(URL.createObjectURL(file));
+            // Create preview URL for new file
+            const previewUrl = URL.createObjectURL(file);
+            setImageUrl(previewUrl);
         } else {
             setImageFile(null);
             // Revert to original image
@@ -115,24 +153,57 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
         }
     };
 
+    // ENHANCED: Better validation and error handling
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Clear previous errors
+        mealPlanViewModel.setError('');
+
         // Validation
-        if (!mealName || categories.length === 0 || !generalNotes || !recipe || !preparationSteps || !calories || !protein || !carbohydrates || !fats) {
-            mealPlanViewModel.setError('Please fill in all required fields (Meal Name, at least one Category, Meal Details, and Basic Nutrients).');
+        const requiredFields = [];
+        if (!mealName.trim()) requiredFields.push('Meal Name');
+        if (categories.length === 0) requiredFields.push('At least one Category');
+        if (!generalNotes.trim()) requiredFields.push('General Description & Notes');
+        if (!recipe.trim()) requiredFields.push('Ingredients');
+        if (!preparationSteps.trim()) requiredFields.push('Preparation Steps');
+        if (!calories.trim()) requiredFields.push('Calories');
+        if (!protein.trim()) requiredFields.push('Protein');
+        if (!carbohydrates.trim()) requiredFields.push('Carbohydrates');
+        if (!fats.trim()) requiredFields.push('Fats');
+
+        if (requiredFields.length > 0) {
+            mealPlanViewModel.setError(`Please fill in the following required fields: ${requiredFields.join(', ')}`);
             return;
+        }
+
+        // Validate numeric values
+        const numericFields = [calories, protein, carbohydrates, fats];
+        const optionalNumericFields = [sugar, saturatedFat, unsaturatedFat, cholesterol, sodium, potassium];
+        
+        for (const field of numericFields) {
+            if (isNaN(Number(field)) || Number(field) < 0) {
+                mealPlanViewModel.setError('Please enter valid positive numbers for all nutrient fields.');
+                return;
+            }
+        }
+
+        for (const field of optionalNumericFields) {
+            if (field.trim() && (isNaN(Number(field)) || Number(field) < 0)) {
+                mealPlanViewModel.setError('Please enter valid positive numbers for all optional nutrient fields.');
+                return;
+            }
         }
 
         const updatedMealPlanData = {
             _id: mealPlan._id,
-            name: mealName,
-            category: categories, // Send as array
-            categories: categories, // Also send as categories for compatibility
-            description: generalNotes, // Map generalNotes to description for backend compatibility
-            recipe: recipe,
-            preparationSteps: preparationSteps,
-            generalNotes: generalNotes,
+            name: mealName.trim(),
+            category: categories,
+            categories: categories,
+            description: generalNotes.trim(),
+            ingredients: recipe.trim(),  // ✅ Changed from recipe to ingredients
+            steps: preparationSteps.trim(),  // ✅ Changed from preparationSteps to steps
+            generalNotes: generalNotes.trim(),
 
             nutrients: {
                 calories: Number(calories) || 0,
@@ -148,6 +219,8 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             },
         };
 
+        console.log('Submitting updated meal plan:', updatedMealPlanData);
+
         const success = await mealPlanViewModel.updateMealPlan({
             ...updatedMealPlanData,
             imageFile: imageFile,
@@ -161,12 +234,13 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
 
     const { loading, error, success, allCategories } = mealPlanViewModel;
 
+    // IMPROVED: Better loading states
     if (!mealPlan) {
-        return <p>Loading meal plan details for update...</p>;
-    }
-
-    if (!isInitialized) {
-        return <p>Initializing form with existing data...</p>;
+        return (
+            <div className="update-meal-plan-container">
+                <p className="update-meal-plan-loading">Loading meal plan details for update...</p>
+            </div>
+        );
     }
 
     return (
@@ -200,7 +274,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                         <div className="update-meal-plan-form-group">
                             <label>Categories * (Select at least one)</label>
                             <div className="update-meal-plan-categories-container">
-                                {allCategories.map((categoryName) => (
+                                {allCategories && allCategories.map((categoryName) => (
                                     <div key={categoryName} className="update-meal-plan-category-item">
                                         <label className="update-meal-plan-category-label">
                                             <input
