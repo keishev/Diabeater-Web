@@ -86,7 +86,7 @@ const AdminMealPlans = observer(() => {
 
     const rejectionReasons = [
         'Incomplete information provided',
-        'Inaccurate nutritional data',
+        'Contains typos or spelling errors',
         'Contains allergens not declared',
         'Poor image quality',
         'Does not meet dietary guidelines',

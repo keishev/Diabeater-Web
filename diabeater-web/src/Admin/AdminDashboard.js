@@ -375,6 +375,7 @@ const AdminCreateAccountContent = observer(() => {
     );
 });
 // User Account Table Row Component (no changes needed for this specific task)
+// Updated UserAccountRow Component with separate action columns
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
@@ -406,6 +407,36 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 </td>
             )}
 
+            {/* FIXED: Separate action columns for pending approval */}
+            {type === 'pending' && (
+                <>
+                    {/* Approve Column */}
+                    <td>
+                        <button
+                            className="action-button approve-button"
+                            onClick={() => AdminDashboardViewModel.approveNutritionist(user.id)}
+                            disabled={AdminDashboardViewModel.isLoading}
+                        >
+                            Approve
+                        </button>
+                    </td>
+                    {/* Reject Column */}
+                    <td>
+                        <button
+                            className="action-button reject-button"
+                            onClick={() => {
+                                AdminDashboardViewModel.setSelectedUser(user);
+                                AdminDashboardViewModel.setShowRejectionReasonModal(true);
+                            }}
+                            disabled={AdminDashboardViewModel.isLoading}
+                        >
+                            Reject
+                        </button>
+                    </td>
+                </>
+            )}
+
+            {/* Keep the original single action column for 'all' type */}
             {type === 'all' && (
                 <td>
                     {user.accountType !== 'admin' && (
@@ -417,27 +448,6 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                             {user.status === 'Active' ? 'Suspend' : 'Unsuspend'}
                         </button>
                     )}
-                </td>
-            )}
-            {type === 'pending' && (
-                <td>
-                    <button
-                        className="action-button approve-button"
-                        onClick={() => AdminDashboardViewModel.approveNutritionist(user.id)}
-                        disabled={AdminDashboardViewModel.isLoading}
-                    >
-                        Approve
-                    </button>
-                    <button
-                        className="action-button reject-button"
-                        onClick={() => {
-                            AdminDashboardViewModel.setSelectedUser(user); // Still used for RejectionReasonModal
-                            AdminDashboardViewModel.setShowRejectionReasonModal(true);
-                        }}
-                        disabled={AdminDashboardViewModel.isLoading}
-                    >
-                        Reject
-                    </button>
                 </td>
             )}
         </tr>
@@ -734,44 +744,48 @@ const UserAccountsContent = observer(() => {
                     {(error || userAccountsError) && <p className="error-message">{error || userAccountsError}</p>}
 
                     <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
-                                    <th>Status</th>
-                                    {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
-                                    {activeTab === 'PENDING_APPROVAL' && (
-                                        <>
-                                            <th>Signed up at</th>
-                                            <th>Documents</th>
-                                        </>
-                                    )}
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
+                        
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
+            <th>Status</th>
+            {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
+            {activeTab === 'PENDING_APPROVAL' && (
+                <>
+                    <th>Signed up at</th>
+                    <th>Documents</th>
+                    <th>Approve</th>
+                    <th>Reject</th>
+                </>
+            )}
+            {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
+        </tr>
+    </thead>
 
-                            <tbody>
-                                {currentPageData.length > 0 ? (
-                                    currentPageData.map(user => (
-                                        <UserAccountRow
-                                            key={user.id}
-                                            user={user}
-                                            onAction={handleSuspendUnsuspend}
-                                            onNameClick={handleOpenModal}
-                                            type={activeTab === 'ALL_ACCOUNTS' ? 'all' : 'pending'}
-                                        />
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message">
-                                            {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+    <tbody>
+        {currentPageData.length > 0 ? (
+            currentPageData.map(user => (
+                <UserAccountRow
+                    key={user.id}
+                    user={user}
+                    onAction={handleSuspendUnsuspend}
+                    onNameClick={handleOpenModal}
+                    type={activeTab === 'ALL_ACCOUNTS' ? 'all' : 'pending'}
+                />
+            ))
+        ) : (
+            <tr>
+                {/* FIXED: Updated colspan to account for new columns */}
+                <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '7'} className="no-data-message">
+                    {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
+                </td>
+            </tr>
+        )}
+    </tbody>
+</table>
                         
                         {/* FIXED PAGINATION */}
                         {currentData.length > 0 && (

@@ -70,7 +70,6 @@ const useUserFeedbackViewModel = () => {
         }
     };
 
-
     const toggleDisplayOnMarketing = async (feedbackId, currentDisplayStatus) => {
         try {
             await FeedbackRepository.setDisplayOnMarketing(feedbackId, !currentDisplayStatus);
@@ -87,36 +86,60 @@ const useUserFeedbackViewModel = () => {
         }
     };
 
+    // ENHANCED: Automate marketing feedbacks with auto-approval
     const automateMarketingFeedbacks = async () => {
         try {
+            console.log('[UserFeedbackViewModel] Starting automated marketing feedbacks...');
+            
             const allFeedbacks = await FeedbackRepository.getFeedbacks();
 
-            const approvedFiveStarFeedbacks = allFeedbacks.filter(fb => 
-                fb.rating === 5 && fb.status === "Approved"
-            );
+            // UPDATED: Select 5-star feedbacks regardless of approval status
+            const fiveStarFeedbacks = allFeedbacks.filter(fb => fb.rating === 5);
             
-            const newMarketingFeedbackIds = new Set();
+            console.log(`[UserFeedbackViewModel] Found ${fiveStarFeedbacks.length} five-star feedbacks`);
+            
+            // Select up to 3 unique users with 5-star feedbacks
+            const selectedFeedbacks = [];
             const selectedUserIds = new Set();
-            for (const feedback of approvedFiveStarFeedbacks) {
-                if (newMarketingFeedbackIds.size >= 3) {
+            
+            for (const feedback of fiveStarFeedbacks) {
+                if (selectedFeedbacks.length >= 3) {
                     break;
                 }
                 if (!selectedUserIds.has(feedback.userId)) {
-                    newMarketingFeedbackIds.add(feedback.id);
+                    selectedFeedbacks.push(feedback);
                     selectedUserIds.add(feedback.userId);
                 }
             }
-            
+
+            console.log(`[UserFeedbackViewModel] Selected ${selectedFeedbacks.length} feedbacks for marketing`);
+
+            // First, remove all existing marketing feedbacks
             for (const feedback of allFeedbacks) {
-                const shouldDisplay = newMarketingFeedbackIds.has(feedback.id);
-                if (feedback.displayOnMarketing !== shouldDisplay) {
-                    await FeedbackRepository.updateDisplayOnMarketing(feedback.id, shouldDisplay);
+                if (feedback.displayOnMarketing) {
+                    await FeedbackRepository.updateDisplayOnMarketing(feedback.id, false);
+                    console.log(`[UserFeedbackViewModel] Removed feedback ${feedback.id} from marketing`);
                 }
             }
 
+            // ENHANCED: Auto-approve and set to display on marketing for selected feedbacks
+            for (const feedback of selectedFeedbacks) {
+                // Auto-approve the feedback if not already approved
+                if (feedback.status !== "Approved") {
+                    await FeedbackRepository.updateFeedbackStatus(feedback.id, "Approved");
+                    console.log(`[UserFeedbackViewModel] Auto-approved feedback ${feedback.id}`);
+                }
+                
+                // Set to display on marketing
+                await FeedbackRepository.updateDisplayOnMarketing(feedback.id, true);
+                console.log(`[UserFeedbackViewModel] Featured feedback ${feedback.id} on marketing`);
+            }
+
+            // Refresh both feedbacks and marketing feedbacks
             await fetchFeedbacks(); 
             await fetchMarketingFeedbacks(); 
             
+            console.log('[UserFeedbackViewModel] Automated marketing feedbacks completed successfully');
             return true;
         } catch (err) {
             console.error("Error automating marketing feedbacks:", err);

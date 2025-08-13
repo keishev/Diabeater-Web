@@ -237,22 +237,7 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                     
                     {(mealPlan.status === 'APPROVED' || mealPlan.status === 'REJECTED') && (
                         <div className="detail-actions admin-actions">
-                             <button className="button-base delete-plan-button" onClick={() => {
-                                if (window.confirm("Are you sure you want to delete this meal plan? This action cannot be undone.")) {
-                                    setLocalLoading(true);
-                                    mealPlanViewModel.deleteMealPlan(mealPlan._id, mealPlan.imageFileName)
-                                        .then(success => {
-                                            if (success) onClose();
-                                        })
-                                        .catch(err => {
-                                            console.error("Error deleting meal plan from admin detail:", err);
-                                            alert(mealPlanViewModel.error || 'Failed to delete meal plan.');
-                                        })
-                                        .finally(() => {
-                                            setLocalLoading(false);
-                                        });
-                                }
-                            }} disabled={localLoading}>DELETE PLAN</button>
+                           
                         </div>
                     )}
                 </div>
