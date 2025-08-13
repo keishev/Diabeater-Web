@@ -119,14 +119,36 @@ class AdminDashboardViewModel {
     }
 
     // --- Computed Properties ---
-    get filteredPendingAccounts() {
-        const lowerCaseSearchTerm = this.userAccountsVM.searchTerm.toLowerCase();
-        return this.pendingAccounts.filter(user =>
-            (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm) ||
-             user.lastName?.toLowerCase().includes(lowerCaseSearchTerm) ||
-             user.email.toLowerCase().includes(lowerCaseSearchTerm))
+   // Updated filteredPendingAccounts getter in AdminDashboardViewModel.js
+get filteredPendingAccounts() {
+    const lowerCaseSearchTerm = this.userAccountsVM.searchTerm.toLowerCase();
+    
+    return this.pendingAccounts.filter(user => {
+        // Create a combined full name from firstName and lastName
+        const fullName = user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}`.toLowerCase()
+            : '';
+        
+        // Also try the reverse order (lastName firstName)
+        const reverseName = user.firstName && user.lastName 
+            ? `${user.lastName} ${user.firstName}`.toLowerCase()
+            : '';
+        
+        // Check if search term matches any of these fields:
+        return (
+            // Individual first name
+            (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Individual last name
+            (user.lastName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Combined full name (firstName lastName)
+            fullName.includes(lowerCaseSearchTerm) ||
+            // Reverse full name (lastName firstName)
+            reverseName.includes(lowerCaseSearchTerm) ||
+            // Email
+            (user.email?.toLowerCase().includes(lowerCaseSearchTerm))
         );
-    }
+    });
+}
 
     /**
      * Fetches both pending nutritionist accounts and all general user accounts.

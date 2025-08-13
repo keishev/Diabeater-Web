@@ -152,151 +152,177 @@ class AdminStatViewModel {
     }
 
     loadDashboardData = async () => {
-        console.log("[AdminStatViewModel] Starting loadDashboardData...");
-        this.setLoading(true);
+    console.log("[AdminStatViewModel] Starting loadDashboardData...");
+    this.setLoading(true);
 
-        try {
-            const [
-                totalUsers,
-                totalNutritionists,
-                totalApprovedMealPlans,
-                totalPendingMealPlans,
-                totalSubscriptions,
-                dailySignupsRawData,
-                weeklyTopMealPlans,
-                allSubscriptionsData,
-            ] = await Promise.all([
-                AdminStatService.getDocumentCount('user_accounts'),
-                AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
-                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'APPROVED'),
-                AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING_APPROVAL'),
-                AdminStatService.getDocumentCount('subscriptions'),
-                AdminStatService.getDailySignups(7),
-                AdminStatService.getWeeklyTopMealPlans(3),
-                AdminStatService.getAllSubscriptions(),
-            ]);
+    try {
+        const [
+            totalUsers,
+            totalNutritionists,
+            totalApprovedMealPlans,
+            totalPendingMealPlans,
+            totalSubscriptions,
+            dailySignupsRawData,
+            weeklyTopMealPlans,
+            allSubscriptionsData,
+        ] = await Promise.all([
+            AdminStatService.getDocumentCount('user_accounts'),
+            AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
+            AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'APPROVED'),
+            AdminStatService.getDocumentCount('meal_plans', 'status', '==', 'PENDING_APPROVAL'),
+            AdminStatService.getDocumentCount('subscriptions'),
+            AdminStatService.getDailySignups(7),
+            AdminStatService.getWeeklyTopMealPlans(3),
+            AdminStatService.getAllSubscriptions(),
+        ]);
 
-            console.log("[AdminStatViewModel] Raw data fetched successfully.");
-            console.log("-> allSubscriptionsData:", allSubscriptionsData);
+        // ADD DEBUGGING HERE TO SEE WHAT WAS FETCHED
+        console.log("=== RAW DATA FETCHED ===");
+        console.log("totalUsers:", totalUsers, typeof totalUsers);
+        console.log("totalNutritionists:", totalNutritionists, typeof totalNutritionists);
+        console.log("totalApprovedMealPlans:", totalApprovedMealPlans, typeof totalApprovedMealPlans);
+        console.log("totalPendingMealPlans:", totalPendingMealPlans, typeof totalPendingMealPlans);
+        console.log("totalSubscriptions:", totalSubscriptions, typeof totalSubscriptions);
+        console.log("dailySignupsRawData length:", dailySignupsRawData?.length);
+        console.log("weeklyTopMealPlans length:", weeklyTopMealPlans?.length);
+        console.log("allSubscriptionsData length:", allSubscriptionsData?.length);
 
-            let calculatedMonthlyRevenue = 0;
-            let calculatedCancelledSubscriptionsCount = 0;
+        console.log("[AdminStatViewModel] Raw data fetched successfully.");
+        console.log("-> allSubscriptionsData:", allSubscriptionsData);
 
-            if (Array.isArray(allSubscriptionsData)) {
-                allSubscriptionsData.forEach(sub => {
-                    console.log("--- Processing Subscription Document ---");
-                    console.log("Subscription ID:", sub._id || 'N/A');
-                    console.log("  Status:", sub.status);
-                    console.log("  Type:", sub.type);
-                    console.log("  Price:", sub.price, " (Type:", typeof sub.price, ")");
+        let calculatedMonthlyRevenue = 0;
+        let calculatedCancelledSubscriptionsCount = 0;
 
-                    // For Monthly Revenue: Now includes all 'monthly' type subs with a valid price, regardless of status
-                    const isMonthly = sub.type && sub.type.toLowerCase() === 'monthly';
-                    const isPriceValidNumber = typeof sub.price === 'number' && !isNaN(sub.price);
+        if (Array.isArray(allSubscriptionsData)) {
+            allSubscriptionsData.forEach(sub => {
+                console.log("--- Processing Subscription Document ---");
+                console.log("Subscription ID:", sub._id || 'N/A');
+                console.log("  Status:", sub.status);
+                console.log("  Type:", sub.type);
+                console.log("  Price:", sub.price, " (Type:", typeof sub.price, ")");
 
-                    if (isMonthly && isPriceValidNumber) {
-                        calculatedMonthlyRevenue += sub.price;
-                        console.log(`  MATCH: Monthly & Valid Price. Adding ${sub.price}. Current monthlyRevenue: ${calculatedMonthlyRevenue}`);
-                    } else {
-                        console.log(`  SKIP: Not (Monthly & Valid Price). Conditions: isMonthly=${isMonthly}, isPriceValidNumber=${isPriceValidNumber}`);
-                    }
+                // For Monthly Revenue: Now includes all 'monthly' type subs with a valid price, regardless of status
+                const isMonthly = sub.type && sub.type.toLowerCase() === 'monthly';
+                const isPriceValidNumber = typeof sub.price === 'number' && !isNaN(sub.price);
 
-                    // For Cancelled Subscriptions: FIXING TYPO 'canceled' vs 'cancelled'
-                    const isCancelled = sub.status && sub.status.toLowerCase() === 'canceled'; // <--- FIX: Changed 'cancelled' to 'canceled'
-                    if (isCancelled) {
-                        calculatedCancelledSubscriptionsCount++;
-                        console.log(`  MATCH: Cancelled Status. Current cancelledSubscriptionsCount: ${calculatedCancelledSubscriptionsCount}`);
-                    } else {
-                        console.log(`  SKIP: Not Cancelled. Condition: isCancelled=${isCancelled}`);
-                    }
-                });
-            } else {
-                console.warn("[AdminStatViewModel] allSubscriptionsData is not an array, cannot process subscriptions for calculations.");
-            }
+                if (isMonthly && isPriceValidNumber) {
+                    calculatedMonthlyRevenue += sub.price;
+                    console.log(`  MATCH: Monthly & Valid Price. Adding ${sub.price}. Current monthlyRevenue: ${calculatedMonthlyRevenue}`);
+                } else {
+                    console.log(`  SKIP: Not (Monthly & Valid Price). Conditions: isMonthly=${isMonthly}, isPriceValidNumber=${isPriceValidNumber}`);
+                }
 
-            console.log("--- Calculation Summary ---");
-            console.log("Final calculatedMonthlyRevenue:", calculatedMonthlyRevenue);
-            console.log("Final calculatedCancelledSubscriptionsCount:", calculatedCancelledSubscriptionsCount);
-
-            // Format signups
-            const processedDailySignups = {};
-            const today = moment().startOf('day');
-            for (let i = 6; i >= 0; i--) {
-                const date = moment(today).subtract(i, 'days');
-                processedDailySignups[date.format('YYYY-MM-DD')] = 0;
-            }
-
-            dailySignupsRawData.forEach(user => {
-                const createdAt = user.createdAt?.toDate ? moment(user.createdAt.toDate()) : null;
-                if (createdAt && createdAt.isBetween(moment(today).subtract(7, 'days'), moment(today).add(1, 'day'), null, '[]')) {
-                    const key = createdAt.format('YYYY-MM-DD');
-                    processedDailySignups[key] = (processedDailySignups[key] || 0) + 1;
+                // For Cancelled Subscriptions: FIXING TYPO 'canceled' vs 'cancelled'
+                const isCancelled = sub.status && sub.status.toLowerCase() === 'canceled'; // <--- FIX: Changed 'cancelled' to 'canceled'
+                if (isCancelled) {
+                    calculatedCancelledSubscriptionsCount++;
+                    console.log(`  MATCH: Cancelled Status. Current cancelledSubscriptionsCount: ${calculatedCancelledSubscriptionsCount}`);
+                } else {
+                    console.log(`  SKIP: Not Cancelled. Condition: isCancelled=${isCancelled}`);
                 }
             });
-
-            // Group subscriptions by user for `userAccounts` enrichment
-            const subsByUser = {};
-            for (const sub of allSubscriptionsData) {
-                const userId = sub.userId;
-                if (!subsByUser[userId]) subsByUser[userId] = [];
-                subsByUser[userId].push(sub);
-            }
-
-            // Fetch user accounts for those subscriptions
-            const userIds = Object.keys(subsByUser);
-            const userFetches = await Promise.all(userIds.map(uid => AdminStatService.getUserAccountById(uid)));
-            const users = userFetches.filter(Boolean); // remove nulls if any
-
-            // Merge user + latest subscription
-            const enrichedUsers = users.map(user => {
-                const userSubs = subsByUser[user._id] || [];
-                userSubs.sort((a, b) => {
-                    const dateA = a.endDate?.toDate?.() || new Date(0);
-                    const dateB = b.endDate?.toDate?.() || new Date(0);
-                    return dateB - dateA; // Latest end date first
-                });
-                const latestSub = userSubs[0];
-
-                return {
-                    ...user,
-                    subscriptionStatus: latestSub?.status || 'unknown',
-                    subscriptionEndDate: latestSub?.endDate?.toDate?.() || null,
-                    currentSubscription: latestSub,
-                };
-            });
-
-            runInAction(() => {
-                this.totalUsers = totalUsers;
-                this.totalNutritionists = totalNutritionists;
-                this.totalApprovedMealPlans = totalApprovedMealPlans;
-                this.totalPendingMealPlans = totalPendingMealPlans;
-                this.totalSubscriptions = totalSubscriptions;
-                this.dailySignupsData = processedDailySignups;
-                this.weeklyTopMealPlans = weeklyTopMealPlans;
-                this.allSubscriptions = allSubscriptionsData;
-                this.userAccounts = enrichedUsers;
-
-                // Set the newly calculated values
-                this.monthlyRevenue = calculatedMonthlyRevenue;
-                this.cancelledSubscriptionsCount = calculatedCancelledSubscriptionsCount;
-                console.log("[AdminStatViewModel] State updated. monthlyRevenue:", this.monthlyRevenue, "cancelledSubscriptionsCount:", this.cancelledSubscriptionsCount);
-            });
-
-            console.log("[AdminStatViewModel] Dashboard data loaded successfully.");
-            this.setSuccess('Dashboard data refreshed.');
-
-        } catch (error) {
-            console.error("[AdminStatViewModel] Error in loadDashboardData:", error);
-            this.setError(`Failed to load dashboard data: ${error.message}`);
-            // Reset calculated values on error
-            runInAction(() => {
-                this.monthlyRevenue = 0;
-                this.cancelledSubscriptionsCount = 0;
-            });
-        } finally {
-            this.setLoading(false);
+        } else {
+            console.warn("[AdminStatViewModel] allSubscriptionsData is not an array, cannot process subscriptions for calculations.");
         }
+
+        console.log("--- Calculation Summary ---");
+        console.log("Final calculatedMonthlyRevenue:", calculatedMonthlyRevenue);
+        console.log("Final calculatedCancelledSubscriptionsCount:", calculatedCancelledSubscriptionsCount);
+
+        // Format signups
+        const processedDailySignups = {};
+        const today = moment().startOf('day');
+        for (let i = 6; i >= 0; i--) {
+            const date = moment(today).subtract(i, 'days');
+            processedDailySignups[date.format('YYYY-MM-DD')] = 0;
+        }
+
+        dailySignupsRawData.forEach(user => {
+            const createdAt = user.createdAt?.toDate ? moment(user.createdAt.toDate()) : null;
+            if (createdAt && createdAt.isBetween(moment(today).subtract(7, 'days'), moment(today).add(1, 'day'), null, '[]')) {
+                const key = createdAt.format('YYYY-MM-DD');
+                processedDailySignups[key] = (processedDailySignups[key] || 0) + 1;
+            }
+        });
+
+        console.log("=== PROCESSED DAILY SIGNUPS ===");
+        console.log("processedDailySignups:", processedDailySignups);
+
+        // Group subscriptions by user for `userAccounts` enrichment
+        const subsByUser = {};
+        for (const sub of allSubscriptionsData) {
+            const userId = sub.userId;
+            if (!subsByUser[userId]) subsByUser[userId] = [];
+            subsByUser[userId].push(sub);
+        }
+
+        // Fetch user accounts for those subscriptions
+        const userIds = Object.keys(subsByUser);
+        const userFetches = await Promise.all(userIds.map(uid => AdminStatService.getUserAccountById(uid)));
+        const users = userFetches.filter(Boolean); // remove nulls if any
+
+        // Merge user + latest subscription
+        const enrichedUsers = users.map(user => {
+            const userSubs = subsByUser[user._id] || [];
+            userSubs.sort((a, b) => {
+                const dateA = a.endDate?.toDate?.() || new Date(0);
+                const dateB = b.endDate?.toDate?.() || new Date(0);
+                return dateB - dateA; // Latest end date first
+            });
+            const latestSub = userSubs[0];
+
+            return {
+                ...user,
+                subscriptionStatus: latestSub?.status || 'unknown',
+                subscriptionEndDate: latestSub?.endDate?.toDate?.() || null,
+                currentSubscription: latestSub,
+            };
+        });
+
+        runInAction(() => {
+            this.totalUsers = totalUsers;
+            this.totalNutritionists = totalNutritionists;
+            this.totalApprovedMealPlans = totalApprovedMealPlans;
+            this.totalPendingMealPlans = totalPendingMealPlans;
+            this.totalSubscriptions = totalSubscriptions;
+            this.dailySignupsData = processedDailySignups;
+            this.weeklyTopMealPlans = weeklyTopMealPlans;
+            this.allSubscriptions = allSubscriptionsData;
+            this.userAccounts = enrichedUsers;
+
+            // Set the newly calculated values
+            this.monthlyRevenue = calculatedMonthlyRevenue;
+            this.cancelledSubscriptionsCount = calculatedCancelledSubscriptionsCount;
+            console.log("[AdminStatViewModel] State updated. monthlyRevenue:", this.monthlyRevenue, "cancelledSubscriptionsCount:", this.cancelledSubscriptionsCount);
+        });
+
+        // ADD FINAL STATE DEBUG
+        console.log("=== VIEWMODEL FINAL STATE ===");
+        console.log("this.totalUsers:", this.totalUsers);
+        console.log("this.totalNutritionists:", this.totalNutritionists);
+        console.log("this.totalApprovedMealPlans:", this.totalApprovedMealPlans);
+        console.log("this.totalPendingMealPlans:", this.totalPendingMealPlans);
+        console.log("this.totalSubscriptions:", this.totalSubscriptions);
+        console.log("this.monthlyRevenue:", this.monthlyRevenue);
+        console.log("this.cancelledSubscriptionsCount:", this.cancelledSubscriptionsCount);
+        console.log("this.dailySignupsData:", this.dailySignupsData);
+        console.log("this.weeklyTopMealPlans:", this.weeklyTopMealPlans);
+
+        console.log("[AdminStatViewModel] Dashboard data loaded successfully.");
+        this.setSuccess('Dashboard data refreshed.');
+
+    } catch (error) {
+        console.error("[AdminStatViewModel] Error in loadDashboardData:", error);
+        this.setError(`Failed to load dashboard data: ${error.message}`);
+        // Reset calculated values on error
+        runInAction(() => {
+            this.monthlyRevenue = 0;
+            this.cancelledSubscriptionsCount = 0;
+        });
+    } finally {
+        this.setLoading(false);
     }
+}
 
     // ... (rest of your methods unchanged)
     suspendUserAccount = async (userId, suspend) => {

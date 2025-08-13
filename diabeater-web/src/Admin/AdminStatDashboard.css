@@ -291,8 +291,8 @@
 }
 
 .admin-meal-plan-image {
-    width: 130px; /* Reduced image size from 100px to 80px */
-    height: 130px; /* Reduced image size from 100px to 80px */
+    width: 150px; /* Reduced image size from 100px to 80px */
+    height: 180px; /* Reduced image size from 100px to 80px */
     object-fit: cover;
     border-radius: 8px;
 }

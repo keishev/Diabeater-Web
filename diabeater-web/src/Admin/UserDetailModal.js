@@ -6,21 +6,19 @@ import moment from 'moment'; // For date formatting
 
 // Destructure all expected props
 const UserDetailModal = observer(({
-    user, // <-- Now received as a prop
+    user,
     onClose,
-    onApprove, // <-- Action callback props
-    onReject, // This will now typically just trigger the rejection modal to open
+    onApprove,
+    onReject,
     onViewDocument,
-    loading, // <-- Loading state for actions related to this specific modal
-    error,   // <-- Error state for actions
-    success, // <-- Success state for actions
-
-    // Props specifically for the nested rejection modal
-    showRejectionReasonModal, // Boolean to show/hide the nested rejection reason input
-    rejectionReason,          // Current value of the rejection reason textarea
-    setRejectionReason,       // Setter for the rejection reason
-    onConfirmReject,          // Callback for confirming rejection with reason
-    onCancelReject            // Callback to close the rejection reason modal without confirming
+    loading,
+    error,
+    success,
+    showRejectionReasonModal,
+    rejectionReason,
+    setRejectionReason,
+    onConfirmReject,
+    onCancelReject
 }) => {
     console.log("[UserDetailModal] Received user prop:", user);
 
@@ -35,20 +33,17 @@ const UserDetailModal = observer(({
     const handleApproveClick = () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to APPROVE ${userName}'s nutritionist application?`)) {
-            // Note: user.id might be undefined if not explicitly set by the DB. user._id (document ID) is safer.
             onApprove(user._id);
         }
     };
 
     const handleOpenRejectReasonClick = () => {
-        // This action will trigger the parent to manage the state for the nested rejection modal
-        onReject(); // Simplified, parent should handle opening its own rejection modal
+        onReject();
     };
 
     const handleConfirmRejectClick = () => {
         const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.email;
         if (window.confirm(`Are you sure you want to REJECT ${userName}'s nutritionist application? This action cannot be undone.`)) {
-            // Pass the user's ID and the reason back to the parent ViewModel
             onConfirmReject(user._id, rejectionReason);
         }
     };
@@ -59,13 +54,12 @@ const UserDetailModal = observer(({
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
-        if (timestamp.toDate && typeof timestamp.toDate === 'function') { // Check if it's a Firebase Timestamp object
+        if (timestamp.toDate && typeof timestamp.toDate === 'function') {
             return moment(timestamp.toDate()).format('DD/MM/YYYY HH:mm');
         }
         return moment(timestamp).format('DD/MM/YYYY HH:mm');
     };
 
-    // FIXED RENEWAL DATE CALCULATION - ADD 1 DAY TO END DATE
     const calculateRenewalDate = (endDate) => {
         if (!endDate) {
             return 'N/A';
@@ -74,9 +68,7 @@ const UserDetailModal = observer(({
         try {
             let dateObject;
             
-            // Handle different date formats
             if (endDate.toDate && typeof endDate.toDate === 'function') {
-                // Firestore Timestamp
                 dateObject = endDate.toDate();
             } else if (endDate instanceof Date) {
                 dateObject = endDate;
@@ -87,21 +79,49 @@ const UserDetailModal = observer(({
                 return 'N/A';
             }
 
-            // Check if date is valid
             if (isNaN(dateObject.getTime())) {
                 console.warn('Invalid date object:', dateObject);
                 return 'N/A';
             }
 
-            // Add 1 day to the end date to get renewal date
             const renewalDate = new Date(dateObject);
             renewalDate.setDate(renewalDate.getDate() + 1);
             
-            // Format as DD/MM/YYYY
             return moment(renewalDate).format('DD/MM/YYYY');
 
         } catch (error) {
             console.error('Error calculating renewal date:', error);
+            return 'N/A';
+        }
+    };
+
+    const formatRole = (role) => {
+        if (!role) return 'N/A';
+        
+        switch (role.toLowerCase()) {
+            case 'admin':
+                return 'Administrator';
+            case 'nutritionist':
+                return 'Nutritionist';
+            case 'user':
+                return 'Regular User';
+            case 'pending_nutritionist':
+                return 'Pending Nutritionist';
+            default:
+                return role.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                ).join(' ');
+        }
+    };
+
+    // Helper to format user since date consistently
+    const formatUserSince = (userSince, createdAt) => {
+        // Try userSince first, then fallback to createdAt, then show N/A
+        if (userSince) {
+            return userSince;
+        } else if (createdAt) {
+            return formatDate(createdAt);
+        } else {
             return 'N/A';
         }
     };
@@ -119,16 +139,29 @@ const UserDetailModal = observer(({
                 <div className="user-detail-modal-info">
                     <p><strong>Name:</strong> {user.firstName ? `${user.firstName} ${user.lastName}` : (user.name || 'N/A')}</p>
                     <p><strong>Email:</strong> {user.email || 'N/A'}</p>
+                    
+                    {/* Role field */}
+                    <p><strong>Role:</strong> 
+                        <span className={`role-badge role-${user.role ? user.role.toLowerCase().replace('_', '-') : 'unknown'}`}>
+                            {formatRole(user.role)}
+                        </span>
+                    </p>
+                    
                     {user.accountType && <p><strong>Account Type:</strong> {user.accountType}</p>}
-                    {user.dob && <p><strong>Date of Birth:</strong> {formatDate(user.dob)}</p>}
+                    
+                    {/* FIXED: Always show these fields with fallbacks */}
+                    <p><strong>Date of Birth:</strong> {user.dob ? formatDate(user.dob) : 'Not provided'}</p>
+                    
                     <p>
                         <strong>Status:</strong>
                         <span className={`status-dot status-${user.status ? user.status.toLowerCase() : 'unknown'}`}></span>
                         {user.status || 'N/A'}
                     </p>
-                    {user.userSince && <p><strong>User Since:</strong> {user.userSince}</p>}
-                    <p><strong>Created At:</strong> {formatDate(user.createdAt)}</p>
+                    
+                    {/* FIXED: Always show User Since */}
+                    <p><strong>User Since:</strong> {formatUserSince(user.userSince, user.createdAt)}</p>
 
+                    {/* Certificate section */}
                     {(isNutritionistCandidate || isApprovedNutritionist) && user.certificateUrl && (
                         <div className="certificate-section">
                             <p><strong>Certificate:</strong>
@@ -139,7 +172,7 @@ const UserDetailModal = observer(({
                         </div>
                     )}
 
-                    {/* FIXED Current Premium Status - Proper Renewal Date Calculation */}
+                    {/* Premium Status Section */}
                     <h4>Current Premium Status:</h4>
                     {user.currentSubscription ? (
                         <>
@@ -150,7 +183,6 @@ const UserDetailModal = observer(({
                             </p>
                             <p><strong>Price:</strong> ${user.currentSubscription.price?.toFixed(2) || 'N/A'}</p>
                             <p><strong>Current Period:</strong> {formatDate(user.currentSubscription.startDate)} - {formatDate(user.currentSubscription.endDate)}</p>
-                            {/* FIXED: Now properly calculates renewal date as end date + 1 day */}
                             <p><strong>Next Renewal:</strong> {calculateRenewalDate(user.currentSubscription.endDate)}</p>
                         </>
                     ) : (

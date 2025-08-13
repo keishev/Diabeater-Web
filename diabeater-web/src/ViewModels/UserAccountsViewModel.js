@@ -33,15 +33,42 @@ class UserAccountsViewModel {
         this.error = message;
     }
 
-    get filteredAllAccounts() {
-        const lowerCaseSearchTerm = this.searchTerm.toLowerCase();
-        return this.allAccounts.filter(user =>
-            (user.name?.toLowerCase().includes(lowerCaseSearchTerm) ||
-             user.email.toLowerCase().includes(lowerCaseSearchTerm) ||
-             user.role?.toLowerCase().includes(lowerCaseSearchTerm) ||
-             user.status?.toLowerCase().includes(lowerCaseSearchTerm))
+    // Updated filteredAllAccounts getter in UserAccountsViewModel.js
+get filteredAllAccounts() {
+    const lowerCaseSearchTerm = this.searchTerm.toLowerCase();
+    
+    return this.allAccounts.filter(user => {
+        // Create a combined full name from firstName and lastName
+        const fullName = user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}`.toLowerCase()
+            : '';
+        
+        // Also try the reverse order (lastName firstName)
+        const reverseName = user.firstName && user.lastName 
+            ? `${user.lastName} ${user.firstName}`.toLowerCase()
+            : '';
+        
+        // Check if search term matches any of these fields:
+        return (
+            // Individual first name
+            (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Individual last name  
+            (user.lastName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Combined full name (firstName lastName)
+            fullName.includes(lowerCaseSearchTerm) ||
+            // Reverse full name (lastName firstName)
+            reverseName.includes(lowerCaseSearchTerm) ||
+            // Legacy name field (if it exists)
+            (user.name?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Email
+            (user.email?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Role
+            (user.role?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            // Status
+            (user.status?.toLowerCase().includes(lowerCaseSearchTerm))
         );
-    }
+    });
+}
 
     async fetchAccounts() {
         this.setLoading(true);

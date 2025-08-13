@@ -695,7 +695,7 @@ const UserAccountsContent = observer(() => {
                     <div className="admin-search-bar">
                         <input
                             type="text"
-                            placeholder="Search by username, email, or name"
+                            placeholder="Search by name or email"
                             value={searchTerm}
                             onChange={(e) => userAccountsVM.setSearchTerm(e.target.value)}
                         />

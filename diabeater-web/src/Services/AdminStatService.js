@@ -1,4 +1,5 @@
 import app from '../firebase'; // Assuming your firebase config is here
+import moment from 'moment';
 import {
     getFirestore,
     collection,
@@ -12,7 +13,7 @@ import {
     doc,
     getDoc,
     updateDoc,
-    deleteDoc
+    deleteDoc,
 } from 'firebase/firestore';
 
 const db = getFirestore(app);
@@ -195,53 +196,181 @@ const AdminStatService = {
         }
     },
 
-    async getWeeklyTopMealPlans(count = 3) {
-        try {
-            const savedMealPlansSnapshot = await getDocs(collection(db, 'saved_meal_plans'));
-            const mealPlanSaves = {};
+async getWeeklyTopMealPlans(count = 3) {
+    try {
+        console.log("=== Starting getWeeklyTopMealPlans (No Index Version) ===");
+        
+        // Get all saved_meal_plans and filter manually (no index needed)
+        console.log("Step 1: Fetching all saved_meal_plans...");
+        const allSavedPlansSnapshot = await getDocs(collection(db, 'saved_meal_plans'));
+        console.log("Total saved_meal_plans documents:", allSavedPlansSnapshot.size);
+        
+        if (allSavedPlansSnapshot.size === 0) {
+            console.log("No saved_meal_plans found - using fallback to top meal plans by saveCount");
+            return await this.getFallbackTopMealPlans(count);
+        }
 
-            savedMealPlansSnapshot.docs.forEach(doc => {
-                const data = doc.data();
-                if (data.mealPlanId) {
-                    mealPlanSaves[data.mealPlanId] = (mealPlanSaves[data.mealPlanId] || 0) + 1;
-                }
-            });
-
-            const sortedMealPlans = Object.entries(mealPlanSaves)
-                .sort(([, countA], [, countB]) => countB - countA)
-                .slice(0, count);
-
-            const topMealPlanIds = sortedMealPlans.map(([mealPlanId]) => mealPlanId);
-
-            console.log(`[Service] getWeeklyTopMealPlans: Top ${count} Meal Plan IDs by saves:`, topMealPlanIds);
-
-            if (topMealPlanIds.length === 0) {
-                console.log(`[Service] getWeeklyTopMealPlans: No top meal plans found after counting saves.`);
-                return [];
+        // Calculate 7 days ago
+        const sevenDaysAgo = moment().subtract(7, 'days').toDate();
+        console.log("Filtering saves from:", sevenDaysAgo);
+        
+        // Manually filter saves from last 7 days and count by mealPlanId
+        const recentMealPlanSaves = {};
+        let totalRecentSaves = 0;
+        
+        allSavedPlansSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            
+            // Check if document has required fields
+            if (!data.mealPlanId) {
+                console.log("Missing mealPlanId in document:", doc.id);
+                return;
             }
+            
+            if (!data.createdAt) {
+                console.log("Missing createdAt in document:", doc.id);
+                return;
+            }
+            
+            // Check if save is from last 7 days
+            const createdAt = data.createdAt.toDate();
+            if (createdAt >= sevenDaysAgo) {
+                recentMealPlanSaves[data.mealPlanId] = (recentMealPlanSaves[data.mealPlanId] || 0) + 1;
+                totalRecentSaves++;
+            }
+        });
 
-            const q = query(
+        console.log(`Found ${totalRecentSaves} saves in last 7 days for ${Object.keys(recentMealPlanSaves).length} meal plans`);
+        console.log("Recent meal plan saves:", recentMealPlanSaves);
+
+        // If no recent saves, use fallback
+        if (Object.keys(recentMealPlanSaves).length === 0) {
+            console.log("No recent saves found - using fallback to top meal plans by saveCount");
+            return await this.getFallbackTopMealPlans(count);
+        }
+
+        // Sort meal plans by recent save count
+        const sortedMealPlans = Object.entries(recentMealPlanSaves)
+            .sort(([, countA], [, countB]) => countB - countA)
+            .slice(0, count);
+
+        console.log("Top meal plans by recent saves:", sortedMealPlans);
+
+        // Fetch meal plan details
+        const mealPlanPromises = sortedMealPlans.map(async ([mealPlanId, recentSaveCount]) => {
+            try {
+                const docRef = doc(db, 'meal_plans', mealPlanId);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log(`Meal plan ${mealPlanId}:`, {
+                        name: data.name,
+                        status: data.status,
+                        recentSaves: recentSaveCount,
+                        totalSaves: data.saveCount
+                    });
+                    
+                    // Only include approved meal plans
+                    if (data.status === 'APPROVED') {
+                        return {
+                            _id: docSnap.id,
+                            ...data,
+                            saveCount: recentSaveCount, // Show recent save count
+                            totalSaveCount: data.saveCount || 0 // Keep original total
+                        };
+                    } else {
+                        console.log(`Meal plan ${mealPlanId} not approved (status: ${data.status})`);
+                    }
+                } else {
+                    console.log(`Meal plan ${mealPlanId} does not exist`);
+                }
+                return null;
+            } catch (error) {
+                console.error("Error fetching meal plan:", mealPlanId, error);
+                return null;
+            }
+        });
+
+        const validMealPlans = (await Promise.all(mealPlanPromises)).filter(Boolean);
+        
+        console.log(`Returning ${validMealPlans.length} approved meal plans with recent saves`);
+        
+        // If no approved meal plans from recent saves, use fallback
+        if (validMealPlans.length === 0) {
+            console.log("No approved meal plans from recent saves - using fallback");
+            return await this.getFallbackTopMealPlans(count);
+        }
+        
+        return validMealPlans;
+        
+    } catch (error) {
+        console.error('[Service] ERROR fetching weekly top meal plans:', error);
+        // Use fallback on any error
+        return await this.getFallbackTopMealPlans(count);
+    }
+},
+
+// Helper method for fallback (gets top meal plans by overall saveCount)
+async getFallbackTopMealPlans(count = 3) {
+    try {
+        console.log("=== Using Fallback: Top Meal Plans by Overall SaveCount ===");
+        
+        // Try with orderBy first (needs index for status + saveCount)
+        try {
+            const topMealPlansQuery = query(
                 collection(db, 'meal_plans'),
-                where('__name__', 'in', topMealPlanIds),
-                where('status', '==', 'APPROVED')
+                where('status', '==', 'APPROVED'),
+                orderBy('saveCount', 'desc'),
+                limit(count)
             );
-
-            const querySnapshot = await getDocs(q);
-            const data = querySnapshot.docs.map(doc => ({
-                _id: doc.id,
-                ...doc.data()
-            }));
-
-            const orderedData = topMealPlanIds.map(id => data.find(plan => plan._id === id)).filter(Boolean);
-
-            console.log(`[Service] getWeeklyTopMealPlans (top ${count}): Found ${orderedData.length} plans. Sample:`, orderedData.slice(0, 2));
-            return orderedData;
-        } catch (error) {
-            console.error('[Service] ERROR fetching weekly top meal plans:', error);
+            
+            const topMealPlansSnapshot = await getDocs(topMealPlansQuery);
+            
+            if (!topMealPlansSnapshot.empty) {
+                const topMealPlans = topMealPlansSnapshot.docs.map(doc => ({
+                    _id: doc.id,
+                    ...doc.data()
+                }));
+                
+                console.log(`Fallback: Found ${topMealPlans.length} approved meal plans with highest saveCount`);
+                return topMealPlans;
+            }
+        } catch (indexError) {
+            console.log("OrderBy query failed (missing index), trying manual sort...");
+        }
+        
+        // Manual fallback: get all approved meal plans and sort manually
+        const allApprovedQuery = query(
+            collection(db, 'meal_plans'),
+            where('status', '==', 'APPROVED')
+        );
+        
+        const allApprovedSnapshot = await getDocs(allApprovedQuery);
+        
+        if (allApprovedSnapshot.empty) {
+            console.log("No approved meal plans found at all");
             return [];
         }
-    },
-
+        
+        const allApproved = allApprovedSnapshot.docs.map(doc => ({
+            _id: doc.id,
+            ...doc.data()
+        }));
+        
+        // Sort by saveCount manually and take top ones
+        const sortedByTotalSaves = allApproved
+            .sort((a, b) => (b.saveCount || 0) - (a.saveCount || 0))
+            .slice(0, count);
+        
+        console.log(`Fallback: Returning ${sortedByTotalSaves.length} meal plans sorted by total saveCount`);
+        return sortedByTotalSaves;
+        
+    } catch (error) {
+        console.error("Fallback also failed:", error);
+        return [];
+    }
+},
     async getMealPlans() {
         try {
             const q = collection(db, 'meal_plans');
