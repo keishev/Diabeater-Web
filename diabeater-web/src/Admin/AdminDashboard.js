@@ -1,10 +1,11 @@
-// src/AdminDashboard.js - Fixed Version
+// src/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel';
-import AdminViewModel from '../ViewModels/AdminViewModel';
-import UserDetailModal from './UserDetailModal';
-import RejectionReasonModal from './RejectionReasonModal';
+import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Ensure this path is correct
+import AdminViewModel from '../ViewModels/AdminViewModel'; // Ensure this path is correct
+import adminCreateAccountVM from '../ViewModels/AdminCreateAccountViewModel'; // Add this import
+import UserDetailModal from './UserDetailModal'; // Ensure this path is correct
+import RejectionReasonModal from './RejectionReasonModal'; // Ensure this path is correct
 import AdminProfile from './AdminProfile';
 import AdminStatDashboard from './AdminStatDashboard';
 import AdminMealPlans from './AdminMealPlans';
@@ -14,7 +15,7 @@ import UserFeedbacksPage from './UserFeedbacksPage';
 import AdminRewards from './AdminRewards';
 import adminStatViewModel from '../ViewModels/AdminStatViewModel';
 import PremiumPage from './PremiumPage';
-import premiumStatViewModel from '../ViewModels/PremiumStatViewModel'; // Add this import
+import premiumStatViewModel from '../ViewModels/PremiumStatViewModel'; 
 
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
@@ -58,7 +59,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
                     className={`nav-item ${currentView === 'premiumAccounts' ? 'active' : ''}`}
                     onClick={() => onNavigate('premiumAccounts')}
                 >
-                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i> {/* You can choose an appropriate icon */}
                     <span>Premium</span>
                 </div>
                 <div
@@ -102,6 +103,301 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
     );
 });
 
+// Admin Create Account Content Component - FIXED SEND VERIFICATION BUTTON
+const AdminCreateAccountContent = observer(() => {
+    const {
+        formData,
+        isCreating,
+        isCheckingVerification,
+        isSendingVerification,
+        errors,
+        globalError,
+        successMessage,
+        emailSent,
+        emailVerified,
+        accountCreated,
+        createdAccount,
+        pendingAccounts,
+        canSendVerificationEmail,
+        canCheckVerification,
+        canCreateAccount,
+        setFormField,
+        sendVerificationEmail,
+        checkEmailVerification,
+        createAdminAccount,
+        resendVerificationEmail,
+        fetchPendingAccounts,
+        clearMessages,
+        resetFlow
+    } = adminCreateAccountVM;
+
+    useEffect(() => {
+        fetchPendingAccounts();
+    }, []);
+
+    const handleInputChange = (field, value) => {
+        setFormField(field, value);
+    };
+
+    const handleSendVerificationEmail = async (e) => {
+        e.preventDefault();
+        await sendVerificationEmail();
+    };
+
+    const handleCheckVerification = async () => {
+        await checkEmailVerification();
+    };
+
+    const handleCreateAccount = async () => {
+        await createAdminAccount();
+    };
+
+    const handleResendVerificationEmail = async () => {
+        await resendVerificationEmail();
+    };
+
+    const handleStartOver = () => {
+        resetFlow();
+    };
+
+    return (
+        <div className="admin-create-account-content">
+            <div className="admin-dashboard-main-content-area">
+                <header className="admin-header">
+                    <h1 className="admin-page-title">CREATE ADMIN ACCOUNT</h1>
+                </header>
+            </div>
+
+            {/* Messages */}
+            {globalError && (
+                <div className="error-message">
+                    {globalError}
+                    <button onClick={clearMessages} className="close-message-btn">✕</button>
+                </div>
+            )}
+            
+            {successMessage && (
+                <div className="success-message">
+                    {successMessage}
+                    <button onClick={clearMessages} className="close-message-btn">✕</button>
+                </div>
+            )}
+
+        
+
+            {/* Create Account Form */}
+            <div className="create-admin-form-section">
+                <h2>Admin Account Details</h2>
+                <form className="admin-create-form">
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="firstName">First Name</label>
+                            <input
+                                type="text"
+                                id="firstName"
+                                value={formData.firstName}
+                                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                                className={errors.firstName ? 'error' : ''}
+                                disabled={emailSent || isSendingVerification}
+                                placeholder="Enter first name"
+                            />
+                            {errors.firstName && <span className="field-error">{errors.firstName}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="lastName">Last Name</label>
+                            <input
+                                type="text"
+                                id="lastName"
+                                value={formData.lastName}
+                                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                                className={errors.lastName ? 'error' : ''}
+                                disabled={emailSent || isSendingVerification}
+                                placeholder="Enter last name"
+                            />
+                            {errors.lastName && <span className="field-error">{errors.lastName}</span>}
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Email Address</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            className={errors.email ? 'error' : ''}
+                            disabled={emailSent || isSendingVerification}
+                            placeholder="Enter email address"
+                        />
+                        {errors.email && <span className="field-error">{errors.email}</span>}
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="dob">Date of Birth</label>
+                        <input
+                            type="date"
+                            id="dob"
+                            value={formData.dob}
+                            onChange={(e) => handleInputChange('dob', e.target.value)}
+                            className={errors.dob ? 'error' : ''}
+                            disabled={emailSent || isSendingVerification}
+                        />
+                        {errors.dob && <span className="field-error">{errors.dob}</span>}
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={formData.password}
+                                onChange={(e) => handleInputChange('password', e.target.value)}
+                                className={errors.password ? 'error' : ''}
+                                disabled={emailSent || isSendingVerification}
+                                placeholder="Enter password (min. 6 characters)"
+                            />
+                            {errors.password && <span className="field-error">{errors.password}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="confirmPassword">Confirm Password</label>
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                                className={errors.confirmPassword ? 'error' : ''}
+                                disabled={emailSent || isSendingVerification}
+                                placeholder="Confirm password"
+                            />
+                            {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
+                        </div>
+                    </div>
+
+                    {/* Step 1: Send Verification Email */}
+                    {!emailSent && (
+                        <button 
+                            type="button"
+                            onClick={handleSendVerificationEmail}
+                            className="create-admin-button"
+                            
+                        >
+                            {isSendingVerification ? 'Sending Verification Email...' : 'Send Verification Email'}
+                        </button>
+                    )}
+                </form>
+            </div>
+
+            {/* Step 2: Email Verification Section */}
+            {emailSent && !emailVerified && (
+                <div className="verification-section">
+                    <h3>📧 Verification Email Sent!</h3>
+                    <p>We've sent a verification email to: <strong>{formData.email}</strong></p>
+                    <p>Please check your email and click the verification link, then click the button below to proceed.</p>
+                    
+                    <div className="verification-actions">
+                        <button 
+                            onClick={handleCheckVerification}
+                            disabled={!canCheckVerification}
+                            className="check-verification-button"
+                        >
+                            {isCheckingVerification ? 'Checking Verification...' : 'Check Email Verification'}
+                        </button>
+
+                        <button 
+                            onClick={handleResendVerificationEmail}
+                            disabled={isSendingVerification}
+                            className="resend-verification-button"
+                        >
+                            {isSendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                        </button>
+
+                        <button 
+                            onClick={handleStartOver}
+                            className="start-over-button"
+                        >
+                            Start Over
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Step 3: Create Account Section */}
+            {emailVerified && !accountCreated && (
+                <div className="create-account-section">
+                    <h3>✅ Email Verified Successfully!</h3>
+                    <p>Your email has been verified. You can now create the admin account.</p>
+                    
+                    <div className="create-account-actions">
+                        <button 
+                            onClick={handleCreateAccount}
+                            disabled={!canCreateAccount}
+                            className="create-admin-button"
+                        >
+                            {isCreating ? 'Creating Admin Account...' : 'Create Admin Account'}
+                        </button>
+
+                        <button 
+                            onClick={handleStartOver}
+                            className="start-over-button"
+                        >
+                            Start Over
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Step 4: Success Section */}
+            {accountCreated && createdAccount && (
+                <div className="success-section">
+                    <h3>🎉 Admin Account Created Successfully!</h3>
+                    <p>The admin account for <strong>{createdAccount.email}</strong> has been created and is now active.</p>
+                    <p>The admin can now login using their email and password.</p>
+                    
+                    <div className="success-actions">
+                        <button 
+                            onClick={handleStartOver}
+                            className="create-another-button"
+                        >
+                            Create Another Admin Account
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Pending Accounts */}
+            {pendingAccounts.length > 0 && (
+                <div className="pending-accounts-section">
+                    <h3>Pending Admin Accounts</h3>
+                    <div className="pending-accounts-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Created At</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pendingAccounts.map(account => (
+                                    <tr key={account.id}>
+                                        <td>{account.firstName} {account.lastName}</td>
+                                        <td>{account.email}</td>
+                                        <td>{account.createdAt?.toLocaleDateString?.() || 'N/A'}</td>
+                                        <td>{account.status}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
 // User Account Table Row Component (no changes needed for this specific task)
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
@@ -159,7 +455,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                     <button
                         className="action-button reject-button"
                         onClick={() => {
-                            AdminDashboardViewModel.setSelectedUser(user);
+                            AdminDashboardViewModel.setSelectedUser(user); // Still used for RejectionReasonModal
                             AdminDashboardViewModel.setShowRejectionReasonModal(true);
                         }}
                         disabled={AdminDashboardViewModel.isLoading}
@@ -172,28 +468,46 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     );
 });
 
-// Pagination Component with dynamic calculation
-const Pagination = observer(({ currentData, itemsPerPage = 10 }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    
+// FIXED PAGINATION COMPONENT WITH 10 ITEMS LOGIC
+const Pagination = observer(({ currentData, itemsPerPage = 10, onPageChange, currentPage = 1 }) => {
     const totalItems = currentData?.length || 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
     
-    // Reset to page 1 when data changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [currentData]);
-    
     const handlePrevious = () => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            onPageChange(currentPage - 1);
         }
     };
     
     const handleNext = () => {
         if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+            onPageChange(currentPage + 1);
         }
+    };
+    
+    const handlePageClick = (pageNumber) => {
+        onPageChange(pageNumber);
+    };
+
+    // Calculate page numbers to show
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+        
+        if (totalPages <= maxVisiblePages) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+        }
+        
+        return pages;
     };
     
     return (
@@ -205,7 +519,17 @@ const Pagination = observer(({ currentData, itemsPerPage = 10 }) => {
             >
                 &lt;
             </button>
-            <span>Page {currentPage}/{totalPages}</span>
+            
+            {getPageNumbers().map(pageNumber => (
+                <button
+                    key={pageNumber}
+                    onClick={() => handlePageClick(pageNumber)}
+                    className={currentPage === pageNumber ? 'active' : ''}
+                >
+                    {pageNumber}
+                </button>
+            ))}
+            
             <button 
                 onClick={handleNext} 
                 disabled={currentPage >= totalPages}
@@ -213,11 +537,15 @@ const Pagination = observer(({ currentData, itemsPerPage = 10 }) => {
             >
                 &gt;
             </button>
+            
+            <span className="pagination-info">
+                Page {currentPage} of {totalPages} ({totalItems} total items)
+            </span>
         </div>
     );
 });
 
-// User Accounts Content Component (FIXED VERSION)
+// FIXED USER ACCOUNTS CONTENT WITH PROPER PAGINATION
 const UserAccountsContent = observer(() => {
     const {
         activeTab,
@@ -242,11 +570,20 @@ const UserAccountsContent = observer(() => {
         error: userAccountsError,
     } = userAccountsVM;
 
+    // PAGINATION STATE
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     useEffect(() => {
         AdminDashboardViewModel.fetchAccounts();
     }, [activeTab]);
 
-    // FIXED: Enhanced handleOpenModal to fetch premium data like PremiumPage does
+    // Reset to page 1 when tab changes or data changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchTerm]);
+
+     // FIXED: Enhanced handleOpenModal to fetch premium data like PremiumPage does
     const handleOpenModal = async (user) => {
         console.log("[AdminDashboard] Opening user detail modal for:", user);
         
@@ -362,6 +699,18 @@ const UserAccountsContent = observer(() => {
         return activeTab === 'ALL_ACCOUNTS' ? filteredAllAccounts : filteredPendingAccounts;
     };
 
+    // PAGINATION LOGIC
+    const currentData = getCurrentData();
+    const totalItems = currentData.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPageData = currentData.slice(startIndex, endIndex);
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+    };
+
     return (
         <>
             <div className="admin-dashboard-main-content-area">
@@ -392,64 +741,74 @@ const UserAccountsContent = observer(() => {
                 >
                     PENDING APPROVAL
                 </button>
+                <button
+                    className={`tab-button ${activeTab === 'CREATE_ADMIN' ? 'active' : ''}`}
+                    onClick={() => AdminDashboardViewModel.setActiveTab('CREATE_ADMIN')}
+                >
+                    CREATE ADMIN
+                </button>
             </div>
 
-            {(isLoading || userAccountsLoading) && <p className="loading-message">Loading accounts...</p>}
-            {(error || userAccountsError) && <p className="error-message">{error || userAccountsError}</p>}
+            {/* Render different content based on active tab */}
+            {activeTab === 'CREATE_ADMIN' ? (
+                <AdminCreateAccountContent />
+            ) : (
+                <>
+                    {(isLoading || userAccountsLoading) && <p className="loading-message">Loading accounts...</p>}
+                    {(error || userAccountsError) && <p className="error-message">{error || userAccountsError}</p>}
 
-            <div className="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
-                            <th>Status</th>
-                            {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
-                            {activeTab === 'PENDING_APPROVAL' && (
-                                <>
-                                    <th>Signed up at</th>
-                                    <th>Documents</th>
-                                </>
-                            )}
-                            <th>Action</th>
-                        </tr>
-                    </thead>
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
+                                    <th>Status</th>
+                                    {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
+                                    {activeTab === 'PENDING_APPROVAL' && (
+                                        <>
+                                            <th>Signed up at</th>
+                                            <th>Documents</th>
+                                        </>
+                                    )}
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
 
-                    <tbody>
-                        {activeTab === 'ALL_ACCOUNTS' && filteredAllAccounts.length > 0 ? (
-                            filteredAllAccounts.map(user => (
-                                <UserAccountRow
-                                    key={user.id}
-                                    user={user}
-                                    onAction={handleSuspendUnsuspend}
-                                    onNameClick={handleOpenModal}
-                                    type="all"
-                                />
-                            ))
-                        ) : activeTab === 'PENDING_APPROVAL' && filteredPendingAccounts.length > 0 ? (
-                            filteredPendingAccounts.map(user => (
-                                <UserAccountRow
-                                    key={user.id}
-                                    user={user}
-                                    onAction={() => { }}
-                                    onNameClick={handleOpenModal}
-                                    type="pending"
-                                />
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message">
-                                    {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
-                                </td>
-                            </tr>
+                            <tbody>
+                                {currentPageData.length > 0 ? (
+                                    currentPageData.map(user => (
+                                        <UserAccountRow
+                                            key={user.id}
+                                            user={user}
+                                            onAction={handleSuspendUnsuspend}
+                                            onNameClick={handleOpenModal}
+                                            type={activeTab === 'ALL_ACCOUNTS' ? 'all' : 'pending'}
+                                        />
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '5'} className="no-data-message">
+                                            {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                        
+                        {/* FIXED PAGINATION */}
+                        {currentData.length > 0 && (
+                            <Pagination 
+                                currentData={currentData} 
+                                itemsPerPage={itemsPerPage}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                            />
                         )}
-                    </tbody>
-                </table>
-                
-                {/* Dynamic Pagination */}
-                <Pagination currentData={getCurrentData()} itemsPerPage={10} />
-            </div>
+                    </div>
+                </>
+            )}
 
             {/* Render UserDetailModal using states from AdminDashboardViewModel */}
             {showUserDetailModal && selectedUser && (
@@ -513,7 +872,7 @@ const AdminDashboard = observer(({ onLogout }) => {
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
                 {currentView === 'userAccounts' && <UserAccountsContent />}
-                {currentView === 'premiumAccounts' && <PremiumPage />}
+                {currentView === 'premiumAccounts' && <PremiumPage />} {/* RENDER NEW PREMIUM PAGE */}
                 {currentView === 'mealPlans' && <AdminMealPlans />}
                 {currentView === 'exportReport' && <AdminExportReport />}
                 {currentView === 'rewards' && <AdminRewards />}

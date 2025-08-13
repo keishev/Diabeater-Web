@@ -583,3 +583,315 @@ table tbody tr:last-child td {
         font-size: 14px;
     }
 }
+
+/* Admin Create Account Content Styles */
+.admin-create-account-content {
+    padding: 20px;
+    background-color: #fffaf3;
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Form Section Styles */
+.create-admin-form-section {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 800px;
+    margin-top: -20px;
+    margin-left: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.create-admin-form-section h2 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 34px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.admin-create-form {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    background-color: white;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form-group input.error {
+    border-color: #dc3545;
+}
+
+.form-group input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.field-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Button Styles */
+.create-admin-button {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.create-admin-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0056b3, #004085);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.create-admin-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Verification Section Styles */
+.verification-section {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #28a745;
+    text-align: center;
+}
+
+.verification-section h3 {
+    color: #28a745;
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.verification-section p {
+    margin-bottom: 20px;
+    color: #666;
+    text-align: center;
+}
+
+.verification-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.check-verification-button,
+.activate-admin-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.check-verification-button {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+.check-verification-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-1px);
+}
+
+.activate-admin-button {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+}
+
+.activate-admin-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1e7e34, #155724);
+    transform: translateY(-1px);
+}
+
+.check-verification-button:disabled,
+.activate-admin-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Pending Accounts Section Styles */
+.pending-accounts-section {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pending-accounts-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.pending-accounts-table {
+    overflow-x: auto;
+}
+
+.pending-accounts-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.pending-accounts-table th,
+.pending-accounts-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.pending-accounts-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.pending-accounts-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.pending-accounts-table .check-verification-button.small,
+.pending-accounts-table .activate-admin-button.small {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+/* Message Styles */
+.error-message,
+.success-message {
+    position: relative;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.error-message button,
+.success-message button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.error-message button:hover,
+.success-message button:hover {
+    opacity: 1;
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-create-account-content {
+        padding: 10px;
+    }
+    
+    .create-admin-form-section,
+    .verification-section,
+    .pending-accounts-section {
+        max-width: 100%;
+        margin-left: 10px;
+        margin-right: 10px;
+        padding: 20px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .verification-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .verification-actions button {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .pending-accounts-table {
+        font-size: 14px;
+    }
+    
+    .pending-accounts-table th,
+    .pending-accounts-table td {
+        padding: 8px 10px;
+    }
+}

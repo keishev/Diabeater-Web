@@ -241,35 +241,35 @@ const AdminStatDashboard = observer(() => {
                     <div className="stat-value">{totalUsers}</div>
                     <div className="stat-label">Total Users</div>
                     <div className="stat-change neutral">
-                        <i className="fas fa-info-circle"></i> No change data
+                
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalNutritionists}</div>
                     <div className="stat-label">Total Nutritionists</div>
                     <div className="stat-change neutral">
-                        <i className="fas fa-info-circle"></i> No change data
+                        
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalSubscriptions}</div>
                     <div className="stat-label">Active Subscriptions</div>
                     <div className="stat-change neutral">
-                        <i className="fas fa-info-circle"></i> No change data
+                      
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalApprovedMealPlans}</div>
                     <div className="stat-label">Approved Meal Plans</div>
                     <div className="stat-change neutral">
-                        <i className="fas fa-info-circle"></i> No change data
+                        
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalPendingMealPlans}</div>
                     <div className="stat-label">Pending Meal Plans</div>
                     <div className="stat-change neutral">
-                        <i className="fas fa-info-circle"></i> No change data
+                     
                     </div>
                 </div>
             </div>

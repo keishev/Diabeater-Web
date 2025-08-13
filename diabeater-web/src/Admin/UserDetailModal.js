@@ -65,6 +65,47 @@ const UserDetailModal = observer(({
         return moment(timestamp).format('DD/MM/YYYY HH:mm');
     };
 
+    // FIXED RENEWAL DATE CALCULATION - ADD 1 DAY TO END DATE
+    const calculateRenewalDate = (endDate) => {
+        if (!endDate) {
+            return 'N/A';
+        }
+
+        try {
+            let dateObject;
+            
+            // Handle different date formats
+            if (endDate.toDate && typeof endDate.toDate === 'function') {
+                // Firestore Timestamp
+                dateObject = endDate.toDate();
+            } else if (endDate instanceof Date) {
+                dateObject = endDate;
+            } else if (typeof endDate === 'string') {
+                dateObject = new Date(endDate);
+            } else {
+                console.warn('Invalid endDate format:', endDate);
+                return 'N/A';
+            }
+
+            // Check if date is valid
+            if (isNaN(dateObject.getTime())) {
+                console.warn('Invalid date object:', dateObject);
+                return 'N/A';
+            }
+
+            // Add 1 day to the end date to get renewal date
+            const renewalDate = new Date(dateObject);
+            renewalDate.setDate(renewalDate.getDate() + 1);
+            
+            // Format as DD/MM/YYYY
+            return moment(renewalDate).format('DD/MM/YYYY');
+
+        } catch (error) {
+            console.error('Error calculating renewal date:', error);
+            return 'N/A';
+        }
+    };
+
     return (
         <div className="user-detail-modal-overlay">
             <div className="user-detail-modal-content">
@@ -98,7 +139,7 @@ const UserDetailModal = observer(({
                         </div>
                     )}
 
-                    {/* Current Premium Status Only - No detailed subscription history */}
+                    {/* FIXED Current Premium Status - Proper Renewal Date Calculation */}
                     <h4>Current Premium Status:</h4>
                     {user.currentSubscription ? (
                         <>
@@ -109,7 +150,8 @@ const UserDetailModal = observer(({
                             </p>
                             <p><strong>Price:</strong> ${user.currentSubscription.price?.toFixed(2) || 'N/A'}</p>
                             <p><strong>Current Period:</strong> {formatDate(user.currentSubscription.startDate)} - {formatDate(user.currentSubscription.endDate)}</p>
-                            <p><strong>Next Renewal:</strong> {user.displayRenewalDate || 'N/A'}</p>
+                            {/* FIXED: Now properly calculates renewal date as end date + 1 day */}
+                            <p><strong>Next Renewal:</strong> {calculateRenewalDate(user.currentSubscription.endDate)}</p>
                         </>
                     ) : (
                         <p>No active premium subscription found for this user.</p>
