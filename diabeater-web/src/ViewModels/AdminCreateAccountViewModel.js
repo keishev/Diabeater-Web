@@ -1,6 +1,5 @@
-// ViewModels/AdminCreateAccountViewModel.js - IMPROVED VERSION
+// ViewModels/AdminCreateAccountViewModel.js - SIMPLIFIED CLIENT-SIDE VERSION
 import { makeAutoObservable, runInAction } from 'mobx';
-import AdminCreateAccountRepository from '../Repositories/AdminCreateAccountRepository';
 import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 
 class AdminCreateAccountViewModel {
@@ -30,8 +29,9 @@ class AdminCreateAccountViewModel {
   emailSent = false;
   emailVerified = false;
   createdAccount = null;
-  pendingAccounts = [];
-  verificationLink = ''; // Store the verification link
+  
+  // Password storage for resend functionality
+  temporaryPassword = '';
 
   constructor() {
     makeAutoObservable(this);
@@ -61,7 +61,7 @@ class AdminCreateAccountViewModel {
     this.emailVerified = false;
     this.accountCreated = false;
     this.createdAccount = null;
-    this.verificationLink = '';
+    this.temporaryPassword = '';
   };
 
   // --- State Management ---
@@ -78,23 +78,22 @@ class AdminCreateAccountViewModel {
       runInAction(() => {
         this.successMessage = '';
       });
-    }, 5000);
+    }, 8000);
   };
 
   setCreatedAccount = (account) => { this.createdAccount = account; };
-  setPendingAccounts = (accounts) => { this.pendingAccounts = accounts; };
   setEmailSent = (value) => { this.emailSent = value; };
   setEmailVerified = (value) => { this.emailVerified = value; };
   setAccountCreated = (value) => { this.accountCreated = value; };
-  setVerificationLink = (link) => { this.verificationLink = link; };
+  setTemporaryPassword = (password) => { this.temporaryPassword = password; };
 
   // --- Computed Properties ---
   get isFormValid() {
-    const validation = AdminCreateAccountRepository.validateAdminForm(this.formData);
+    const validation = AdminCreateAccountService.validateAdminForm(this.formData);
     return validation.isValid;
   }
 
-  get canSendVerificationEmail() {
+  get canCreateAccount() {
     return this.isFormValid && 
            !this.emailSent && 
            !this.accountCreated &&
@@ -112,25 +111,24 @@ class AdminCreateAccountViewModel {
            !this.isCreating;
   }
 
-  get canCreateAccount() {
-    return this.emailVerified && 
-           !this.accountCreated && 
-           !this.isCreating && 
-           !this.isCheckingVerification && 
+  get canResendEmail() {
+    return this.emailSent && 
+           !this.emailVerified && 
+           !this.accountCreated &&
            !this.isSendingVerification;
   }
 
   // --- Actions ---
 
   /**
-   * Step 1: Send verification email (simplified)
+   * Create admin account via cloud function (no client auth operations)
    */
-  sendVerificationEmail = async () => {
+  createAdminAccount = async () => {
     this.setGlobalError('');
     this.setSuccessMessage('');
     
     // Validate form first
-    const validation = AdminCreateAccountRepository.validateAdminForm(this.formData);
+    const validation = AdminCreateAccountService.validateAdminForm(this.formData);
     if (!validation.isValid) {
       runInAction(() => {
         this.setErrors(validation.errors);
@@ -138,21 +136,22 @@ class AdminCreateAccountViewModel {
       return;
     }
 
-    this.setSendingVerification(true);
+    this.setCreating(true);
     
     try {
-      console.log('Creating admin account and sending verification email...');
-      const result = await AdminCreateAccountRepository.createAdminAccount(this.formData);
+      console.log('Creating admin account via cloud function (no session change)...');
+      const result = await AdminCreateAccountService.createAdminAccount(this.formData);
       
       runInAction(() => {
         if (result.success) {
           this.setEmailSent(true);
-          this.setVerificationLink(result.verificationLink);
-          this.setSuccessMessage(
-            `Admin account created! A verification email should be sent to ${this.formData.email}. ` +
-            `Please check your email and click the verification link to continue.`
-          );
-          console.log('Admin account created successfully');
+          this.setCreatedAccount({
+            uid: result.uid,
+            email: result.email
+          });
+          
+          this.setSuccessMessage(result.message);
+          console.log('Admin account created via cloud function - current session preserved');
         } else {
           this.setGlobalError('Failed to create admin account');
         }
@@ -161,30 +160,17 @@ class AdminCreateAccountViewModel {
     } catch (error) {
       console.error('Error creating admin account:', error);
       runInAction(() => {
-        let errorMessage = error.message || 'Failed to create admin account';
-        
-        // Handle common Firebase errors
-        if (error.message?.includes('email-already-in-use')) {
-          errorMessage = 'This email is already in use. Please use a different email address.';
-        } else if (error.message?.includes('invalid-email')) {
-          errorMessage = 'Please enter a valid email address.';
-        } else if (error.message?.includes('weak-password')) {
-          errorMessage = 'Password should be at least 6 characters long.';
-        } else if (error.message?.includes('permission-denied')) {
-          errorMessage = 'You do not have permission to create admin accounts.';
-        }
-        
-        this.setGlobalError(errorMessage);
+        this.setGlobalError(error.message || 'Failed to create admin account. Please try again.');
       });
     } finally {
       runInAction(() => {
-        this.setSendingVerification(false);
+        this.setCreating(false);
       });
     }
   };
 
   /**
-   * Step 2: Check if email is verified
+   * Check if Firebase email is verified (still uses cloud function for admin claims)
    */
   checkEmailVerification = async () => {
     this.setGlobalError('');
@@ -192,17 +178,17 @@ class AdminCreateAccountViewModel {
     this.setCheckingVerification(true);
 
     try {
-      const result = await AdminCreateAccountService.checkEmailVerification(
-        this.formData.email, 
-        this.formData.password
-      );
+      const result = await AdminCreateAccountService.checkEmailVerification(this.formData.email);
       
       runInAction(() => {
         if (result.success && result.isVerified) {
           this.setEmailVerified(true);
-          this.setSuccessMessage('Email verified successfully! You can now create the admin account.');
+          this.setAccountCreated(true);
+          this.setSuccessMessage('🎉 ' + result.message + ' The admin account is now ready to use!');
+          // Clear temporary password after successful verification
+          this.setTemporaryPassword('');
         } else {
-          this.setGlobalError('Email not yet verified. Please check your email and click the verification link.');
+          this.setGlobalError(result.message || 'Email not yet verified. Please check your email and click the verification link.');
         }
       });
 
@@ -219,54 +205,17 @@ class AdminCreateAccountViewModel {
   };
 
   /**
-   * Step 3: Complete admin account creation
-   */
-  createAdminAccount = async () => {
-    this.setGlobalError('');
-    this.setSuccessMessage('');
-    this.setCreating(true);
-    
-    try {
-      const result = await AdminCreateAccountRepository.createFinalAdminAccount(this.formData);
-      
-      runInAction(() => {
-        if (result.success) {
-          this.setAccountCreated(true);
-          this.setCreatedAccount({
-            userId: result.userId,
-            email: this.formData.email
-          });
-          this.setSuccessMessage('Admin account created successfully! The account is now active and ready to use.');
-        } else {
-          this.setGlobalError('Failed to create admin account');
-        }
-      });
-
-      await this.fetchPendingAccounts();
-
-    } catch (error) {
-      console.error('Error creating admin account:', error);
-      runInAction(() => {
-        this.setGlobalError(error.message || 'Failed to create admin account');
-      });
-    } finally {
-      runInAction(() => {
-        this.setCreating(false);
-      });
-    }
-  };
-
-  /**
-   * Resend verification - simplified approach
+   * Resend Firebase verification email via simple cloud function (no session issues)
    */
   resendVerificationEmail = async () => {
     this.setSendingVerification(true);
     this.setGlobalError('');
 
     try {
+      console.log('Resending verification email via cloud function (no session conflicts)...');
+      
       const result = await AdminCreateAccountService.resendVerificationEmail(
-        this.formData.email,
-        this.formData.password
+        this.formData.email
       );
       
       runInAction(() => {
@@ -280,42 +229,11 @@ class AdminCreateAccountViewModel {
     } catch (error) {
       console.error('Error resending verification email:', error);
       runInAction(() => {
-        this.setGlobalError(error.message || 'Please check your email for the original verification link');
+        this.setGlobalError(error.message || 'Failed to resend verification email');
       });
     } finally {
       runInAction(() => {
         this.setSendingVerification(false);
-      });
-    }
-  };
-
-  /**
-   * Open verification link in new tab (for testing/convenience)
-   */
-  openVerificationLink = () => {
-    if (this.verificationLink) {
-      window.open(this.verificationLink, '_blank');
-    }
-  };
-
-  /**
-   * Fetch pending accounts
-   */
-  fetchPendingAccounts = async () => {
-    this.setLoading(true);
-    try {
-      const pending = await AdminCreateAccountRepository.getPendingAdminAccounts();
-      runInAction(() => {
-        this.setPendingAccounts(pending);
-      });
-    } catch (error) {
-      console.error('Error fetching pending accounts:', error);
-      runInAction(() => {
-        this.setGlobalError(error.message || 'Failed to fetch pending accounts');
-      });
-    } finally {
-      runInAction(() => {
-        this.setLoading(false);
       });
     }
   };

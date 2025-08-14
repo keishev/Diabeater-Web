@@ -15,27 +15,40 @@ function MarketingWebsiteEditorPage() {
     const [showStopHostingModal, setShowStopHostingModal] = useState(false);
 
     // This handler now receives the Firestore key directly
-    const handleSaveContent = async (key, value) => {
-        // Optimistic UI update: Update React state immediately
+   const handleSaveContent = async (key, value) => {
+    // Handle array fields specially
+    let processedValue = value;
+    
+    if (key === 'basicFeatureList' || key === 'premiumFeatureList') {
+        // Convert comma-separated string to array
+        processedValue = typeof value === 'string' 
+            ? value.split(',').map(item => item.trim()).filter(item => item.length > 0)
+            : (Array.isArray(value) ? value : []);
+        
+        console.log(`Processing ${key}:`, value, '→', processedValue);
+    }
+    
+    // Optimistic UI update: Update React state immediately
+    setWebsiteContent(prevContent => ({
+        ...prevContent,
+        [key]: processedValue,
+    }));
+    
+    try {
+        // Call the exported function directly with processed value
+        await saveContentField(key, processedValue);
+        console.log(`Successfully saved ${key}:`, processedValue);
+        return true; // Indicate success
+    } catch (err) {
+        console.error("MarketingWebsiteEditorPage: Failed to save content:", err);
+        // Revert local state if save fails
         setWebsiteContent(prevContent => ({
             ...prevContent,
-            [key]: value,
+            [key]: websiteContent[key], // Revert to original value
         }));
-        try {
-            // Call the exported function directly
-            await saveContentField(key, value);
-            return true; // Indicate success to MarketingEditorSection
-        } catch (err) {
-            console.error("MarketingWebsiteEditorPage: Failed to save content:", err);
-            // Revert local state if save fails (optional)
-            setWebsiteContent(prevContent => ({
-                ...prevContent,
-                [key]: websiteContent[key], // Revert to original value before optimistic update
-            }));
-            throw err; // Propagate error for UI feedback in MarketingEditorSection
-        }
-    };
-
+        throw err; // Propagate error
+    }
+};
     const handleStopHostingClick = () => {
         setShowStopHostingModal(true);
     };
@@ -121,19 +134,21 @@ function MarketingWebsiteEditorPage() {
                 <MarketingEditorSection title="Premium Plan Header" initialContent={websiteContent?.premiumHeader} onSave={handleSaveContent} contentKey="premiumHeader" />
                 {/* Handle array fields by joining/splitting strings */}
                 <MarketingEditorSection
-                    title="Basic Features (comma-separated)"
-                    initialContent={Array.isArray(websiteContent?.basicFeatureList) ? websiteContent.basicFeatureList.join(', ') : ''}
-                    onSave={(val) => handleSaveContent('basicFeatureList', val.split(',').map(item => item.trim()).filter(item => item !== ''))}
-                    contentType="textarea"
-                    contentKey="basicFeatureList"
-                />
-                <MarketingEditorSection
-                    title="Premium Features (comma-separated)"
-                    initialContent={Array.isArray(websiteContent?.premiumFeatureList) ? websiteContent.premiumFeatureList.join(', ') : ''}
-                    onSave={(val) => handleSaveContent('premiumFeatureList', val.split(',').map(item => item.trim()).filter(item => item !== ''))}
-                    contentType="textarea"
-                    contentKey="premiumFeatureList"
-                />
+    title="Basic Features (comma-separated)"
+    initialContent={Array.isArray(websiteContent?.basicFeatureList) ? websiteContent.basicFeatureList.join(', ') : ''}
+    onSave={handleSaveContent}
+    contentKey="basicFeatureList"
+    contentType="textarea"
+    isArrayField={true}
+/>
+<MarketingEditorSection
+    title="Premium Features (comma-separated)"
+    initialContent={Array.isArray(websiteContent?.premiumFeatureList) ? websiteContent.premiumFeatureList.join(', ') : ''}
+    onSave={handleSaveContent}
+    contentKey="premiumFeatureList"
+    contentType="textarea"
+    isArrayField={true}
+/>
                 <MarketingEditorSection title="Comparison CTA Text" initialContent={websiteContent?.comparisonCtaText} onSave={handleSaveContent} contentKey="comparisonCtaText" />
 
                 <MarketingEditorSection title="Download CTA Title" initialContent={websiteContent?.downloadCTATitle} onSave={handleSaveContent} contentKey="downloadCTATitle" />

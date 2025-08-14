@@ -103,7 +103,7 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
     );
 });
 
-// Admin Create Account Content Component - FIXED SEND VERIFICATION BUTTON
+// AdminCreateAccountContent Component - SIMPLIFIED CLIENT-SIDE VERSION
 const AdminCreateAccountContent = observer(() => {
     const {
         formData,
@@ -117,44 +117,28 @@ const AdminCreateAccountContent = observer(() => {
         emailVerified,
         accountCreated,
         createdAccount,
-        pendingAccounts,
-        canSendVerificationEmail,
-        canCheckVerification,
         canCreateAccount,
+        canCheckVerification,
+        canResendEmail,
         setFormField,
-        sendVerificationEmail,
-        checkEmailVerification,
         createAdminAccount,
+        checkEmailVerification,
         resendVerificationEmail,
-        fetchPendingAccounts,
         clearMessages,
         resetFlow
     } = adminCreateAccountVM;
-
-    useEffect(() => {
-        fetchPendingAccounts();
-    }, []);
 
     const handleInputChange = (field, value) => {
         setFormField(field, value);
     };
 
-    const handleSendVerificationEmail = async (e) => {
+    const handleCreateAccount = async (e) => {
         e.preventDefault();
-        await sendVerificationEmail();
+        await createAdminAccount();
     };
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Handles the action of checking email verification status.
- * Calls the checkEmailVerification function to verify the status.
-/*******  0e126236-1bbc-4fef-9527-c688172c4bad  *******/
     const handleCheckVerification = async () => {
         await checkEmailVerification();
-    };
-
-    const handleCreateAccount = async () => {
-        await createAdminAccount();
     };
 
     const handleResendVerificationEmail = async () => {
@@ -169,7 +153,7 @@ const AdminCreateAccountContent = observer(() => {
         <div className="admin-create-account-content">
             <div className="admin-dashboard-main-content-area">
                 <header className="admin-header">
-                    <h1 className="admin-page-title">CREATE ADMIN ACCOUNT</h1>
+
                 </header>
             </div>
 
@@ -188,119 +172,140 @@ const AdminCreateAccountContent = observer(() => {
                 </div>
             )}
 
-        
+            {/* Step 1: Create Account Form */}
+            {!emailSent && (
+                <div className="create-admin-form-section">
+                    <h2>Admin Account Details</h2>
+                    <form className="admin-create-form">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="firstName">First Name</label>
+                                <input
+                                    type="text"
+                                    id="firstName"
+                                    value={formData.firstName}
+                                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                                    className={errors.firstName ? 'error' : ''}
+                                    disabled={isCreating}
+                                    placeholder="Enter first name"
+                                />
+                                {errors.firstName && <span className="field-error">{errors.firstName}</span>}
+                            </div>
 
-            {/* Create Account Form */}
-            <div className="create-admin-form-section">
-                <h2>Admin Account Details</h2>
-                <form className="admin-create-form">
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="firstName">First Name</label>
-                            <input
-                                type="text"
-                                id="firstName"
-                                value={formData.firstName}
-                                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                                className={errors.firstName ? 'error' : ''}
-                                disabled={emailSent || isSendingVerification}
-                                placeholder="Enter first name"
-                            />
-                            {errors.firstName && <span className="field-error">{errors.firstName}</span>}
+                            <div className="form-group">
+                                <label htmlFor="lastName">Last Name</label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    value={formData.lastName}
+                                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                                    className={errors.lastName ? 'error' : ''}
+                                    disabled={isCreating}
+                                    placeholder="Enter last name"
+                                />
+                                {errors.lastName && <span className="field-error">{errors.lastName}</span>}
+                            </div>
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="lastName">Last Name</label>
+                            <label htmlFor="email">Email Address</label>
                             <input
-                                type="text"
-                                id="lastName"
-                                value={formData.lastName}
-                                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                                className={errors.lastName ? 'error' : ''}
-                                disabled={emailSent || isSendingVerification}
-                                placeholder="Enter last name"
+                                type="email"
+                                id="email"
+                                value={formData.email}
+                                onChange={(e) => handleInputChange('email', e.target.value)}
+                                className={errors.email ? 'error' : ''}
+                                disabled={isCreating}
+                                placeholder="Enter email address"
                             />
-                            {errors.lastName && <span className="field-error">{errors.lastName}</span>}
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="email">Email Address</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={formData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            className={errors.email ? 'error' : ''}
-                            disabled={emailSent || isSendingVerification}
-                            placeholder="Enter email address"
-                        />
-                        {errors.email && <span className="field-error">{errors.email}</span>}
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="dob">Date of Birth</label>
-                        <input
-                            type="date"
-                            id="dob"
-                            value={formData.dob}
-                            onChange={(e) => handleInputChange('dob', e.target.value)}
-                            className={errors.dob ? 'error' : ''}
-                            disabled={emailSent || isSendingVerification}
-                        />
-                        {errors.dob && <span className="field-error">{errors.dob}</span>}
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={formData.password}
-                                onChange={(e) => handleInputChange('password', e.target.value)}
-                                className={errors.password ? 'error' : ''}
-                                disabled={emailSent || isSendingVerification}
-                                placeholder="Enter password (min. 6 characters)"
-                            />
-                            {errors.password && <span className="field-error">{errors.password}</span>}
+                            {errors.email && <span className="field-error">{errors.email}</span>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="confirmPassword">Confirm Password</label>
+                            <label htmlFor="dob">Date of Birth</label>
                             <input
-                                type="password"
-                                id="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                className={errors.confirmPassword ? 'error' : ''}
-                                disabled={emailSent || isSendingVerification}
-                                placeholder="Confirm password"
+                                type="date"
+                                id="dob"
+                                value={formData.dob}
+                                onChange={(e) => handleInputChange('dob', e.target.value)}
+                                className={errors.dob ? 'error' : ''}
+                                disabled={isCreating}
                             />
-                            {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
+                            {errors.dob && <span className="field-error">{errors.dob}</span>}
                         </div>
-                    </div>
 
-                    {/* Step 1: Send Verification Email */}
-                    {!emailSent && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="password">Password</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={formData.password}
+                                    onChange={(e) => handleInputChange('password', e.target.value)}
+                                    className={errors.password ? 'error' : ''}
+                                    disabled={isCreating}
+                                    placeholder="Enter password (min. 6 characters)"
+                                />
+                                {errors.password && <span className="field-error">{errors.password}</span>}
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="confirmPassword">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                                    className={errors.confirmPassword ? 'error' : ''}
+                                    disabled={isCreating}
+                                    placeholder="Confirm password"
+                                />
+                                {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
+                            </div>
+                        </div>
+
                         <button 
                             type="button"
-                            onClick={handleSendVerificationEmail}
+                            onClick={handleCreateAccount}
+                            disabled={!canCreateAccount}
                             className="create-admin-button"
-                            
                         >
-                            {isSendingVerification ? 'Sending Verification Email...' : 'Send Verification Email'}
+                            {isCreating ? 'Creating Account & Sending Email...' : 'Create Admin Account'}
                         </button>
-                    )}
-                </form>
-            </div>
+                    </form>
+                </div>
+            )}
 
             {/* Step 2: Email Verification Section */}
-            {emailSent && !emailVerified && (
+            {emailSent && !accountCreated && (
                 <div className="verification-section">
-                    <h3>📧 Verification Email Sent!</h3>
-                    <p>We've sent a verification email to: <strong>{formData.email}</strong></p>
-                    <p>Please check your email and click the verification link, then click the button below to proceed.</p>
+                    <h3>📧 Firebase Verification Email Sent!</h3>
+                    <p>A verification email has been sent to: <strong>{formData.email}</strong></p>
+                    <p>Please check your email (including spam/junk folder) and click the verification link.</p>
+                    
+                    <div className="verification-flow">
+                        <div className="flow-step">
+                            <i className="fas fa-envelope-open-text"></i>
+                            <div>
+                                <strong>1. Check Your Email</strong>
+                                <p>Look for an email from Firebase Authentication</p>
+                            </div>
+                        </div>
+                        <div className="flow-step">
+                            <i className="fas fa-mouse-pointer"></i>
+                            <div>
+                                <strong>2. Click Verification Link</strong>
+                                <p>Click the link in the email to verify your account</p>
+                            </div>
+                        </div>
+                        <div className="flow-step">
+                            <i className="fas fa-check-circle"></i>
+                            <div>
+                                <strong>3. Complete Setup</strong>
+                                <p>Come back here and click "Check Verification"</p>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div className="verification-actions">
                         <button 
@@ -311,13 +316,15 @@ const AdminCreateAccountContent = observer(() => {
                             {isCheckingVerification ? 'Checking Verification...' : 'Check Email Verification'}
                         </button>
 
-                        <button 
-                            onClick={handleResendVerificationEmail}
-                            disabled={isSendingVerification}
-                            className="resend-verification-button"
-                        >
-                            {isSendingVerification ? 'Sending...' : 'Resend Verification Email'}
-                        </button>
+                        {canResendEmail && (
+                            <button 
+                                onClick={handleResendVerificationEmail}
+                                disabled={isSendingVerification}
+                                className="resend-verification-button"
+                            >
+                                {isSendingVerification ? 'Resending...' : 'Resend Verification Email'}
+                            </button>
+                        )}
 
                         <button 
                             onClick={handleStartOver}
@@ -326,40 +333,41 @@ const AdminCreateAccountContent = observer(() => {
                             Start Over
                         </button>
                     </div>
-                </div>
-            )}
 
-            {/* Step 3: Create Account Section */}
-            {emailVerified && !accountCreated && (
-                <div className="create-account-section">
-                    <h3>✅ Email Verified Successfully!</h3>
-                    <p>Your email has been verified. You can now create the admin account.</p>
-                    
-                    <div className="create-account-actions">
-                        <button 
-                            onClick={handleCreateAccount}
-                            disabled={!canCreateAccount}
-                            className="create-admin-button"
-                        >
-                            {isCreating ? 'Creating Admin Account...' : 'Create Admin Account'}
-                        </button>
-
-                        <button 
-                            onClick={handleStartOver}
-                            className="start-over-button"
-                        >
-                            Start Over
-                        </button>
+                    <div className="verification-help">
+                        <h4>📋 Troubleshooting</h4>
+                        <ul>
+                            <li>Check your spam/junk folder for the verification email</li>
+                            <li>Make sure the email address is entered correctly</li>
+                            <li>The verification email comes directly from Firebase</li>
+                            <li>Click "Resend" if you don't receive the email within 5 minutes</li>
+                            <li>After clicking the verification link, return here and click "Check Verification"</li>
+                        </ul>
                     </div>
                 </div>
             )}
 
-            {/* Step 4: Success Section */}
+            {/* Step 3: Success Section */}
             {accountCreated && createdAccount && (
                 <div className="success-section">
                     <h3>🎉 Admin Account Created Successfully!</h3>
-                    <p>The admin account for <strong>{createdAccount.email}</strong> has been created and is now active.</p>
+                    <p>The admin account for <strong>{createdAccount.email}</strong> has been created and email verified!</p>
                     <p>The admin can now login using their email and password.</p>
+                    
+                    <div className="success-details">
+                        <div className="detail-item">
+                            <i className="fas fa-user-shield"></i>
+                            <span>Admin privileges have been granted</span>
+                        </div>
+                        <div className="detail-item">
+                            <i className="fas fa-envelope-circle-check"></i>
+                            <span>Email verification completed</span>
+                        </div>
+                        <div className="detail-item">
+                            <i className="fas fa-key"></i>
+                            <span>Account is ready for login</span>
+                        </div>
+                    </div>
                     
                     <div className="success-actions">
                         <button 
