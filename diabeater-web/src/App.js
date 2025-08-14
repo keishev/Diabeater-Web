@@ -6,6 +6,7 @@ import NutritionistDashboard from './Nutritionist/NutritionistDashboard';
 import AdminDashboard from './Admin/AdminDashboard';
 import ResetPasswordPage from './ResetPasswordPage';
 import CreateAccountPage from './CreateAccountPage';
+import NutritionistProfile from './Nutritionist/NutritionistProfile'; // Import the NutritionistProfile component
 
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
@@ -27,7 +28,6 @@ function App() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    // const idTokenResult = await user.getIdTokenResult(true); // This line is not directly used for role/status check in the provided logic
                     const userDocRef = doc(db, 'user_accounts', user.uid);
                     console.log(user.uid);
                     const userDocSnap = await getDoc(userDocRef);
@@ -56,7 +56,6 @@ function App() {
                             setVerifiedLogin(false);
                         }
                     }
-                    // After setting user role and ID, tell the ViewModel to initialize
                     mealPlanViewModel.initializeUser();
 
                 } catch (err) {
@@ -70,23 +69,18 @@ function App() {
                 setUserRole(null);
                 setUserId(null); // Clear userId
                 setVerifiedLogin(false);
-                mealPlanViewModel.initializeUser(); // Call to clear state in ViewModel if no user
+                mealPlanViewModel.initializeUser();
             }
 
             setIsFirebaseLoading(false);
         });
 
         return () => {
-            unsubscribe();
-            // Optional: You might want to dispose of ViewModel listeners if App.js unmounts,
-            // though for a root component, it's less critical. ViewModel itself handles listener disposal.
+            unsubscribe()
         };
     }, []);
 
     const handleLoginSuccess = (role) => {
-        // ViewModel's initializeUser will be triggered by onAuthStateChanged after successful login
-        // which will then pick up the new user and role.
-        // We still update local state for immediate rendering.
         setUserRole(role);
         setVerifiedLogin(true);
     };
@@ -95,19 +89,18 @@ function App() {
         setUserRole(null);
         setVerifiedLogin(false);
         const auth = getAuth(app);
-        signOut(auth); // Ensure user is signed out properly
-        mealPlanViewModel.initializeUser(); // Re-initialize ViewModel to clear state
+        signOut(auth);
+        mealPlanViewModel.initializeUser();
     };
 
     const handleLogout = async () => {
         await AuthRepository.logout();
         setUserRole(null);
-        setUserId(null); // Clear userId
+        setUserId(null);
         setVerifiedLogin(false);
-        mealPlanViewModel.initializeUser(); // Re-initialize ViewModel to clear state
+        mealPlanViewModel.initializeUser();
     };
 
-    // Auth guard component for protected routes
     const ProtectedRoute = ({ children, allowedRole }) => {
         if (isFirebaseLoading) {
             return <div>Loading authentication...</div>;
@@ -125,7 +118,6 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Public routes */}
                 <Route path="/" element={
                     verifiedLogin ? (
                         userRole === 'admin' ? 
@@ -142,21 +134,101 @@ function App() {
                 <Route path="/reset-password" element={<ResetPasswordPage onBackToLogin={handleBackToLogin} />} />
                 <Route path="/create-account" element={<CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />} />
                 
-                {/* Protected routes - Admin */}
                 <Route path="/admin/dashboard/*" element={
                     <ProtectedRoute allowedRole="admin">
                         <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />
                     </ProtectedRoute>
                 } />
                 
-                {/* Protected routes - Nutritionist */}
-                <Route path="/nutritionist/dashboard/*" element={
+                <Route path="/nutritionist/*" element={
                     <ProtectedRoute allowedRole="nutritionist">
-                        <NutritionistDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />
+                        <Routes>
+                            <Route path="profile" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="profile"
+                                />
+                            } />
+
+                            {/* Meal Plans routes with specific tabs */}
+                            <Route path="meal-plans/published" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="published"
+                                />
+                            } />
+                            <Route path="meal-plans/pending" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="pending"
+                                />
+                            } />
+                            <Route path="meal-plans/rejected" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="rejected"
+                                />
+                            } />
+                            <Route path="meal-plans/draft" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="draft"
+                                />
+                            } />
+
+                            <Route path="create-meal-plan" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="create"
+                                />
+                            } />
+                            <Route path="notifications" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="notifications"
+                                />
+                            } />
+
+                            <Route path="meal-plan-detail/:mealPlanId" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="detail"
+                                />
+                            } />
+                            <Route path="update-meal-plan/:mealPlanId" element={
+                                <NutritionistDashboard
+                                    onLogout={handleLogout}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    activeTab="update"
+                                />
+                            } />
+
+                            <Route path="*" element={<Navigate to="/nutritionist/meal-plans/published" replace />} />
+                        </Routes>
                     </ProtectedRoute>
                 } />
                 
-                {/* Fallback route */}
+                <Route path="/nutritionist/dashboard/*" element={
+                    <Navigate to="/nutritionist/meal-plans/published" replace />
+                } />
+
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
