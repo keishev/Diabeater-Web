@@ -1,6 +1,7 @@
 // src/Admin/AdminMealPlans.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel';
 import AdminMealPlanDetail from './AdminMealPlanDetail';
 import MealCategoryManagementModal from './MealCategoryManagementModal';
@@ -63,7 +64,11 @@ const PopularSection = ({ title, mealPlans, onCardClick, emptyMessage = "No meal
     );
 };
 
-const AdminMealPlans = observer(() => {
+const AdminMealPlans = observer(({ activeMealPlanTab }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const params = useParams();
+
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedPlanToReject, setSelectedPlanToReject] = useState(null);
     const [selectedRejectReason, setSelectedRejectReason] = useState('');
@@ -109,6 +114,42 @@ const AdminMealPlans = observer(() => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Determine current tab from URL or prop
+    const getCurrentTab = () => {
+        if (activeMealPlanTab) {
+            const tabMap = {
+                'popular': 'POPULAR',
+                'pending': 'PENDING_APPROVAL',
+                'approved': 'APPROVED',
+                'rejected': 'REJECTED'
+            };
+            return tabMap[activeMealPlanTab] || 'POPULAR';
+        }
+
+        const pathname = location.pathname;
+        if (pathname.includes('/meal-plans/pending')) return 'PENDING_APPROVAL';
+        if (pathname.includes('/meal-plans/approved')) return 'APPROVED';
+        if (pathname.includes('/meal-plans/rejected')) return 'REJECTED';
+        if (pathname.includes('/meal-plan-detail')) return 'DETAIL_VIEW';
+        return 'POPULAR'; // default
+    };
+
+    const currentTab = getCurrentTab();
+
+    // Update ViewModel tab when URL changes
+    useEffect(() => {
+        if (currentTab !== 'DETAIL_VIEW') {
+            MealPlanViewModel.setAdminActiveTab(currentTab);
+        }
+    }, [currentTab]);
+
+    // Handle meal plan detail view from URL parameter
+    useEffect(() => {
+        if (params.mealPlanId && !showDetailView) {
+            handleCardClick(params.mealPlanId);
+        }
+    }, [params.mealPlanId]);
 
     const handleApproveClick = useCallback((id, event) => {
         console.log('Approve clicked for plan:', id); // Debug log
@@ -220,17 +261,43 @@ const AdminMealPlans = observer(() => {
         setOtherReasonText('');
     }, []);
 
+    // Updated tab navigation handlers to use URL routing
+    const handleTabNavigation = (tab) => {
+        const routeMap = {
+            'POPULAR': '/admin/meal-plans/popular',
+            'PENDING_APPROVAL': '/admin/meal-plans/pending',
+            'APPROVED': '/admin/meal-plans/approved',
+            'REJECTED': '/admin/meal-plans/rejected'
+        };
+
+        if (routeMap[tab]) {
+            navigate(routeMap[tab]);
+        }
+    };
+
+    // Updated card click handler to navigate to detail URL
     const handleCardClick = useCallback(async (id) => {
         await MealPlanViewModel.loadMealPlanDetails(id);
         if (MealPlanViewModel.selectedMealPlanForDetail) {
+            navigate(`/admin/meal-plan-detail/${id}`);
             setShowDetailView(true);
         }
-    }, []);
+    }, [navigate]);
 
+    // Updated close detail handler to navigate back
     const handleCloseDetailView = useCallback(() => {
         MealPlanViewModel.clearSelectedMealPlans();
         setShowDetailView(false);
-    }, []);
+        // Navigate back to the current tab
+        const currentTabRoute = {
+            'POPULAR': '/admin/meal-plans/popular',
+            'PENDING_APPROVAL': '/admin/meal-plans/pending',
+            'APPROVED': '/admin/meal-plans/approved',
+            'REJECTED': '/admin/meal-plans/rejected'
+        }[MealPlanViewModel.adminActiveTab] || '/admin/meal-plans/popular';
+
+        navigate(currentTabRoute);
+    }, [navigate]);
 
     const handleOpenCategoryManagement = useCallback(() => {
         setShowCategoryManagementModal(true);
@@ -240,6 +307,16 @@ const AdminMealPlans = observer(() => {
         setShowCategoryManagementModal(false);
         MealPlanViewModel.fetchMealCategories();
     }, []);
+
+    // Show detail view if we're on detail route or if showDetailView is true
+    if ((params.mealPlanId || showDetailView) && MealPlanViewModel.selectedMealPlanForDetail) {
+        return (
+            <AdminMealPlanDetail
+                mealPlan={MealPlanViewModel.selectedMealPlanForDetail}
+                onClose={handleCloseDetailView}
+            />
+        );
+    }
 
     // Helper function to categorize popular meal plans
     const categorizePopularMealPlans = (mealPlans) => {
@@ -285,15 +362,6 @@ const AdminMealPlans = observer(() => {
     // Debug log to check state
     console.log('showRejectModal state:', showRejectModal);
     console.log('selectedPlanToReject:', selectedPlanToReject);
-
-    if (showDetailView && MealPlanViewModel.selectedMealPlanForDetail) {
-        return (
-            <AdminMealPlanDetail
-                mealPlan={MealPlanViewModel.selectedMealPlanForDetail}
-                onClose={handleCloseDetailView}
-            />
-        );
-    }
 
     // Get categorized popular meal plans
     const popularCategories = categorizePopularMealPlans(MealPlanViewModel.mealPlans);
@@ -360,28 +428,28 @@ const AdminMealPlans = observer(() => {
             <div className="admin-status-tabs">
                 <button
                     className={`tab-button ${MealPlanViewModel.adminActiveTab === 'POPULAR' ? 'active' : ''}`}
-                    onClick={() => MealPlanViewModel.setAdminActiveTab('POPULAR')}
+                    onClick={() => handleTabNavigation('POPULAR')}
                 >
                     <i className="fas fa-star"></i>
                     Popular
                 </button>
                 <button
                     className={`tab-button ${MealPlanViewModel.adminActiveTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
-                    onClick={() => MealPlanViewModel.setAdminActiveTab('PENDING_APPROVAL')}
+                    onClick={() => handleTabNavigation('PENDING_APPROVAL')}
                 >
                     <i className="fas fa-clock"></i>
                     Pending ({pendingCount})
                 </button>
                 <button
                     className={`tab-button ${MealPlanViewModel.adminActiveTab === 'APPROVED' ? 'active' : ''}`}
-                    onClick={() => MealPlanViewModel.setAdminActiveTab('APPROVED')}
+                    onClick={() => handleTabNavigation('APPROVED')}
                 >
                     <i className="fas fa-check"></i>
                     Approved ({approvedCount})
                 </button>
                 <button
                     className={`tab-button ${MealPlanViewModel.adminActiveTab === 'REJECTED' ? 'active' : ''}`}
-                    onClick={() => MealPlanViewModel.setAdminActiveTab('REJECTED')}
+                    onClick={() => handleTabNavigation('REJECTED')}
                 >
                     <i className="fas fa-times"></i>
                     Rejected ({rejectedCount})

@@ -1,6 +1,7 @@
 // src/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Ensure this path is correct
 import AdminViewModel from '../ViewModels/AdminViewModel'; // Ensure this path is correct
 import adminCreateAccountVM from '../ViewModels/AdminCreateAccountViewModel'; // Add this import
@@ -20,8 +21,45 @@ import premiumStatViewModel from '../ViewModels/PremiumStatViewModel';
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
 
-// Admin Sidebar Component (no changes needed)
-const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
+// Admin Sidebar Component - Updated to use React Router navigation
+const AdminSidebar = observer(({ onLogout }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Map URL paths to view names for active state
+    const getViewFromPath = (pathname) => {
+        if (pathname.includes('/admin/profile')) return 'myProfile';
+        if (pathname.includes('/admin/dashboard')) return 'dashboard';
+        if (pathname.includes('/admin/user-accounts')) return 'userAccounts';
+        if (pathname.includes('/admin/premium-accounts')) return 'premiumAccounts';
+        if (pathname.includes('/admin/meal-plans')) return 'mealPlans';
+        if (pathname.includes('/admin/export-report')) return 'exportReport';
+        if (pathname.includes('/admin/rewards')) return 'rewards';
+        if (pathname.includes('/admin/edit-website')) return 'editWebsite';
+        if (pathname.includes('/admin/user-feedbacks')) return 'userFeedbacks';
+        return 'dashboard';
+    };
+
+    const currentActiveView = getViewFromPath(location.pathname);
+
+    const handleNavigation = (view) => {
+        const routeMap = {
+            'myProfile': '/admin/profile',
+            'dashboard': '/admin/dashboard',
+            'userAccounts': '/admin/user-accounts',
+            'premiumAccounts': '/admin/premium-accounts',
+            'mealPlans': '/admin/meal-plans',
+            'exportReport': '/admin/export-report',
+            'rewards': '/admin/rewards',
+            'editWebsite': '/admin/edit-website',
+            'userFeedbacks': '/admin/user-feedbacks'
+        };
+
+        if (routeMap[view]) {
+            navigate(routeMap[view]);
+        }
+    };
+
     const handleLogout = async () => {
         await onLogout();
         window.location.href = '/';
@@ -35,64 +73,64 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
             </div>
             <nav className="navigation">
                 <div
-                    className={`nav-item ${currentView === 'myProfile' ? 'active' : ''}`}
-                    onClick={() => onNavigate('myProfile')}
+                    className={`nav-item ${currentActiveView === 'myProfile' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('myProfile')}
                 >
                     <i className="fas fa-user"></i>
                     <span>My Profile</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
-                    onClick={() => onNavigate('dashboard')}
+                    className={`nav-item ${currentActiveView === 'dashboard' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('dashboard')}
                 >
                     <i className="fas fa-home"></i>
                     <span>Dashboard</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'userAccounts' ? 'active' : ''}`}
-                    onClick={() => onNavigate('userAccounts')}
+                    className={`nav-item ${currentActiveView === 'userAccounts' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('userAccounts')}
                 >
                     <i className="fas fa-users"></i>
                     <span>User Accounts</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'premiumAccounts' ? 'active' : ''}`}
-                    onClick={() => onNavigate('premiumAccounts')}
+                    className={`nav-item ${currentActiveView === 'premiumAccounts' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('premiumAccounts')}
                 >
-                    <i className="fas fa-star"></i> {/* You can choose an appropriate icon */}
+                    <i className="fas fa-star"></i>
                     <span>Premium</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'mealPlans' ? 'active' : ''}`}
-                    onClick={() => onNavigate('mealPlans')}
+                    className={`nav-item ${currentActiveView === 'mealPlans' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('mealPlans')}
                 >
                     <i className="fas fa-clipboard-list"></i>
                     <span>Meal Plans</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'exportReport' ? 'active' : ''}`}
-                    onClick={() => onNavigate('exportReport')}
+                    className={`nav-item ${currentActiveView === 'exportReport' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('exportReport')}
                 >
                     <i className="fas fa-file-export"></i>
                     <span>Export Report</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'rewards' ? 'active' : ''}`}
-                    onClick={() => onNavigate('rewards')}
+                    className={`nav-item ${currentActiveView === 'rewards' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('rewards')}
                 >
                     <i className="fas fa-trophy"></i>
                     <span>Rewards</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'editWebsite' ? 'active' : ''}`}
-                    onClick={() => onNavigate('editWebsite')}
+                    className={`nav-item ${currentActiveView === 'editWebsite' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('editWebsite')}
                 >
                     <i className="fas fa-globe"></i>
                     <span>Edit Website</span>
                 </div>
                 <div
-                    className={`nav-item ${currentView === 'userFeedbacks' ? 'active' : ''}`}
-                    onClick={() => onNavigate('userFeedbacks')}
+                    className={`nav-item ${currentActiveView === 'userFeedbacks' ? 'active' : ''}`}
+                    onClick={() => handleNavigation('userFeedbacks')}
                 >
                     <i className="fas fa-comments"></i>
                     <span>User Feedback</span>
@@ -103,7 +141,6 @@ const AdminSidebar = observer(({ onNavigate, currentView, onLogout }) => {
     );
 });
 
-// Admin Create Account Content Component - FIXED SEND VERIFICATION BUTTON
 const AdminCreateAccountContent = observer(() => {
     const {
         formData,
@@ -144,11 +181,6 @@ const AdminCreateAccountContent = observer(() => {
         await sendVerificationEmail();
     };
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Handles the action of checking email verification status.
- * Calls the checkEmailVerification function to verify the status.
-/*******  0e126236-1bbc-4fef-9527-c688172c4bad  *******/
     const handleCheckVerification = async () => {
         await checkEmailVerification();
     };
@@ -173,7 +205,6 @@ const AdminCreateAccountContent = observer(() => {
                 </header>
             </div>
 
-            {/* Messages */}
             {globalError && (
                 <div className="error-message">
                     {globalError}
@@ -188,9 +219,6 @@ const AdminCreateAccountContent = observer(() => {
                 </div>
             )}
 
-        
-
-            {/* Create Account Form */}
             <div className="create-admin-form-section">
                 <h2>Admin Account Details</h2>
                 <form className="admin-create-form">
@@ -281,7 +309,6 @@ const AdminCreateAccountContent = observer(() => {
                         </div>
                     </div>
 
-                    {/* Step 1: Send Verification Email */}
                     {!emailSent && (
                         <button 
                             type="button"
@@ -295,7 +322,6 @@ const AdminCreateAccountContent = observer(() => {
                 </form>
             </div>
 
-            {/* Step 2: Email Verification Section */}
             {emailSent && !emailVerified && (
                 <div className="verification-section">
                     <h3>📧 Verification Email Sent!</h3>
@@ -329,7 +355,6 @@ const AdminCreateAccountContent = observer(() => {
                 </div>
             )}
 
-            {/* Step 3: Create Account Section */}
             {emailVerified && !accountCreated && (
                 <div className="create-account-section">
                     <h3>✅ Email Verified Successfully!</h3>
@@ -354,7 +379,6 @@ const AdminCreateAccountContent = observer(() => {
                 </div>
             )}
 
-            {/* Step 4: Success Section */}
             {accountCreated && createdAccount && (
                 <div className="success-section">
                     <h3>🎉 Admin Account Created Successfully!</h3>
@@ -836,8 +860,26 @@ const UserAccountsContent = observer(() => {
 });
 
 // AdminDashboard Main Component
-const AdminDashboard = observer(({ onLogout }) => {
-    const { currentView } = AdminDashboardViewModel;
+const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab }) => {
+    const location = useLocation();
+
+    // Determine the current view from the URL path if activeSection is not provided
+    const getCurrentView = () => {
+        if (activeSection) return activeSection;
+
+        const pathname = location.pathname;
+        if (pathname.includes('/admin/profile')) return 'myProfile';
+        if (pathname.includes('/admin/user-accounts')) return 'userAccounts';
+        if (pathname.includes('/admin/premium-accounts')) return 'premiumAccounts';
+        if (pathname.includes('/admin/meal-plans') || pathname.includes('/admin/meal-plan-detail')) return 'mealPlans';
+        if (pathname.includes('/admin/export-report')) return 'exportReport';
+        if (pathname.includes('/admin/rewards')) return 'rewards';
+        if (pathname.includes('/admin/edit-website')) return 'editWebsite';
+        if (pathname.includes('/admin/user-feedbacks')) return 'userFeedbacks';
+        return 'dashboard'; // default to dashboard
+    };
+
+    const currentView = getCurrentView();
 
     useEffect(() => {
         const checkAccess = async () => {
@@ -853,17 +895,13 @@ const AdminDashboard = observer(({ onLogout }) => {
 
     return (
         <div className="admin-dashboard-page">
-            <AdminSidebar
-                onNavigate={(view) => AdminDashboardViewModel.setCurrentView(view)}
-                currentView={currentView}
-                onLogout={onLogout}
-            />
+            <AdminSidebar onLogout={onLogout} />
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
                 {currentView === 'userAccounts' && <UserAccountsContent />}
-                {currentView === 'premiumAccounts' && <PremiumPage />} {/* RENDER NEW PREMIUM PAGE */}
-                {currentView === 'mealPlans' && <AdminMealPlans />}
+                {currentView === 'premiumAccounts' && <PremiumPage />}
+                {(currentView === 'mealPlans' || currentView === 'mealPlanDetail') && <AdminMealPlans activeMealPlanTab={activeMealPlanTab} />}
                 {currentView === 'exportReport' && <AdminExportReport />}
                 {currentView === 'rewards' && <AdminRewards />}
                 {currentView === 'editWebsite' && <MarketingWebsiteEditorPage />}

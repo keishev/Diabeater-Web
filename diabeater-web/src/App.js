@@ -134,9 +134,54 @@ function App() {
                 <Route path="/reset-password" element={<ResetPasswordPage onBackToLogin={handleBackToLogin} />} />
                 <Route path="/create-account" element={<CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />} />
                 
-                <Route path="/admin/dashboard/*" element={
+                <Route path="/admin/*" element={
                     <ProtectedRoute allowedRole="admin">
-                        <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />
+                        <Routes>
+                            <Route path="profile" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="myProfile" />
+                            } />
+                            <Route path="dashboard" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="dashboard" />
+                            } />
+                            <Route path="user-accounts" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" />
+                            } />
+                            <Route path="premium-accounts" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="premiumAccounts" />
+                            } />
+                            <Route path="meal-plans" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" />
+                            } />
+                            <Route path="meal-plans/popular" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="popular" />
+                            } />
+                            <Route path="meal-plans/pending" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="pending" />
+                            } />
+                            <Route path="meal-plans/approved" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="approved" />
+                            } />
+                            <Route path="meal-plans/rejected" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="rejected" />
+                            } />
+                            <Route path="meal-plan-detail/:mealPlanId" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlanDetail" />
+                            } />
+                            <Route path="export-report" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="exportReport" />
+                            } />
+                            <Route path="rewards" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="rewards" />
+                            } />
+                            <Route path="edit-website" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="editWebsite" />
+                            } />
+                            <Route path="user-feedbacks" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userFeedbacks" />
+                            } />
+                            {/* Default redirect to dashboard */}
+                            <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+                        </Routes>
                     </ProtectedRoute>
                 } />
                 
