@@ -150,12 +150,97 @@ class AdminStatViewModel {
             });
         }
     }
+// Add this method to your AdminStatViewModel.js for flexibility
 
-    loadDashboardData = async () => {
+/**
+ * Get revenue for a specific month/year
+ * @param {number} month - Month (1-12), default current month
+ * @param {number} year - Year, default current year
+ */
+getMonthlyRevenue = async (month = null, year = null) => {
+    this.setLoading(true);
+    try {
+        const now = new Date();
+        const targetMonth = month || (now.getMonth() + 1);
+        const targetYear = year || now.getFullYear();
+        
+        console.log(`[AdminStatViewModel] Getting revenue for ${targetMonth}/${targetYear}`);
+        
+        const revenueData = await AdminStatService.getCurrentMonthRevenue(targetYear, targetMonth);
+        const cancelledData = await AdminStatService.getCurrentMonthCancelledSubscriptions(targetYear, targetMonth);
+        
+        runInAction(() => {
+            this.monthlyRevenue = revenueData.revenue || 0;
+            this.cancelledSubscriptionsCount = cancelledData.count || 0;
+        });
+        
+        this.setSuccess(`Revenue data loaded for ${moment(`${targetYear}-${targetMonth}`, 'YYYY-M').format('MMMM YYYY')}`);
+        
+        return {
+            revenue: revenueData.revenue,
+            cancelledCount: cancelledData.count,
+            month: targetMonth,
+            year: targetYear,
+            subscriptionsProcessed: revenueData.processedCount,
+            totalSubscriptions: revenueData.subscriptions.length
+        };
+        
+    } catch (error) {
+        console.error("[AdminStatViewModel] Error getting monthly revenue:", error);
+        this.setError(`Failed to get monthly revenue: ${error.message}`);
+        return null;
+    } finally {
+        this.setLoading(false);
+    }
+}
+
+/**
+ * Get revenue comparison between months
+ * @param {Array} months - Array of {month, year} objects
+ */
+getRevenueComparison = async (months) => {
+    this.setLoading(true);
+    try {
+        const results = await Promise.all(
+            months.map(({month, year}) => 
+                AdminStatService.getCurrentMonthRevenue(year, month)
+            )
+        );
+        
+        const comparison = results.map((result, index) => ({
+            month: months[index].month,
+            year: months[index].year,
+            revenue: result.revenue,
+            subscriptions: result.subscriptions.length,
+            label: moment(`${months[index].year}-${months[index].month}`, 'YYYY-M').format('MMM YYYY')
+        }));
+        
+        console.log("[AdminStatViewModel] Revenue comparison:", comparison);
+        return comparison;
+        
+    } catch (error) {
+        console.error("[AdminStatViewModel] Error getting revenue comparison:", error);
+        this.setError(`Failed to get revenue comparison: ${error.message}`);
+        return [];
+    } finally {
+        this.setLoading(false);
+    }
+}
+
+   // Update the loadDashboardData method in your AdminStatViewModel.js
+
+loadDashboardData = async () => {
     console.log("[AdminStatViewModel] Starting loadDashboardData...");
     this.setLoading(true);
 
     try {
+        // Get current month and year
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1; // 1-12
+        const currentYear = now.getFullYear();
+        
+        console.log(`[AdminStatViewModel] Calculating stats for ${currentMonth}/${currentYear}`);
+
         const [
             totalUsers,
             totalNutritionists,
@@ -164,7 +249,8 @@ class AdminStatViewModel {
             totalSubscriptions,
             dailySignupsRawData,
             weeklyTopMealPlans,
-            allSubscriptionsData,
+            monthlyRevenueData,
+            cancelledSubscriptionsData,
         ] = await Promise.all([
             AdminStatService.getDocumentCount('user_accounts'),
             AdminStatService.getDocumentCount('user_accounts', 'role', '==', 'nutritionist'),
@@ -173,63 +259,23 @@ class AdminStatViewModel {
             AdminStatService.getDocumentCount('subscriptions'),
             AdminStatService.getDailySignups(7),
             AdminStatService.getWeeklyTopMealPlans(3),
-            AdminStatService.getAllSubscriptions(),
+            AdminStatService.getCurrentMonthRevenue(currentYear, currentMonth), // NEW: Get current month revenue
+            AdminStatService.getCurrentMonthCancelledSubscriptions(currentYear, currentMonth), // NEW: Get current month cancellations
         ]);
 
-        // ADD DEBUGGING HERE TO SEE WHAT WAS FETCHED
-        console.log("=== RAW DATA FETCHED ===");
-        console.log("totalUsers:", totalUsers, typeof totalUsers);
-        console.log("totalNutritionists:", totalNutritionists, typeof totalNutritionists);
-        console.log("totalApprovedMealPlans:", totalApprovedMealPlans, typeof totalApprovedMealPlans);
-        console.log("totalPendingMealPlans:", totalPendingMealPlans, typeof totalPendingMealPlans);
-        console.log("totalSubscriptions:", totalSubscriptions, typeof totalSubscriptions);
-        console.log("dailySignupsRawData length:", dailySignupsRawData?.length);
-        console.log("weeklyTopMealPlans length:", weeklyTopMealPlans?.length);
-        console.log("allSubscriptionsData length:", allSubscriptionsData?.length);
+        console.log("=== MONTHLY REVENUE DATA ===");
+        console.log("monthlyRevenueData:", monthlyRevenueData);
+        console.log("Monthly revenue amount:", monthlyRevenueData.revenue);
+        console.log("Subscriptions processed:", monthlyRevenueData.processedCount);
+        console.log("Total subscriptions found:", monthlyRevenueData.subscriptions?.length);
+
+        console.log("=== CANCELLED SUBSCRIPTIONS DATA ===");
+        console.log("cancelledSubscriptionsData:", cancelledSubscriptionsData);
+        console.log("Cancelled count:", cancelledSubscriptionsData.count);
 
         console.log("[AdminStatViewModel] Raw data fetched successfully.");
-        console.log("-> allSubscriptionsData:", allSubscriptionsData);
 
-        let calculatedMonthlyRevenue = 0;
-        let calculatedCancelledSubscriptionsCount = 0;
-
-        if (Array.isArray(allSubscriptionsData)) {
-            allSubscriptionsData.forEach(sub => {
-                console.log("--- Processing Subscription Document ---");
-                console.log("Subscription ID:", sub._id || 'N/A');
-                console.log("  Status:", sub.status);
-                console.log("  Type:", sub.type);
-                console.log("  Price:", sub.price, " (Type:", typeof sub.price, ")");
-
-                // For Monthly Revenue: Now includes all 'monthly' type subs with a valid price, regardless of status
-                const isMonthly = sub.type && sub.type.toLowerCase() === 'monthly';
-                const isPriceValidNumber = typeof sub.price === 'number' && !isNaN(sub.price);
-
-                if (isMonthly && isPriceValidNumber) {
-                    calculatedMonthlyRevenue += sub.price;
-                    console.log(`  MATCH: Monthly & Valid Price. Adding ${sub.price}. Current monthlyRevenue: ${calculatedMonthlyRevenue}`);
-                } else {
-                    console.log(`  SKIP: Not (Monthly & Valid Price). Conditions: isMonthly=${isMonthly}, isPriceValidNumber=${isPriceValidNumber}`);
-                }
-
-                // For Cancelled Subscriptions: FIXING TYPO 'canceled' vs 'cancelled'
-                const isCancelled = sub.status && sub.status.toLowerCase() === 'canceled'; // <--- FIX: Changed 'cancelled' to 'canceled'
-                if (isCancelled) {
-                    calculatedCancelledSubscriptionsCount++;
-                    console.log(`  MATCH: Cancelled Status. Current cancelledSubscriptionsCount: ${calculatedCancelledSubscriptionsCount}`);
-                } else {
-                    console.log(`  SKIP: Not Cancelled. Condition: isCancelled=${isCancelled}`);
-                }
-            });
-        } else {
-            console.warn("[AdminStatViewModel] allSubscriptionsData is not an array, cannot process subscriptions for calculations.");
-        }
-
-        console.log("--- Calculation Summary ---");
-        console.log("Final calculatedMonthlyRevenue:", calculatedMonthlyRevenue);
-        console.log("Final calculatedCancelledSubscriptionsCount:", calculatedCancelledSubscriptionsCount);
-
-        // Format signups
+        // Process daily signups (keep existing logic)
         const processedDailySignups = {};
         const today = moment().startOf('day');
         for (let i = 6; i >= 0; i--) {
@@ -245,9 +291,9 @@ class AdminStatViewModel {
             }
         });
 
-        console.log("=== PROCESSED DAILY SIGNUPS ===");
-        console.log("processedDailySignups:", processedDailySignups);
-
+        // Get all subscriptions for user account enrichment (keep existing logic)
+        const allSubscriptionsData = await AdminStatService.getAllSubscriptions();
+        
         // Group subscriptions by user for `userAccounts` enrichment
         const subsByUser = {};
         for (const sub of allSubscriptionsData) {
@@ -290,13 +336,15 @@ class AdminStatViewModel {
             this.allSubscriptions = allSubscriptionsData;
             this.userAccounts = enrichedUsers;
 
-            // Set the newly calculated values
-            this.monthlyRevenue = calculatedMonthlyRevenue;
-            this.cancelledSubscriptionsCount = calculatedCancelledSubscriptionsCount;
-            console.log("[AdminStatViewModel] State updated. monthlyRevenue:", this.monthlyRevenue, "cancelledSubscriptionsCount:", this.cancelledSubscriptionsCount);
+            // FIXED: Use the properly calculated current month values
+            this.monthlyRevenue = monthlyRevenueData.revenue || 0;
+            this.cancelledSubscriptionsCount = cancelledSubscriptionsData.count || 0;
+            
+            console.log(`[AdminStatViewModel] State updated for ${currentMonth}/${currentYear}:`);
+            console.log("- Monthly revenue:", this.monthlyRevenue);
+            console.log("- Cancelled subscriptions:", this.cancelledSubscriptionsCount);
         });
 
-        // ADD FINAL STATE DEBUG
         console.log("=== VIEWMODEL FINAL STATE ===");
         console.log("this.totalUsers:", this.totalUsers);
         console.log("this.totalNutritionists:", this.totalNutritionists);
@@ -305,11 +353,9 @@ class AdminStatViewModel {
         console.log("this.totalSubscriptions:", this.totalSubscriptions);
         console.log("this.monthlyRevenue:", this.monthlyRevenue);
         console.log("this.cancelledSubscriptionsCount:", this.cancelledSubscriptionsCount);
-        console.log("this.dailySignupsData:", this.dailySignupsData);
-        console.log("this.weeklyTopMealPlans:", this.weeklyTopMealPlans);
 
         console.log("[AdminStatViewModel] Dashboard data loaded successfully.");
-        this.setSuccess('Dashboard data refreshed.');
+        this.setSuccess(`Dashboard data refreshed for ${moment().format('MMMM YYYY')}.`);
 
     } catch (error) {
         console.error("[AdminStatViewModel] Error in loadDashboardData:", error);

@@ -35,7 +35,148 @@ const AdminStatService = {
             throw new Error(`Failed to fetch count for ${collectionName}.`);
         }
     },
+// Add this method to your AdminStatService.js
 
+/**
+ * Get current month's revenue from subscriptions
+ * @param {number} year - Year (default: current year)
+ * @param {number} month - Month 1-12 (default: current month)
+ * @returns {Promise<{revenue: number, subscriptions: Array}>}
+ */
+async getCurrentMonthRevenue(year = null, month = null) {
+    try {
+        const now = new Date();
+        const targetYear = year || now.getFullYear();
+        const targetMonth = month || (now.getMonth() + 1); // getMonth() is 0-indexed
+        
+        console.log(`[Service] Calculating revenue for ${targetMonth}/${targetYear}`);
+        
+        // Create start and end dates for the target month
+        const startDate = new Date(targetYear, targetMonth - 1, 1); // Month is 0-indexed in Date constructor
+        const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999); // Last day of month
+        
+        console.log(`[Service] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+        
+        const subscriptionsRef = collection(db, 'subscriptions');
+        const q = query(
+            subscriptionsRef,
+            where('createdAt', '>=', Timestamp.fromDate(startDate)),
+            where('createdAt', '<=', Timestamp.fromDate(endDate))
+        );
+
+        const querySnapshot = await getDocs(q);
+        const subscriptions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`[Service] Found ${subscriptions.length} subscriptions for ${targetMonth}/${targetYear}`);
+
+        // Calculate total revenue from current month's subscriptions
+        let totalRevenue = 0;
+        let processedCount = 0;
+        
+        subscriptions.forEach(sub => {
+            console.log(`[Service] Processing subscription ${sub.id}:`, {
+                status: sub.status,
+                type: sub.type,
+                price: sub.price,
+                priceType: typeof sub.price
+            });
+            
+            // Only count subscriptions with valid prices
+            if (typeof sub.price === 'number' && !isNaN(sub.price) && sub.price > 0) {
+                totalRevenue += sub.price;
+                processedCount++;
+                console.log(`[Service] Added ${sub.price} to revenue. Total: ${totalRevenue}`);
+            } else {
+                console.log(`[Service] Skipping subscription ${sub.id} - invalid price:`, sub.price);
+            }
+        });
+
+        console.log(`[Service] Final revenue calculation: ${totalRevenue} from ${processedCount}/${subscriptions.length} subscriptions`);
+
+        return {
+            revenue: totalRevenue,
+            subscriptions: subscriptions,
+            processedCount: processedCount,
+            month: targetMonth,
+            year: targetYear
+        };
+
+    } catch (error) {
+        console.error("[Service] Error calculating current month revenue:", error);
+        throw new Error(`Failed to calculate monthly revenue: ${error.message}`);
+    }
+},
+
+/**
+ * Get cancelled subscriptions count for current month
+ * @param {number} year - Year (default: current year)
+ * @param {number} month - Month 1-12 (default: current month)
+ * @returns {Promise<{count: number, subscriptions: Array}>}
+ */
+async getCurrentMonthCancelledSubscriptions(year = null, month = null) {
+    try {
+        const now = new Date();
+        const targetYear = year || now.getFullYear();
+        const targetMonth = month || (now.getMonth() + 1);
+        
+        console.log(`[Service] Calculating cancelled subscriptions for ${targetMonth}/${targetYear}`);
+        
+        // For cancelled subscriptions, we might want to filter by when they were cancelled
+        // or by when they were created. Let's use when they were cancelled (updatedAt or cancelledAt)
+        
+        // First, get all cancelled subscriptions
+        const subscriptionsRef = collection(db, 'subscriptions');
+        const q = query(
+            subscriptionsRef,
+            where('status', '==', 'canceled') // Note: using 'canceled' not 'cancelled'
+        );
+
+        const querySnapshot = await getDocs(q);
+        const allCancelledSubs = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`[Service] Found ${allCancelledSubs.length} total cancelled subscriptions`);
+
+        // Filter by current month using updatedAt field (when the cancellation happened)
+        const startDate = new Date(targetYear, targetMonth - 1, 1);
+        const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+        
+        const currentMonthCancelled = allCancelledSubs.filter(sub => {
+            // Use updatedAt for when cancellation happened, fallback to createdAt
+            const cancelDate = sub.updatedAt?.toDate() || sub.createdAt?.toDate();
+            
+            if (!cancelDate) {
+                console.log(`[Service] No date found for cancelled subscription ${sub.id}`);
+                return false;
+            }
+            
+            const isInRange = cancelDate >= startDate && cancelDate <= endDate;
+            if (isInRange) {
+                console.log(`[Service] Cancelled subscription ${sub.id} cancelled on ${cancelDate.toISOString()}`);
+            }
+            
+            return isInRange;
+        });
+
+        console.log(`[Service] ${currentMonthCancelled.length} subscriptions cancelled in ${targetMonth}/${targetYear}`);
+
+        return {
+            count: currentMonthCancelled.length,
+            subscriptions: currentMonthCancelled,
+            month: targetMonth,
+            year: targetYear
+        };
+
+    } catch (error) {
+        console.error("[Service] Error calculating cancelled subscriptions:", error);
+        throw new Error(`Failed to calculate cancelled subscriptions: ${error.message}`);
+    }
+},
     async getAllUserAccounts(role = null) {
         try {
             let q = collection(db, 'user_accounts');
