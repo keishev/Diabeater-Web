@@ -1,9 +1,3 @@
-/* ==============================================
-   IMPROVED DIABEATER DASHBOARD CSS
-   Modern, cohesive styling with better UX
-   ============================================== */
-
-/* CSS Variables for consistent theming */
 :root {
   /* Brand Colors */
   --primary-orange: #ff9800;
@@ -62,9 +56,7 @@
   --font-size-3xl: 2rem;
 }
 
-/* ==============================================
-   BASE LAYOUT
-   ============================================== */
+/* BASE LAYOUT */
 
 .nutritionist-dashboard-page {
   display: flex;
@@ -76,9 +68,7 @@
   color: var(--text-primary);
 }
 
-/* ==============================================
-   SIDEBAR
-   ============================================== */
+/* SIDEBAR */
 
 .sidebar {
   width: 280px;
@@ -139,22 +129,21 @@
   font-size: 18px;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative; /* Important for proper badge positioning */
-  overflow: hidden; /* Prevents the pseudo-element from extending outside */
-  justify-content: space-between; /* This helps with badge positioning */
+  position: relative;
+  overflow: hidden;
+  justify-content: space-between;
+  text-decoration: none;
 }
 
-/* Removed the problematic ::before pseudo-element that was causing weird hover effects */
 .nav-item i {
   margin-right: var(--spacing-md);
   font-size: var(--font-size-lg);
   width: 20px;
   text-align: center;
   transition: transform 0.3s ease;
-  flex-shrink: 0; /* Prevents icon from shrinking */
+  flex-shrink: 0;
 }
 
-/* Fixed: Create a container for the text and badge */
 .nav-item span {
   flex-grow: 1;
   display: flex;
@@ -183,7 +172,6 @@
   color: white;
 }
 
-/* Fixed notification badge positioning */
 .notification-badge {
   background: linear-gradient(135deg, var(--error-red) 0%, #ff6b6b 100%);
   color: white;
@@ -195,14 +183,13 @@
   text-align: center;
   animation: pulse 2s infinite;
   box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
-  /* Fixed positioning */
-  position: static; /* Changed from absolute positioning */
-  margin-left: 8px; /* Small gap from the text */
-  flex-shrink: 0; /* Prevents badge from shrinking */
+  position: static;
+  margin-left: 8px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 20px; /* Fixed height for consistency */
+  height: 20px;
 }
 
 @keyframes pulse {
@@ -236,9 +223,7 @@
   box-shadow: var(--shadow-hover);
 }
 
-/* ==============================================
-   MAIN CONTENT AREA
-   ============================================== */
+/* MAIN CONTENT AREA */
 
 .main-content {
   margin-left: 280px;
@@ -398,9 +383,7 @@
   font-weight: 500;
 }
 
-/* ==============================================
-   TABS
-   ============================================== */
+/* TABS */
 
 .tabs {
   display: flex;
@@ -441,9 +424,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* ==============================================
-   MEAL PLAN GRID
-   ============================================== */
+/* MEAL PLAN GRID */
 
 .meal-plans-grid {
   display: grid;
@@ -661,10 +642,6 @@
   box-shadow: var(--shadow-md);
 }
 
-/* ==============================================
-   EMPTY STATE
-   ============================================== */
-
 .no-meal-plans-message {
   grid-column: 1 / -1;
   text-align: center;
@@ -693,10 +670,6 @@
   font-size: var(--font-size-base);
   margin: 0;
 }
-
-/* ==============================================
-   LOADING STATES
-   ============================================== */
 
 .loading-container, .global-loading {
   display: flex;
