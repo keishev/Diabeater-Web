@@ -9,10 +9,8 @@ import EmailService from './EmailService'; // Use the correct EmailService
 class NutritionistApplicationService {
     async saveNutritionistData(userId, data) {
         try {
-            // Use a batch write to ensure both documents are created atomically
             const batch = writeBatch(db);
 
-            // Create current timestamp for both documents
             const currentTimestamp = Timestamp.now();
 
             // First, create user account data (this must exist for permission checks)

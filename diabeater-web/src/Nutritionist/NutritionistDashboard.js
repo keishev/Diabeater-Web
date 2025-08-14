@@ -131,7 +131,6 @@ const MyMealPlansContent = observer(({
             'published': 'APPROVED',
             'pending': 'PENDING_APPROVAL',
             'rejected': 'REJECTED',
-            'draft': 'UPLOADED'
         };
 
         return tabMapping[currentTab] || 'APPROVED';
@@ -149,7 +148,6 @@ const MyMealPlansContent = observer(({
                 { id: 'APPROVED', name: 'PUBLISHED', path: 'published' },
                 { id: 'PENDING_APPROVAL', name: 'PENDING VERIFICATION', path: 'pending' },
                 { id: 'REJECTED', name: 'REJECTED', path: 'rejected' },
-                { id: 'UPLOADED', name: 'DRAFT / UNSUBMITTED', path: 'draft' }
             ];
         }
     };

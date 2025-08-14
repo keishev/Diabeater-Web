@@ -357,16 +357,14 @@
 /* Daily Signups Chart Placeholder */
 .daily-signups-section .chart-placeholder {
     width: 100%;
-    height: 200px; /* Fixed height for the SVG */
-    background-color: #fcfcfc; /* Light background for chart area */
+    height: 200px;
+    background-color: #fcfcfc;
     border-radius: 8px;
-    /* Styles for the SVG itself are in JS, but this holds it */
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Subscriptions Section (assuming some styles are already in AdminDashboard.css) */
 .subscriptions-section {
     background-color: #fff;
     border-radius: 12px;
@@ -384,11 +382,11 @@
 .subscriptions-header .search-bar {
     display: flex;
     align-items: center;
-    background-color: #f5f5f5; /* Lighter background for search bar */
+    background-color: #f5f5f5;
     border-radius: 25px;
     padding: 8px 15px;
-    flex-grow: 0.5; /* Allow it to take some space, but not full width */
-    max-width: 350px; /* Limit search bar width */
+    flex-grow: 0.5;
+    max-width: 350px;
 }
 
 .subscriptions-header .search-bar input {
@@ -397,7 +395,7 @@
     flex-grow: 1;
     padding: 5px;
     font-size: 15px;
-    background-color: transparent; /* Match parent background */
+    background-color: transparent;
 }
 
 .subscriptions-header .search-bar i {
@@ -405,7 +403,6 @@
     margin-left: 10px;
 }
 
-/* Table styling is likely already in AdminDashboard.css, but ensure these are set: */
 .subscriptions-table {
     width: 100%;
     border-collapse: collapse;
@@ -418,7 +415,7 @@
 }
 
 .subscriptions-table th {
-    background-color: #fffaf3; /* Light orange background for header */
+    background-color: #fffaf3;
     color: #ff9800;
     font-weight: bold;
     text-transform: uppercase;
@@ -436,7 +433,7 @@
     height: 8px;
     border-radius: 50%;
     margin-right: 5px;
-    background-color: currentColor; /* Uses the color of the parent */
+    background-color: currentColor;
 }
 
 .status-active {
@@ -457,7 +454,7 @@
 
 /* View buttons */
 .action-button.view-button {
-    background-color: #ff9800; /* Primary orange */
+    background-color: #ff9800;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -468,8 +465,8 @@
     margin-left: 20px;
 }
 
-.deets-action-button.view-button { /* Corrected selector */
-    background-color: #ff9800; /* Primary orange */
+.deets-action-button.view-button {
+    background-color: #ff9800;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -477,14 +474,14 @@
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    margin-left: -6px; /* This margin might need adjustment, but the selector will now apply */
+    margin-left: -6px;
 }
-.deets-action-button.view-button:hover { /* Corrected selector */
-    background-color: #e65100; /* Darker orange on hover */
+.deets-action-button.view-button:hover {
+    background-color: #e65100;
 }
 
 .action-button.view-button:hover {
-    background-color: #e65100; /* Darker orange on hover */
+    background-color: #e65100;
 }
 
 .no-data-message {
@@ -494,24 +491,24 @@
     font-style: italic;
 }
 .premium-plan-section {
-    margin-top: 40px; /* Space from the sections above */
-    margin-bottom: 20px; /* Space before the subscriptions table */
+    margin-top: 40px;
+    margin-bottom: 20px;
 }
 
 .premium-plan-card {
-    background-color: #fff; /* Light grey background for the card */
+    background-color: #fff;
     border-radius: 10px;
     padding: 20px 30px;
     display: flex;
     align-items: center;
-    gap: 25px; /* Space between elements in the card */
+    gap: 25px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    margin-bottom: 20px; /* Space between the card and the search bar */
+    flex-wrap: wrap;
+    margin-bottom: 20px;
 }
 
 .premium-plan-section .section-title {
-    margin-bottom: 20px; /* Adjust margin for the subscriptions title */
+    margin-bottom: 20px;
 }
 
 .premium-plan-card .plan-name {
@@ -523,7 +520,7 @@
 .premium-plan-card .plan-price {
     font-size: 24px;
     font-weight: 700;
-    color: #ff9800; /* Orange color */
+    color: #ff9800;
 }
 
 .premium-plan-card .per-month {
@@ -533,25 +530,23 @@
 }
 
 .manage-subscription-button {
-    background-color: #ff9800; /* Light grey background for the button */
-    color: #fff; /* Orange text color */
-    border: 1px solid #e0e0e0; /* Light border */
+    background-color: #ff9800;
+    color: #fff;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 10px 20px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease, border-color 0.2s ease;
-    margin-left: auto; /* Push the button to the right */
+    margin-left: auto;
 }
 
 .manage-subscription-button:hover {
-    background-color: #e6e6e6; /* Slightly darker grey on hover */
+    background-color: #e6e6e6;
     border-color: #d0d0d0;
 }
 
-
-/* Responsive adjustments for the dashboard content */
 @media (max-width: 768px) {
     .admin-header {
         flex-direction: column;
@@ -560,11 +555,11 @@
     }
 
     .stats-cards-container {
-        grid-template-columns: 1fr; /* Stack cards on small screens */
+        grid-template-columns: 1fr;
     }
 
     .dashboard-sections-row {
-        grid-template-columns: 1fr; /* Stack sections on small screens */
+        grid-template-columns: 1fr;
     }
 
     .subscriptions-header {
@@ -579,55 +574,41 @@
     }
 
     .subscriptions-table th, .subscriptions-table td {
-        padding: 10px; /* Reduce padding on small screens */
-        font-size: 13px; /* Smaller font for table content */
+        padding: 10px;
+        font-size: 13px;
     }
 
-    /* Adjust meal plan item for smaller screens */
     .meal-plan-item {
-        flex-wrap: wrap; /* Allow items to wrap */
-        justify-content: center; /* Center content if wraps */
+        flex-wrap: wrap;
+        justify-content: center;
         text-align: center;
     }
 
     .meal-plan-item .meal-plan-image {
-        order: -1; /* Move image to top if wrapping */
+        order: -1;
     }
 
     .meal-plan-item .meal-plan-info {
-        flex-basis: 100%; /* Take full width */
-        margin-top: 5px; /* Space between image and info */
+        flex-basis: 100%;
+        margin-top: 5px;
     }
 
     .meal-plan-views {
-        flex-basis: 100%; /* Take full width */
+        flex-basis: 100%;
         margin-top: 5px;
     }
     @media (max-width: 768px) {
     .premium-plan-card {
-        flex-direction: column; /* Stack items vertically on smaller screens */
-        align-items: flex-start; /* Align items to the start */
-        gap: 15px; /* Adjust gap */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
         padding: 20px;
     }
 
     .manage-subscription-button {
-        margin-left: 0; /* Remove auto-margin */
-        width: 100%; /* Make button full width */
+        margin-left: 0;
+        width: 100%;
     }
-}
-    
-}
+    }
 
-/* Additional styling for the main AdminDashboard.css to support new AdminStatDashboard */
-/* Make sure these are present in your AdminDashboard.css */
-/* If you don't have them, add them to AdminDashboard.css */
-
-/* .admin-main-content {
-    flex-grow: 1;
-    padding: 30px;
-    overflow-y: auto;
-    height: 100vh;
-    box-sizing: border-box;
-    background-color: #fffaf3;
-} */
+}

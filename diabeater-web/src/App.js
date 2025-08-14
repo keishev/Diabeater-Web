@@ -6,7 +6,6 @@ import NutritionistDashboard from './Nutritionist/NutritionistDashboard';
 import AdminDashboard from './Admin/AdminDashboard';
 import ResetPasswordPage from './ResetPasswordPage';
 import CreateAccountPage from './CreateAccountPage';
-import NutritionistProfile from './Nutritionist/NutritionistProfile';
 
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';

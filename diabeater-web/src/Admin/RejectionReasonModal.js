@@ -37,27 +37,22 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
         } else {
             // When selecting a predefined reason, use that
             setReason(value);
-            setCustomReason(''); // Clear custom reason when using predefined
+            setCustomReason('');
         }
     };
 
     const handleCustomReasonChange = (value) => {
         setCustomReason(value);
         if (selectedReason === 'custom') {
-            // Update parent state with custom reason
             setReason(value);
         }
     };
 
-    // FIXED: Pass the final reason to onConfirm
     const handleConfirm = () => {
         const finalReason = selectedReason === 'custom' ? customReason : selectedReason;
-        console.log('Confirming rejection with reason:', finalReason);
-        
+
         if (finalReason && finalReason.trim()) {
-            // Make sure parent has the latest reason
             setReason(finalReason.trim());
-            // Call onConfirm with the reason as parameter for extra safety
             onConfirm(finalReason.trim());
         } else {
             alert('Please select or enter a rejection reason.');

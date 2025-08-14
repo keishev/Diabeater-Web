@@ -53,7 +53,6 @@ class NutritionistApplicationRepository {
                 firstName: userData.firstName,
                 lastName: userData.lastName,
                 email: userData.email,
-                password: userData.password, // This will be used during approval
                 dob: userData.dob,
                 certificateUrl: certificateUrl,
                 certificateFileName: certificateFile.name,

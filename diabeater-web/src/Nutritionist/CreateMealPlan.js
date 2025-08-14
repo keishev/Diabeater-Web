@@ -2,27 +2,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the ViewModel
 
-import './CreateMealPlan.css'; // Assuming this CSS exists and is suitable
+import './CreateMealPlan.css';
 
 const CreateMealPlan = ({ onMealPlanSubmitted }) => {
-    // State variables for basic meal plan details
     const [mealName, setMealName] = useState('');
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [uploadPhoto, setUploadPhoto] = useState(null);
     const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
 
-    // ⭐ NEW STATE FOR SPLIT DESCRIPTION ⭐
     const [ingredients, setIngredients] = useState('');
     const [steps, setSteps] = useState('');
-    const [generalDescription, setGeneralDescription] = useState(''); // Renamed from 'description'
+    const [generalDescription, setGeneralDescription] = useState('');
 
-    // State for basic nutritionals
     const [calories, setCalories] = useState('');
     const [protein, setProtein] = useState('');
     const [carbohydrates, setCarbohydrates] = useState('');
     const [fats, setFats] = useState('');
 
-    // ⭐ NEW STATE FOR PREMIUM NUTRITIONALS ⭐
     const [sugar, setSugar] = useState('');
     const [saturatedFat, setSaturatedFat] = useState('');
     const [unsaturatedFat, setUnsaturatedFat] = useState('');
@@ -30,13 +26,12 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
     const [sodium, setSodium] = useState('');
     const [potassium, setPotassium] = useState('');
 
-    // UI related states
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const categoryDropdownRef = useRef(null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    // const [success, setSuccess] = useState('');
 
     const categoryOptions = [
         'Improved Energy',
@@ -96,22 +91,18 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        setSuccess('');
+        // setSuccess('');
 
-        // ⭐ UPDATED mealPlanData structure ⭐
         const mealPlanData = {
             name: mealName,
             categories: selectedCategories,
-            // Split description fields
             ingredients,
             steps,
-            description: generalDescription, // Use the new general description field
-            // Basic nutritionals
+            description: generalDescription,
             calories: parseFloat(calories),
             protein: parseFloat(protein),
             carbohydrates: parseFloat(carbohydrates),
             fats: parseFloat(fats),
-            // Premium nutritionals (always send, backend/display logic handles premium unlock)
             sugar: sugar ? parseFloat(sugar) : null, // Send null if empty
             saturatedFat: saturatedFat ? parseFloat(saturatedFat) : null,
             unsaturatedFat: unsaturatedFat ? parseFloat(unsaturatedFat) : null,
@@ -123,7 +114,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         try {
             const result = await MealPlanViewModel.createMealPlan(mealPlanData, uploadPhoto);
             if (result) {
-                setSuccess('Meal Plan created successfully and sent for approval!');
+                // setSuccess('Meal Plan created successfully and sent for approval!');
                 if (onMealPlanSubmitted) {
                     onMealPlanSubmitted();
                 }
@@ -410,7 +401,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                 </div>
 
                 {error && <p className="create-meal-plan-error-message">{error}</p>}
-                {success && <p className="create-meal-plan-success-message">{success}</p>}
+                {/*{success && <p className="create-meal-plan-success-message">{success}</p>}*/}
 
                 <button type="submit" className="create-meal-plan-create-button" disabled={loading}>
                     {loading ? 'Creating...' : '+ CREATE'}

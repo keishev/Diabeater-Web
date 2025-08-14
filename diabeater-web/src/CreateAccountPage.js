@@ -6,7 +6,6 @@ import TermsAndConditionsModal from './Nutritionist/TermsAndConditionsModal';
 import bloodDropLogo from './assets/blood_drop_logo.png';
 import './CreateAccountPage.css';
 
-// Instantiate the ViewModel outside the component to persist its state
 const viewModel = new NutritionistApplicationViewModel();
 
 function CreateAccountPage({ onBackToLogin }) {
@@ -34,8 +33,6 @@ function CreateAccountPage({ onBackToLogin }) {
 
     const handleSubmitApplication = (e) => {
         e.preventDefault();
-        // Application is now submitted automatically after email verification
-        // This handler is only used for the initial email verification
         viewModel.sendEmailVerification();
     };
 

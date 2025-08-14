@@ -23,14 +23,12 @@ const AdminCreateAccountService = {
       const auth = getAuth();
       const db = getFirestore();
       
-      // Step 1: Create Firebase Auth user
       console.log('Creating Firebase Auth user...');
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const user = userCredential.user;
       
       console.log('Firebase Auth user created:', user.uid);
       
-      // Step 2: Create Firestore document
       const adminData_firestore = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -69,7 +67,6 @@ const AdminCreateAccountService = {
     } catch (error) {
       console.error('Error creating admin account:', error);
       
-      // Handle specific Firebase/Cloud Function errors
       if (error.code) {
         switch (error.code) {
           case 'auth/email-already-in-use':
@@ -101,9 +98,6 @@ const AdminCreateAccountService = {
     }
   },
 
-  /**
-   * Checks email verification status using Firebase Auth
-   */
   async checkEmailVerification(email) {
     try {
       if (!email?.trim()) {
@@ -144,9 +138,6 @@ const AdminCreateAccountService = {
     }
   },
 
-  /**
-   * Resends Firebase verification email (keeps user signed in)
-   */
   async resendVerificationEmail(email, password) {
     try {
       if (!email?.trim()) {
@@ -221,9 +212,6 @@ const AdminCreateAccountService = {
     }
   },
 
-  /**
-   * Form validation (unchanged)
-   */
   validateAdminForm(formData) {
     const errors = {};
 

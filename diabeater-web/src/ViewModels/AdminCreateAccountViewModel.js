@@ -1,4 +1,4 @@
-// ViewModels/AdminCreateAccountViewModel.js - UPDATED TO STORE PASSWORD
+// ViewModels/AdminCreateAccountViewModel.js
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 
@@ -30,7 +30,6 @@ class AdminCreateAccountViewModel {
   emailVerified = false;
   createdAccount = null;
   
-  // Store password for resend functionality
   storedPassword = '';
 
   constructor() {
