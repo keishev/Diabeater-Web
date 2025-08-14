@@ -819,7 +819,6 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 </button>
             </div>
 
-            {/* Render different content based on active tab */}
             {activeTab === 'CREATE_ADMIN' ? (
                 <AdminCreateAccountContent />
             ) : (
@@ -828,48 +827,46 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                     {(error || userAccountsError) && <p className="error-message">{error || userAccountsError}</p>}
 
                     <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
+                                    <th>Status</th>
+                                    {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
+                                    {activeTab === 'PENDING_APPROVAL' && (
+                                        <>
+                                            <th>Signed up at</th>
+                                            <th>Documents</th>
+                                            <th>Approve</th>
+                                            <th>Reject</th>
+                                        </>
+                                    )}
+                                    {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
+                                </tr>
+                            </thead>
 
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            {activeTab === 'ALL_ACCOUNTS' && <th>Account Type</th>}
-            <th>Status</th>
-            {activeTab === 'ALL_ACCOUNTS' && <th>User Since</th>}
-            {activeTab === 'PENDING_APPROVAL' && (
-                <>
-                    <th>Signed up at</th>
-                    <th>Documents</th>
-                    <th>Approve</th>
-                    <th>Reject</th>
-                </>
-            )}
-            {activeTab === 'ALL_ACCOUNTS' && <th>Action</th>}
-        </tr>
-    </thead>
-
-    <tbody>
-        {currentPageData.length > 0 ? (
-            currentPageData.map(user => (
-                <UserAccountRow
-                    key={user.id}
-                    user={user}
-                    onAction={handleSuspendUnsuspend}
-                    onNameClick={handleOpenModal}
-                    type={activeTab === 'ALL_ACCOUNTS' ? 'all' : 'pending'}
-                />
-            ))
-        ) : (
-            <tr>
-                {/* FIXED: Updated colspan to account for new columns */}
-                <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '7'} className="no-data-message">
-                    {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
-                </td>
-            </tr>
-        )}
-    </tbody>
-</table>
+                            <tbody>
+                                {currentPageData.length > 0 ? (
+                                    currentPageData.map(user => (
+                                        <UserAccountRow
+                                            key={user.id}
+                                            user={user}
+                                            onAction={handleSuspendUnsuspend}
+                                            onNameClick={handleOpenModal}
+                                            type={activeTab === 'ALL_ACCOUNTS' ? 'all' : 'pending'}
+                                        />
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '7'} className="no-data-message">
+                                            {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
 
                         {/* FIXED PAGINATION */}
                         {currentData.length > 0 && (
@@ -884,7 +881,6 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 </>
             )}
 
-            {/* Render UserDetailModal using states from AdminDashboardViewModel */}
             {showUserDetailModal && selectedUser && (
                 <UserDetailModal
                     user={selectedUser}
@@ -906,7 +902,6 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 />
             )}
 
-            {/* Rejection Reason Modal - still controlled by AdminDashboardViewModel */}
             {showRejectionReasonModal && (
                 <RejectionReasonModal
                     reason={rejectionReason}
@@ -923,7 +918,6 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
 const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab, activeUserAccountTab }) => {
     const location = useLocation();
 
-    // Determine the current view from the URL path if activeSection is not provided
     const getCurrentView = () => {
         if (activeSection) return activeSection;
 
