@@ -90,21 +90,13 @@ function UserFeedbacksPage() {
         setShowConfirmModal(true);
     };
 
-    // ENHANCED: Updated automation message
     const handleAutomateMarketingClick = () => {
-        setModalMessage(
-            "Are you sure you want to automatically select and approve up to 3 five-star feedbacks for the marketing website? " +
-            "This will:\n" +
-            "• Auto-approve selected 5-star feedbacks\n" +
-            "• Feature them on the marketing website\n" +
-            "• Remove any existing marketing features\n" +
-            "• Select from unique users only"
-        );
+        setModalMessage("Are you sure you want to automatically approve and host up to 3 five-star feedbacks on the marketing website?");
         setConfirmAction(() => async () => {
             const success = await automateMarketingFeedbacks();
             if (success) {
                 setShowSuccessModal(true);
-                setModalMessage("Automated marketing feedbacks updated successfully! Selected feedbacks have been auto-approved and featured on the marketing website.");
+                setModalMessage("Automated marketing feedbacks approved and hosted successfully.");
             } else {
                 alert("Failed to automate marketing feedbacks.");
             }
@@ -141,39 +133,23 @@ function UserFeedbacksPage() {
 
             <div className="marketing-section">
                 <h2>Featured Marketing Feedbacks</h2>
-                <div className="automation-section">
-                    <button
-                        className="automate-marketing-button enhanced"
-                        onClick={handleAutomateMarketingClick}
-                    >
-                        🚀 Smart Auto-Select & Approve for Marketing
-                    </button>
-                    <p className="automation-description">
-                        Automatically selects up to 3 unique users with 5-star ratings, 
-                        approves their feedback, and features them on the marketing website.
-                    </p>
-                </div>
+                <button
+                    className="automate-marketing-button"
+                    onClick={handleAutomateMarketingClick}
+                >
+                    Auto-Approve & Host 5-Star Feedbacks (Max 3)
+                </button>
                 <div className="marketing-feedbacks-list">
                     {marketingFeedbacks.length > 0 ? (
                         marketingFeedbacks.map(feedback => (
                             <div key={feedback.id} className="marketing-feedback-item">
-                                <div className="feedback-header">
-                                    <strong>{feedback.userFirstName}</strong>
-                                    <span className="auto-approved-badge">✓ Auto-Approved</span>
-                                </div>
+                                <p><strong>{feedback.userFirstName}</strong></p>
                                 {renderStars(feedback.rating)}
-                                <p className="feedback-message">"{feedback.message}"</p>
-                                <div className="feedback-meta">
-                                    <span className="status-badge">{feedback.status}</span>
-                                    <span className="marketing-badge">Featured on Marketing</span>
-                                </div>
+                                <p>"{feedback.message}"</p>
                             </div>
                         ))
                     ) : (
-                        <div className="no-marketing-feedbacks">
-                            <p>No feedbacks currently featured for marketing.</p>
-                            <p className="suggestion">Use the Smart Auto-Select button above to automatically feature the best 5-star feedbacks!</p>
-                        </div>
+                        <p>No 5-star feedbacks currently featured for marketing.</p>
                     )}
                 </div>
             </div>
@@ -192,11 +168,8 @@ function UserFeedbacksPage() {
                     </thead>
                     <tbody>
                         {feedbacks.map((feedback) => (
-                            <tr key={feedback.id} className={feedback.displayOnMarketing ? 'featured-row' : ''}>
-                                <td>
-                                    {feedback.userFirstName}
-                                    {feedback.displayOnMarketing && <span className="featured-indicator">⭐</span>}
-                                </td>
+                            <tr key={feedback.id}>
+                                <td>{feedback.userFirstName}</td>
                                 <td>{feedback.message}</td>
                                 <td>{renderStars(feedback.rating)}</td>
                                 <td>
@@ -226,7 +199,6 @@ function UserFeedbacksPage() {
                                         className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
                                         onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
                                         disabled={feedback.status !== "Approved" || feedback.rating !== 5} // Only allow 5-star approved feedbacks
-                                        title={feedback.rating !== 5 ? "Only 5-star feedbacks can be featured" : ""}
                                     >
                                         {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
                                     </button>
