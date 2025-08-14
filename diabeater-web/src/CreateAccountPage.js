@@ -13,11 +13,7 @@ function CreateAccountPage({ onBackToLogin }) {
     const fileInputRef = useRef(null);
     const [showTermsModal, setShowTermsModal] = useState(false);
 
-    // Use useEffect to react to changes in viewModel's state for modal visibility
     useEffect(() => {
-        // This effect can be used for any side effects based on viewModel state
-        // The direct use of viewModel.showInfoModal and viewModel.showPendingApprovalModal
-        // in JSX via `observer` handles rendering updates.
     }, []);
 
     const handleFileChange = (e) => {
@@ -55,7 +51,6 @@ function CreateAccountPage({ onBackToLogin }) {
 
     return (
         <div className="create-account-container">
-            {/* NEW: Back Button */}
             <button
                 className="create-account-back-button"
                 onClick={onBackToLogin}

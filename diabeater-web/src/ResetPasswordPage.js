@@ -7,7 +7,6 @@ import './ResetPasswordPage.css';
 
 // The 'observer' HOC makes the component reactive to MobX state changes.
 const ResetPasswordPage = observer(() => {
-    // Get the singleton instance of the ViewModel
     const viewModel = ResetPasswordViewModel;
 
     const handleSubmit = async (e) => {
@@ -16,8 +15,7 @@ const ResetPasswordPage = observer(() => {
     };
 
     const handleBackToLoginClick = () => {
-        // Direct browser navigation is okay here as it causes a full page refresh
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     return (

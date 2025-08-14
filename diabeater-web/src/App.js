@@ -1,23 +1,25 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './Nutritionist/LoginPage';
 import NutritionistDashboard from './Nutritionist/NutritionistDashboard';
 import AdminDashboard from './Admin/AdminDashboard';
 import ResetPasswordPage from './ResetPasswordPage';
 import CreateAccountPage from './CreateAccountPage';
-import NutritionistProfile from './Nutritionist/NutritionistProfile'; // Import the NutritionistProfile component
+import NutritionistProfile from './Nutritionist/NutritionistProfile';
 
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import app from './firebase';
 
 import AuthRepository from './Repositories/AuthRepository';
-import mealPlanViewModel from './ViewModels/MealPlanViewModel'; // Import the ViewModel
+import mealPlanViewModel from './ViewModels/MealPlanViewModel';
 
-function App() {
+// Create a wrapper component that can use useNavigate
+const AppContent = () => {
+    const navigate = useNavigate();
     const [userRole, setUserRole] = useState(null);
-    const [userId, setUserId] = useState(null); // New state for userId
+    const [userId, setUserId] = useState(null);
     const [verifiedLogin, setVerifiedLogin] = useState(false);
     const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
 
@@ -36,23 +38,23 @@ function App() {
                         console.warn("User Firestore doc not found, signing out...");
                         await signOut(auth);
                         setUserRole(null);
-                        setUserId(null); // Clear userId
+                        setUserId(null);
                         setVerifiedLogin(false);
                     } else {
                         const userData = userDocSnap.data();
                         if (userData.role === 'admin') {
                             setUserRole('admin');
-                            setUserId(user.uid); // Set userId
+                            setUserId(user.uid);
                             setVerifiedLogin(true);
                         } else if (userData.role === 'nutritionist' && userData.status === 'Active') {
                             setUserRole('nutritionist');
-                            setUserId(user.uid); // Set userId
+                            setUserId(user.uid);
                             setVerifiedLogin(true);
                         } else {
                             console.warn("User not authorized for this dashboard");
                             await signOut(auth);
                             setUserRole(null);
-                            setUserId(null); // Clear userId
+                            setUserId(null);
                             setVerifiedLogin(false);
                         }
                     }
@@ -62,12 +64,12 @@ function App() {
                     console.error("Error during auth check:", err);
                     await signOut(auth);
                     setUserRole(null);
-                    setUserId(null); // Clear userId
+                    setUserId(null);
                     setVerifiedLogin(false);
                 }
             } else {
                 setUserRole(null);
-                setUserId(null); // Clear userId
+                setUserId(null);
                 setVerifiedLogin(false);
                 mealPlanViewModel.initializeUser();
             }
@@ -91,6 +93,7 @@ function App() {
         const auth = getAuth(app);
         signOut(auth);
         mealPlanViewModel.initializeUser();
+        navigate('/');
     };
 
     const handleLogout = async () => {
@@ -99,6 +102,14 @@ function App() {
         setUserId(null);
         setVerifiedLogin(false);
         mealPlanViewModel.initializeUser();
+    };
+
+    const handleResetPasswordRequest = () => {
+        navigate('/reset-password');
+    };
+
+    const handleCreateAccountRequest = () => {
+        navigate('/create-account');
     };
 
     const ProtectedRoute = ({ children, allowedRole }) => {
@@ -116,175 +127,175 @@ function App() {
     if (isFirebaseLoading) return <div>Loading authentication...</div>;
 
     return (
+        <Routes>
+            <Route path="/" element={
+                verifiedLogin ? (
+                    userRole === 'admin' ?
+                        <Navigate to="/admin/dashboard" replace /> :
+                        <Navigate to="/nutritionist/meal-plans/published" replace />
+                ) : (
+                    <LoginPage
+                        onLoginSuccess={handleLoginSuccess}
+                        onResetPasswordRequest={handleResetPasswordRequest}
+                        onCreateAccountRequest={handleCreateAccountRequest}
+                    />
+                )
+            } />
+            <Route path="/reset-password" element={<ResetPasswordPage onBackToLogin={handleBackToLogin} />} />
+            <Route path="/create-account" element={<CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />} />
+
+            <Route path="/admin/*" element={
+                <ProtectedRoute allowedRole="admin">
+                    <Routes>
+                        <Route path="profile" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="myProfile" />
+                        } />
+                        <Route path="dashboard" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="dashboard" />
+                        } />
+                        <Route path="user-accounts" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" />
+                        } />
+                        <Route path="user-accounts/all" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="all" />
+                        } />
+                        <Route path="user-accounts/pending" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="pending" />
+                        } />
+                        <Route path="user-accounts/create-admin" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="createAdmin" />
+                        } />
+                        <Route path="premium-accounts" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="premiumAccounts" />
+                        } />
+                        <Route path="meal-plans" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" />
+                        } />
+                        <Route path="meal-plans/popular" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="popular" />
+                        } />
+                        <Route path="meal-plans/pending" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="pending" />
+                        } />
+                        <Route path="meal-plans/approved" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="approved" />
+                        } />
+                        <Route path="meal-plans/rejected" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="rejected" />
+                        } />
+                        <Route path="meal-plan-detail/:mealPlanId" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlanDetail" />
+                        } />
+                        <Route path="export-report" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="exportReport" />
+                        } />
+                        <Route path="rewards" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="rewards" />
+                        } />
+                        <Route path="edit-website" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="editWebsite" />
+                        } />
+                        <Route path="user-feedbacks" element={
+                            <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userFeedbacks" />
+                        } />
+                        <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+                    </Routes>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/nutritionist/*" element={
+                <ProtectedRoute allowedRole="nutritionist">
+                    <Routes>
+                        <Route path="profile" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="profile"
+                            />
+                        } />
+                        <Route path="meal-plans/published" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="published"
+                            />
+                        } />
+                        <Route path="meal-plans/pending" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="pending"
+                            />
+                        } />
+                        <Route path="meal-plans/rejected" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="rejected"
+                            />
+                        } />
+                        <Route path="meal-plans/draft" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="draft"
+                            />
+                        } />
+                        <Route path="create-meal-plan" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="create"
+                            />
+                        } />
+                        <Route path="notifications" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="notifications"
+                            />
+                        } />
+                        <Route path="meal-plan-detail/:mealPlanId" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="detail"
+                            />
+                        } />
+                        <Route path="update-meal-plan/:mealPlanId" element={
+                            <NutritionistDashboard
+                                onLogout={handleLogout}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                activeTab="update"
+                            />
+                        } />
+                        <Route path="*" element={<Navigate to="/nutritionist/meal-plans/published" replace />} />
+                    </Routes>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/nutritionist/dashboard/*" element={
+                <Navigate to="/nutritionist/meal-plans/published" replace />
+            } />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
+};
+
+function App() {
+    return (
         <Router>
-            <Routes>
-                <Route path="/" element={
-                    verifiedLogin ? (
-                        userRole === 'admin' ? 
-                            <Navigate to="/admin/dashboard" replace /> : 
-                            <Navigate to="/nutritionist/dashboard" replace />
-                    ) : (
-                        <LoginPage
-                            onLoginSuccess={handleLoginSuccess}
-                            onResetPasswordRequest={() => window.location.href = '/reset-password'}
-                            onCreateAccountRequest={() => window.location.href = '/create-account'}
-                        />
-                    )
-                } />
-                <Route path="/reset-password" element={<ResetPasswordPage onBackToLogin={handleBackToLogin} />} />
-                <Route path="/create-account" element={<CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />} />
-                
-                <Route path="/admin/*" element={
-                    <ProtectedRoute allowedRole="admin">
-                        <Routes>
-                            <Route path="profile" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="myProfile" />
-                            } />
-                            <Route path="dashboard" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="dashboard" />
-                            } />
-                            <Route path="user-accounts" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" />
-                            } />
-                            <Route path="user-accounts/all" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="all" />
-                            } />
-                            <Route path="user-accounts/pending" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="pending" />
-                            } />
-                            <Route path="user-accounts/create-admin" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="createAdmin" />
-                            } />
-                            <Route path="premium-accounts" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="premiumAccounts" />
-                            } />
-                            <Route path="meal-plans" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" />
-                            } />
-                            <Route path="meal-plans/popular" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="popular" />
-                            } />
-                            <Route path="meal-plans/pending" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="pending" />
-                            } />
-                            <Route path="meal-plans/approved" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="approved" />
-                            } />
-                            <Route path="meal-plans/rejected" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlans" activeMealPlanTab="rejected" />
-                            } />
-                            <Route path="meal-plan-detail/:mealPlanId" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="mealPlanDetail" />
-                            } />
-                            <Route path="export-report" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="exportReport" />
-                            } />
-                            <Route path="rewards" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="rewards" />
-                            } />
-                            <Route path="edit-website" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="editWebsite" />
-                            } />
-                            <Route path="user-feedbacks" element={
-                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userFeedbacks" />
-                            } />
-                            {/* Default redirect to dashboard */}
-                            <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
-                        </Routes>
-                    </ProtectedRoute>
-                } />
-                
-                <Route path="/nutritionist/*" element={
-                    <ProtectedRoute allowedRole="nutritionist">
-                        <Routes>
-                            <Route path="profile" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="profile"
-                                />
-                            } />
-
-                            {/* Meal Plans routes with specific tabs */}
-                            <Route path="meal-plans/published" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="published"
-                                />
-                            } />
-                            <Route path="meal-plans/pending" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="pending"
-                                />
-                            } />
-                            <Route path="meal-plans/rejected" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="rejected"
-                                />
-                            } />
-                            <Route path="meal-plans/draft" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="draft"
-                                />
-                            } />
-
-                            <Route path="create-meal-plan" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="create"
-                                />
-                            } />
-                            <Route path="notifications" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="notifications"
-                                />
-                            } />
-
-                            <Route path="meal-plan-detail/:mealPlanId" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="detail"
-                                />
-                            } />
-                            <Route path="update-meal-plan/:mealPlanId" element={
-                                <NutritionistDashboard
-                                    onLogout={handleLogout}
-                                    currentUserId={userId}
-                                    currentUserRole={userRole}
-                                    activeTab="update"
-                                />
-                            } />
-
-                            <Route path="*" element={<Navigate to="/nutritionist/meal-plans/published" replace />} />
-                        </Routes>
-                    </ProtectedRoute>
-                } />
-                
-                <Route path="/nutritionist/dashboard/*" element={
-                    <Navigate to="/nutritionist/meal-plans/published" replace />
-                } />
-
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <AppContent />
         </Router>
     );
 }
