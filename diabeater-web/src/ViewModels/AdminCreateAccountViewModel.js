@@ -1,4 +1,4 @@
-// ViewModels/AdminCreateAccountViewModel.js - SIMPLIFIED CLIENT-SIDE VERSION
+// ViewModels/AdminCreateAccountViewModel.js - UPDATED TO STORE PASSWORD
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 
@@ -30,8 +30,8 @@ class AdminCreateAccountViewModel {
   emailVerified = false;
   createdAccount = null;
   
-  // Password storage for resend functionality
-  temporaryPassword = '';
+  // Store password for resend functionality
+  storedPassword = '';
 
   constructor() {
     makeAutoObservable(this);
@@ -61,7 +61,7 @@ class AdminCreateAccountViewModel {
     this.emailVerified = false;
     this.accountCreated = false;
     this.createdAccount = null;
-    this.temporaryPassword = '';
+    this.storedPassword = '';
   };
 
   // --- State Management ---
@@ -85,7 +85,7 @@ class AdminCreateAccountViewModel {
   setEmailSent = (value) => { this.emailSent = value; };
   setEmailVerified = (value) => { this.emailVerified = value; };
   setAccountCreated = (value) => { this.accountCreated = value; };
-  setTemporaryPassword = (password) => { this.temporaryPassword = password; };
+  setStoredPassword = (password) => { this.storedPassword = password; };
 
   // --- Computed Properties ---
   get isFormValid() {
@@ -115,13 +115,14 @@ class AdminCreateAccountViewModel {
     return this.emailSent && 
            !this.emailVerified && 
            !this.accountCreated &&
-           !this.isSendingVerification;
+           !this.isSendingVerification &&
+           this.storedPassword; // Only allow if we have the password
   }
 
   // --- Actions ---
 
   /**
-   * Create admin account via cloud function (no client auth operations)
+   * Create admin account (keeps user signed in)
    */
   createAdminAccount = async () => {
     this.setGlobalError('');
@@ -139,7 +140,7 @@ class AdminCreateAccountViewModel {
     this.setCreating(true);
     
     try {
-      console.log('Creating admin account via cloud function (no session change)...');
+      console.log('Creating admin account (user stays signed in)...');
       const result = await AdminCreateAccountService.createAdminAccount(this.formData);
       
       runInAction(() => {
@@ -150,8 +151,11 @@ class AdminCreateAccountViewModel {
             email: result.email
           });
           
+          // Store password for resend functionality
+          this.setStoredPassword(result.password);
+          
           this.setSuccessMessage(result.message);
-          console.log('Admin account created via cloud function - current session preserved');
+          console.log('Admin account created - user remains signed in');
         } else {
           this.setGlobalError('Failed to create admin account');
         }
@@ -170,7 +174,7 @@ class AdminCreateAccountViewModel {
   };
 
   /**
-   * Check if Firebase email is verified (still uses cloud function for admin claims)
+   * Check if Firebase email is verified (uses cloud function for admin claims)
    */
   checkEmailVerification = async () => {
     this.setGlobalError('');
@@ -185,8 +189,8 @@ class AdminCreateAccountViewModel {
           this.setEmailVerified(true);
           this.setAccountCreated(true);
           this.setSuccessMessage('🎉 ' + result.message + ' The admin account is now ready to use!');
-          // Clear temporary password after successful verification
-          this.setTemporaryPassword('');
+          // Clear stored password after successful verification
+          this.setStoredPassword('');
         } else {
           this.setGlobalError(result.message || 'Email not yet verified. Please check your email and click the verification link.');
         }
@@ -205,17 +209,18 @@ class AdminCreateAccountViewModel {
   };
 
   /**
-   * Resend Firebase verification email via simple cloud function (no session issues)
+   * Resend Firebase verification email (user stays signed in)
    */
   resendVerificationEmail = async () => {
     this.setSendingVerification(true);
     this.setGlobalError('');
 
     try {
-      console.log('Resending verification email via cloud function (no session conflicts)...');
+      console.log('Resending verification email (user stays signed in)...');
       
       const result = await AdminCreateAccountService.resendVerificationEmail(
-        this.formData.email
+        this.formData.email,
+        this.storedPassword
       );
       
       runInAction(() => {

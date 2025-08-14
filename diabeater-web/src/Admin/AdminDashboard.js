@@ -725,6 +725,36 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         setSelectedUser(adminStatViewModel.selectedUserForManagement);
         setShowRejectionReasonModal(true);
     };
+     const handleRejectNutritionist = async (userId, reasonParam) => {
+        try {
+            // Use the reason parameter if provided, otherwise fall back to state
+            const finalReason = reasonParam || rejectionReason;
+            
+            console.log('Rejecting nutritionist:', userId, 'with reason:', finalReason);
+            
+            if (!finalReason || !finalReason.trim()) {
+                alert('Please provide a reason for rejection.');
+                return;
+            }
+            
+            // Call the rejection method from AdminDashboardViewModel
+            await AdminDashboardViewModel.rejectNutritionist(userId, finalReason.trim());
+            
+            // Close the modal and reset state
+            setShowRejectionReasonModal(false);
+            setSelectedUser(null);
+            setRejectionReason('');
+            
+            // Refresh the data
+            await AdminDashboardViewModel.fetchAccounts();
+            
+            alert('Nutritionist has been rejected and notification email sent!');
+            
+        } catch (error) {
+            console.error('Error rejecting nutritionist:', error);
+            alert(`Failed to reject nutritionist: ${error.message}`);
+        }
+    };
 
     const handleConfirmRejectFromModal = async (userId, reason) => {
         await adminStatViewModel.rejectNutritionist(userId, reason);
@@ -902,12 +932,20 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 />
             )}
 
-            {showRejectionReasonModal && (
+            {showRejectionReasonModal && selectedUser && (
                 <RejectionReasonModal
                     reason={rejectionReason}
                     setReason={(value) => setRejectionReason(value)}
-                    onConfirm={() => handleConfirmRejectFromModal(selectedUser.id, rejectionReason)}
-                    onClose={() => setShowRejectionReasonModal(false)}
+                    onConfirm={(reasonFromModal) => {
+                        // Handle both parameter and state-based reason
+                        const finalReason = reasonFromModal || rejectionReason;
+                        handleRejectNutritionist(selectedUser.id, finalReason);
+                    }}
+                    onClose={() => {
+                        setShowRejectionReasonModal(false);
+                        setSelectedUser(null);
+                        setRejectionReason('');
+                    }}
                 />
             )}
         </>

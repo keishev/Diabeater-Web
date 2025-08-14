@@ -10,15 +10,10 @@ class FeedbackRepository {
         return FeedbackService.updateFeedbackStatus(feedbackId, newStatus);
     }
 
-    async approveFeedback(feedbackId) {
-        return this.updateFeedbackStatus(feedbackId, "Approved");
-    }
-
     async setDisplayOnMarketing(feedbackId, displayStatus) {
         return FeedbackService.updateDisplayOnMarketing(feedbackId, displayStatus);
     }
 
-    // Method to fix the error in ViewModel
     async updateDisplayOnMarketing(feedbackId, displayStatus) {
         return FeedbackService.updateDisplayOnMarketing(feedbackId, displayStatus);
     }
@@ -27,20 +22,15 @@ class FeedbackRepository {
         return FeedbackService.getPublicFeaturedMarketingFeedbacks();
     }
 
-    // ENHANCED: New methods for automation
     async getFiveStarFeedbacks() {
         return FeedbackService.getFiveStarFeedbacks();
-    }
-
-    async autoApproveAndFeatureFeedback(feedbackId) {
-        return FeedbackService.autoApproveAndFeatureFeedback(feedbackId);
     }
 
     async batchUpdateFeedbacks(updates) {
         return FeedbackService.batchUpdateFeedbacks(updates);
     }
 
-    // ENHANCED: Helper method for automation workflow
+    // Helper method for automation workflow
     async automateMarketingFeedbacks() {
         try {
             console.log('[FeedbackRepository] Starting automated marketing feedback selection...');
@@ -49,19 +39,32 @@ class FeedbackRepository {
             const fiveStarFeedbacks = await this.getFiveStarFeedbacks();
             console.log(`[FeedbackRepository] Found ${fiveStarFeedbacks.length} five-star feedbacks`);
 
-            // Select up to 3 unique users
-            const selectedFeedbacks = [];
-            const selectedUserIds = new Set();
-            
-            for (const feedback of fiveStarFeedbacks) {
-                if (selectedFeedbacks.length >= 3) break;
-                if (!selectedUserIds.has(feedback.userId)) {
-                    selectedFeedbacks.push(feedback);
-                    selectedUserIds.add(feedback.userId);
+            // Group feedbacks by userId to ensure we select from different users
+            const feedbacksByUser = {};
+            fiveStarFeedbacks.forEach(feedback => {
+                if (!feedbacksByUser[feedback.userId]) {
+                    feedbacksByUser[feedback.userId] = [];
                 }
+                feedbacksByUser[feedback.userId].push(feedback);
+            });
+
+            // Get array of unique userIds and shuffle them randomly
+            const userIds = Object.keys(feedbacksByUser);
+            const shuffledUserIds = userIds.sort(() => Math.random() - 0.5);
+            
+            const selectedFeedbacks = [];
+            
+            // Select up to 3 random users, picking one random feedback per user
+            for (let i = 0; i < Math.min(3, shuffledUserIds.length); i++) {
+                const userId = shuffledUserIds[i];
+                const userFeedbacks = feedbacksByUser[userId];
+                // Randomly select one feedback from this user
+                const randomIndex = Math.floor(Math.random() * userFeedbacks.length);
+                const selectedFeedback = userFeedbacks[randomIndex];
+                selectedFeedbacks.push(selectedFeedback);
             }
 
-            console.log(`[FeedbackRepository] Selected ${selectedFeedbacks.length} feedbacks for automation`);
+            console.log(`[FeedbackRepository] Selected ${selectedFeedbacks.length} feedbacks for automation from ${selectedFeedbacks.length} different users`);
 
             // Create batch updates
             const updates = [];
@@ -76,11 +79,11 @@ class FeedbackRepository {
                 }
             }
 
-            // Then, approve and feature selected feedbacks
+            // Then, feature selected feedbacks and auto-approve them
             for (const feedback of selectedFeedbacks) {
                 updates.push({
                     feedbackId: feedback.id,
-                    status: "Approved",
+                    status: "Approved", // Auto-approve 5-star feedbacks
                     displayOnMarketing: true
                 });
             }

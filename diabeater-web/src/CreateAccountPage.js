@@ -230,74 +230,128 @@ function CreateAccountPage({ onBackToLogin }) {
                     </button>
                 </form>
 
-                {/* Certificate Requirements Modal */}
-                {viewModel.showInfoModal && (
-                    <div className="create-account-modal-overlay">
-                        <div className="create-account-modal-content">
-                            <h3>Certificate Requirements</h3>
-                            <p>Please upload a valid PDF document of your nutritionist certification or degree.</p>
-                            <p>File size should not exceed 5MB.</p>
-                            <button className="create-account-modal-button" onClick={() => viewModel.setShowInfoModal(false)}>
-                                Got It
-                            </button>
-                        </div>
-                    </div>
-                )}
+               
+{viewModel.showEmailVerificationModal && (
+    <div className="create-account-modal-overlay">
+        <div className="create-account-modal-content verification-modal">
+            <h3>Verify Your Email</h3>
+            <p>
+                We've sent a verification email to <strong>{viewModel.application.email}</strong>
+            </p>
+            <p>
+                Please check your email (including spam folder) and click the verification link, 
+                then return here to complete your application.
+            </p>
+            <p>
+                <small>After verification, your application will be submitted automatically.</small>
+            </p>
+            
+            {viewModel.error && (
+                <div className="create-account-error-message">
+                    {viewModel.error}
+                </div>
+            )}
+            
+            <div className="create-account-modal-actions">
+                <button 
+                    className={`create-account-modal-button ${viewModel.isLoading ? 'loading' : ''}`}
+                    onClick={() => viewModel.checkEmailVerification()}
+                    disabled={viewModel.isLoading}
+                >
+                    {viewModel.isLoading ? 'CHECKING...' : 'CHECK VERIFICATION'}
+                </button>
+                
+                <button 
+                    className="create-account-modal-button-secondary"
+                    onClick={() => viewModel.resendVerificationEmail()}
+                    disabled={viewModel.isLoading}
+                >
+                    RESEND EMAIL
+                </button>
+                
+                <button 
+                    className="create-account-modal-button-cancel"
+                    onClick={() => {
+                        viewModel.setShowEmailVerificationModal(false);
+                        viewModel.setError('');
+                    }}
+                >
+                    CANCEL
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
-                {/* Email Verification Modal */}
-                {viewModel.showEmailVerificationModal && (
-                    <div className="create-account-modal-overlay">
-                        <div className="create-account-modal-content">
-                            <h3>Verify Your Email</h3>
-                            <p>We've sent a verification email to <strong>{viewModel.application.email}</strong></p>
-                            <p>Please check your email and click the verification link, then click "Check Verification" below.</p>
-                            <p><small>After verification, your application will be submitted automatically.</small></p>
-                            
-                            {viewModel.error && <p className="create-account-error-message">{viewModel.error}</p>}
-                            
-                            <div className="create-account-modal-actions">
-                                <button 
-                                    className="create-account-modal-button"
-                                    onClick={() => viewModel.checkEmailVerification()}
-                                    disabled={viewModel.isLoading}
-                                >
-                                    {viewModel.isLoading ? 'CHECKING...' : 'CHECK VERIFICATION'}
-                                </button>
-                                <button 
-                                    className="create-account-modal-button-secondary"
-                                    onClick={() => viewModel.resendVerificationEmail()}
-                                    disabled={viewModel.isLoading}
-                                >
-                                    RESEND EMAIL
-                                </button>
-                                <button 
-                                    className="create-account-modal-button-secondary"
-                                    onClick={() => {
-                                        viewModel.setShowEmailVerificationModal(false);
-                                        viewModel.setError('');
-                                    }}
-                                >
-                                    CANCEL
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+{/* Enhanced Application Success Modal */}
+{viewModel.showPendingApprovalModal && (
+    <div className="create-account-modal-overlay">
+        <div className="create-account-modal-content success-modal">
+            <h3>Application Submitted Successfully</h3>
+            <p>
+                Your nutritionist application has been submitted and is now under review by our admin team.
+            </p>
+            <p>
+                You will receive an email notification once your application has been reviewed. 
+                This process typically takes 1-3 business days.
+            </p>
+            <p>
+                <small>Please keep an eye on your inbox (including spam folder) for updates.</small>
+            </p>
+            
+            <div className="create-account-modal-actions">
+                <button 
+                    className="create-account-modal-button" 
+                    onClick={handleBackToLoginFromModal}
+                >
+                    RETURN TO LOGIN
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
-                {/* Application Success Modal */}
-                {viewModel.showPendingApprovalModal && (
-                    <div className="create-account-modal-overlay">
-                        <div className="create-account-modal-content">
-                            <h3>Application Submitted Successfully</h3>
-                            <p>Your nutritionist application has been submitted for admin review.</p>
-                            <p>You will receive an email notification once your application has been approved or if more information is needed.</p>
-                            <button className="create-account-modal-button" onClick={handleBackToLoginFromModal}>
-                                OK
-                            </button>
-                        </div>
-                    </div>
-                )}
-
+{/* Enhanced Certificate Requirements Modal */}
+{viewModel.showInfoModal && (
+    <div className="create-account-modal-overlay">
+        <div className="create-account-modal-content">
+            <h3>📋 Certificate Requirements</h3>
+            <p>
+                Please upload a valid PDF document of your nutritionist certification, 
+                degree, or professional credentials.
+            </p>
+            <div style={{ 
+                background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)', 
+                padding: '16px', 
+                borderRadius: '12px',
+                margin: '16px 0',
+                textAlign: 'left'
+            }}>
+                <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#4a148c' }}>
+                    ✅ Accepted Documents:
+                </p>
+                <ul style={{ margin: '0', paddingLeft: '20px', color: '#4a148c' }}>
+                    <li>Nutritionist certification</li>
+                    <li>Dietitian license</li>
+                    <li>Nutrition degree or diploma</li>
+                    <li>Professional credentials</li>
+                </ul>
+            </div>
+            <p style={{ fontSize: '0.9em', color: '#666' }}>
+                <strong>Requirements:</strong> PDF format only, maximum file size 5MB
+            </p>
+            
+            <div className="create-account-modal-actions">
+                <button 
+                    className="create-account-modal-button" 
+                    onClick={() => viewModel.setShowInfoModal(false)}
+                >
+                    GOT IT
+                </button>
+            </div>
+        </div>
+    </div>
+)}
                 {/* Terms and Conditions Modal */}
                 <TermsAndConditionsModal
                     isOpen={showTermsModal}

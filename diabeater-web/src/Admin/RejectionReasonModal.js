@@ -1,5 +1,5 @@
-// src/Admin/RejectionReasonModal.js
-import React, { useState } from 'react';
+// src/Admin/RejectionReasonModal.js - FIXED VERSION
+import React, { useState, useEffect } from 'react';
 import './RejectionReasonModal.css';
 
 const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
@@ -14,26 +14,53 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
         'Application does not meet eligibility criteria'
     ];
 
+    // FIXED: Sync local state with parent prop
+    useEffect(() => {
+        if (reason) {
+            const isPredefined = predefinedReasons.includes(reason);
+            if (isPredefined) {
+                setSelectedReason(reason);
+                setCustomReason('');
+            } else {
+                setSelectedReason('custom');
+                setCustomReason(reason);
+            }
+        }
+    }, [reason]);
+
     const handleReasonChange = (value) => {
         setSelectedReason(value);
         if (value === 'custom') {
-            setReason(customReason);
+            // When switching to custom, use the current custom reason
+            const finalReason = customReason || '';
+            setReason(finalReason);
         } else {
+            // When selecting a predefined reason, use that
             setReason(value);
+            setCustomReason(''); // Clear custom reason when using predefined
         }
     };
 
     const handleCustomReasonChange = (value) => {
         setCustomReason(value);
         if (selectedReason === 'custom') {
+            // Update parent state with custom reason
             setReason(value);
         }
     };
 
+    // FIXED: Pass the final reason to onConfirm
     const handleConfirm = () => {
         const finalReason = selectedReason === 'custom' ? customReason : selectedReason;
-        if (finalReason.trim()) {
-            onConfirm();
+        console.log('Confirming rejection with reason:', finalReason);
+        
+        if (finalReason && finalReason.trim()) {
+            // Make sure parent has the latest reason
+            setReason(finalReason.trim());
+            // Call onConfirm with the reason as parameter for extra safety
+            onConfirm(finalReason.trim());
+        } else {
+            alert('Please select or enter a rejection reason.');
         }
     };
 
@@ -99,6 +126,7 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
                         placeholder="Please specify the reason for rejection..."
                         rows="4"
                         aria-label="Custom rejection reason"
+                        autoFocus
                     />
                 )}
 
@@ -106,8 +134,8 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
                     <button 
                         className="confirm-btn"
                         onClick={handleConfirm} 
-                        disabled={!getFinalReason().trim()}
-                        aria-label={`Confirm rejection${getFinalReason().trim() ? `: ${getFinalReason()}` : ''}`}
+                        disabled={!getFinalReason() || !getFinalReason().trim()}
+                        aria-label={`Confirm rejection${getFinalReason() && getFinalReason().trim() ? `: ${getFinalReason()}` : ''}`}
                     >
                         Confirm Rejection
                     </button>

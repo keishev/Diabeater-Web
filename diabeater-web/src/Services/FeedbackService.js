@@ -22,19 +22,6 @@ class FeedbackService {
     }
 
     // Method for the Admin Website
-    async updateFeedbackStatus(feedbackId, newStatus) {
-        try {
-            const feedbackDocRef = doc(db, "feedbacks", feedbackId);
-            await updateDoc(feedbackDocRef, { status: newStatus });
-            console.log(`[FeedbackService] Updated feedback ${feedbackId} status to: ${newStatus}`);
-            return true;
-        } catch (error) {
-            console.error(`Error updating feedback status for ${feedbackId}:`, error);
-            throw error;
-        }
-    }
-
-    // Method for the Admin Website
     async updateDisplayOnMarketing(feedbackId, displayStatus) {
         try {
             const feedbackDocRef = doc(db, "feedbacks", feedbackId);
@@ -50,13 +37,10 @@ class FeedbackService {
     // ENHANCED: Batch update for automation efficiency
     async batchUpdateFeedbacks(updates) {
         try {
-            const promises = updates.map(async ({ feedbackId, status, displayOnMarketing }) => {
+            const promises = updates.map(async ({ feedbackId, displayOnMarketing }) => {
                 const feedbackDocRef = doc(db, "feedbacks", feedbackId);
                 const updateData = {};
                 
-                if (status !== undefined) {
-                    updateData.status = status;
-                }
                 if (displayOnMarketing !== undefined) {
                     updateData.displayOnMarketing = displayOnMarketing;
                 }
@@ -73,14 +57,13 @@ class FeedbackService {
         }
     }
 
-    // UPDATED: Method for the Marketing Website - now includes any approved 5-star feedback
+    // Method for the Marketing Website - gets feedbacks featured for marketing
     async getPublicFeaturedMarketingFeedbacks() {
         try {
             const q = query(
                 this.feedbackCollectionRef,
                 where("displayOnMarketing", "==", true),
                 where("rating", "==", 5),
-                where("status", "==", "Approved"),
                 limit(3)
             );
             const querySnapshot = await getDocs(q);
@@ -97,7 +80,7 @@ class FeedbackService {
         }
     }
 
-    // ENHANCED: Get all 5-star feedbacks for automation
+    // Get all 5-star feedbacks for automation
     async getFiveStarFeedbacks() {
         try {
             const q = query(
@@ -111,22 +94,6 @@ class FeedbackService {
             }));
         } catch (error) {
             console.error("Error fetching five-star feedbacks:", error);
-            throw error;
-        }
-    }
-
-    // ENHANCED: Auto-approve and feature feedback for marketing
-    async autoApproveAndFeatureFeedback(feedbackId) {
-        try {
-            const feedbackDocRef = doc(db, "feedbacks", feedbackId);
-            await updateDoc(feedbackDocRef, { 
-                status: "Approved",
-                displayOnMarketing: true
-            });
-            console.log(`[FeedbackService] Auto-approved and featured feedback ${feedbackId}`);
-            return true;
-        } catch (error) {
-            console.error(`Error auto-approving and featuring feedback ${feedbackId}:`, error);
             throw error;
         }
     }

@@ -24,11 +24,9 @@ function UserFeedbacksPage() {
         marketingFeedbacks,
         loading,
         error,
-        approveFeedback,
         toggleDisplayOnMarketing,
         automateMarketingFeedbacks,
-        fetchFeedbacks,
-        retrackFeedback // Added to allow manual refresh
+        fetchFeedbacks
     } = useUserFeedbackViewModel();
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -36,36 +34,6 @@ function UserFeedbacksPage() {
     const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
     const [modalMessage, setModalMessage] = useState("");
     const [confirmAction, setConfirmAction] = useState(() => () => {}); // To store the function to execute on confirm
-
-    const handleApproveClick = (id) => {
-        setSelectedFeedbackId(id);
-        setModalMessage("Are you sure to publish this feedback to the website?");
-        setConfirmAction(() => async () => {
-            const success = await approveFeedback(id);
-            if (success) {
-                setShowSuccessModal(true);
-                setModalMessage("Feedback has been published.");
-            } else {
-                alert("Failed to publish feedback."); // Basic error handling
-            }
-        });
-        setShowConfirmModal(true);
-    };
-
-    const handleRetrackClick = (id) => {
-        setSelectedFeedbackId(id);
-        setModalMessage("Are you sure you want to revert this feedback to an 'Inbox' status? This will also remove it from the marketing website.");
-        setConfirmAction(() => async () => {
-            const success = await retrackFeedback(id);
-            if (success) {
-                setShowSuccessModal(true);
-                setModalMessage("Feedback status has been changed to 'Inbox' and removed from marketing.");
-            } else {
-                alert("Failed to retrack feedback.");
-            }
-        });
-        setShowConfirmModal(true);
-    };
 
     const handleToggleMarketingClick = (id, currentDisplayStatus) => {
         setSelectedFeedbackId(id);
@@ -91,12 +59,12 @@ function UserFeedbacksPage() {
     };
 
     const handleAutomateMarketingClick = () => {
-        setModalMessage("Are you sure you want to automatically approve and host up to 3 five-star feedbacks on the marketing website?");
+        setModalMessage("Are you sure you want to automatically feature up to 3 five-star feedbacks on the marketing website?");
         setConfirmAction(() => async () => {
             const success = await automateMarketingFeedbacks();
             if (success) {
                 setShowSuccessModal(true);
-                setModalMessage("Automated marketing feedbacks approved and hosted successfully.");
+                setModalMessage("Automated marketing feedbacks featured successfully.");
             } else {
                 alert("Failed to automate marketing feedbacks.");
             }
@@ -137,7 +105,7 @@ function UserFeedbacksPage() {
                     className="automate-marketing-button"
                     onClick={handleAutomateMarketingClick}
                 >
-                    Auto-Approve & Host 5-Star Feedbacks (Max 3)
+                    Auto-Feature 5-Star Feedbacks (Max 3)
                 </button>
                 <div className="marketing-feedbacks-list">
                     {marketingFeedbacks.length > 0 ? (
@@ -161,8 +129,6 @@ function UserFeedbacksPage() {
                             <th>Name</th>
                             <th>Feedback</th>
                             <th>Rating</th>
-                            <th>Status</th>
-                            <th>Action</th>
                             <th>Display on Marketing</th>
                         </tr>
                     </thead>
@@ -172,33 +138,14 @@ function UserFeedbacksPage() {
                                 <td>{feedback.userFirstName}</td>
                                 <td>{feedback.message}</td>
                                 <td>{renderStars(feedback.rating)}</td>
-                                <td>
-                                    <span className={`feedback-status ${feedback.status.toLowerCase()}`}>
-                                        {feedback.status}
-                                    </span>
-                                </td>
-                                <td className="action-cell">
-                                    {feedback.status === "Approved" ? (
-                                        <button 
-                                            className="retrack-button"
-                                            onClick={() => handleRetrackClick(feedback.id)}
-                                        >
-                                            Retrack
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="approve-button"
-                                            onClick={() => handleApproveClick(feedback.id)}
-                                        >
-                                            Approve
-                                        </button>
-                                    )}
-                                </td>
                                 <td className="publish-cell">
                                     <button
                                         className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
                                         onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
-                                        disabled={feedback.status !== "Approved" || feedback.rating !== 5} // Only allow 5-star approved feedbacks
+                                        disabled={
+                                            feedback.rating !== 5 || 
+                                            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
+                                        } // Only allow 5-star feedbacks and max 3 on marketing
                                     >
                                         {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
                                     </button>

@@ -1,4 +1,4 @@
-// services/AdminCreateAccountService.js - PURE CLIENT-SIDE VERSION
+// services/AdminCreateAccountService.js - WITH RESEND EMAIL ADDED
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -30,8 +30,7 @@ const AdminCreateAccountService = {
       
       console.log('Firebase Auth user created:', user.uid);
       
-     
-      // Step 3: Create Firestore document
+      // Step 2: Create Firestore document
       const adminData_firestore = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -55,15 +54,15 @@ const AdminCreateAccountService = {
       await setDoc(doc(db, 'user_accounts', user.uid), adminData_firestore);
       console.log('Admin user document created in Firestore');
       
-      // Step 4: Send Firebase verification email
+      // Step 3: Send Firebase verification email
       await sendEmailVerification(user);
       console.log('Firebase verification email sent');
-      
       
       return {
         success: true,
         email: email.trim(),
         uid: user.uid,
+        password: password, // Return password for resend functionality
         message: 'Admin account created and Firebase verification email sent. Please check your email.'
       };
 
@@ -73,6 +72,14 @@ const AdminCreateAccountService = {
       // Handle specific Firebase/Cloud Function errors
       if (error.code) {
         switch (error.code) {
+          case 'auth/email-already-in-use':
+            throw new Error('This email is already in use. Please use a different email address.');
+          case 'auth/invalid-email':
+            throw new Error('Invalid email address provided.');
+          case 'auth/weak-password':
+            throw new Error('Password is too weak. Please choose a stronger password.');
+          case 'auth/operation-not-allowed':
+            throw new Error('Account creation is not enabled. Please contact support.');
           case 'functions/already-exists':
             throw new Error('This email is already in use. Please use a different email address.');
           case 'functions/invalid-argument':
@@ -138,7 +145,7 @@ const AdminCreateAccountService = {
   },
 
   /**
-   * Resends Firebase verification email (client-side)
+   * Resends Firebase verification email (keeps user signed in)
    */
   async resendVerificationEmail(email, password) {
     try {
@@ -153,28 +160,42 @@ const AdminCreateAccountService = {
       console.log('Resending Firebase verification email...');
 
       const auth = getAuth();
+      const currentUser = auth.currentUser;
       
-      // Sign in to get the user object
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const user = userCredential.user;
-      
-      if (user.emailVerified) {
-        await signOut(auth);
-        throw new Error('Email is already verified');
+      // If there's already a signed-in user, just send verification email
+      if (currentUser && currentUser.email === email.trim()) {
+        console.log('Using current signed-in user for resend');
+        
+        if (currentUser.emailVerified) {
+          throw new Error('Email is already verified');
+        }
+        
+        await sendEmailVerification(currentUser);
+        console.log('Firebase verification email resent successfully');
+        
+        return {
+          success: true,
+          message: 'Verification email resent successfully. Please check your email.'
+        };
+      } else {
+        // If no matching user signed in, sign in temporarily then keep signed in
+        console.log('Signing in to resend verification email');
+        
+        const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+        const user = userCredential.user;
+        
+        if (user.emailVerified) {
+          throw new Error('Email is already verified');
+        }
+        
+        await sendEmailVerification(user);
+        console.log('Firebase verification email resent successfully (user remains signed in)');
+        
+        return {
+          success: true,
+          message: 'Verification email resent successfully. Please check your email.'
+        };
       }
-      
-      // Send Firebase's built-in verification email
-      await sendEmailVerification(user);
-      
-      // Sign out the user
-      await signOut(auth);
-      
-      console.log('Firebase verification email resent successfully');
-      
-      return {
-        success: true,
-        message: 'Verification email resent successfully. Please check your email.'
-      };
 
     } catch (error) {
       console.error('Error resending verification email:', error);

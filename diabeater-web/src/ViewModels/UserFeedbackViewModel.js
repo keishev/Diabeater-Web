@@ -35,41 +35,6 @@ const useUserFeedbackViewModel = () => {
         fetchMarketingFeedbacks();
     }, [fetchFeedbacks, fetchMarketingFeedbacks]);
 
-    const approveFeedback = async (feedbackId) => {
-        try {
-            await FeedbackRepository.approveFeedback(feedbackId);
-            setFeedbacks(prevFeedbacks =>
-                prevFeedbacks.map(fb =>
-                    fb.id === feedbackId ? { ...fb, status: "Approved" } : fb
-                )
-            );
-            await fetchMarketingFeedbacks();
-            return true;
-        } catch (err) {
-            setError(err);
-            return false;
-        }
-    };
-
-    const retrackFeedback = async (feedbackId) => {
-        try {
-            // Updated status to 'Inbox'
-            await FeedbackRepository.updateFeedbackStatus(feedbackId, "Inbox");
-            await FeedbackRepository.updateDisplayOnMarketing(feedbackId, false);
-            setFeedbacks(prevFeedbacks => 
-                // Updated status to 'Inbox'
-                prevFeedbacks.map(fb => 
-                    fb.id === feedbackId ? { ...fb, status: "Inbox", displayOnMarketing: false } : fb
-                )
-            );
-            await fetchMarketingFeedbacks();
-            return true;
-        } catch (err) {
-            setError(err);
-            return false;
-        }
-    };
-
     const toggleDisplayOnMarketing = async (feedbackId, currentDisplayStatus) => {
         try {
             await FeedbackRepository.setDisplayOnMarketing(feedbackId, !currentDisplayStatus);
@@ -90,33 +55,40 @@ const useUserFeedbackViewModel = () => {
         try {
             const allFeedbacks = await FeedbackRepository.getFeedbacks();
 
-            // Get 5-star feedbacks regardless of approval status
+            // Get 5-star feedbacks and group by userId
             const fiveStarFeedbacks = allFeedbacks.filter(fb => fb.rating === 5);
             
-            const newMarketingFeedbackIds = new Set();
-            const selectedUserIds = new Set();
+            // Group feedbacks by userId to ensure we select from different users
+            const feedbacksByUser = {};
+            fiveStarFeedbacks.forEach(feedback => {
+                if (!feedbacksByUser[feedback.userId]) {
+                    feedbacksByUser[feedback.userId] = [];
+                }
+                feedbacksByUser[feedback.userId].push(feedback);
+            });
+
+            // Get array of unique userIds and shuffle them randomly
+            const userIds = Object.keys(feedbacksByUser);
+            const shuffledUserIds = userIds.sort(() => Math.random() - 0.5);
             
-            // Select up to 3 unique users with 5-star ratings
-            for (const feedback of fiveStarFeedbacks) {
-                if (newMarketingFeedbackIds.size >= 3) {
-                    break;
-                }
-                if (!selectedUserIds.has(feedback.userId)) {
-                    newMarketingFeedbackIds.add(feedback.id);
-                    selectedUserIds.add(feedback.userId);
-                }
+            const newMarketingFeedbackIds = new Set();
+            
+            // Select up to 3 random users, picking one random feedback per user
+            for (let i = 0; i < Math.min(3, shuffledUserIds.length); i++) {
+                const userId = shuffledUserIds[i];
+                const userFeedbacks = feedbacksByUser[userId];
+                // Randomly select one feedback from this user
+                const randomIndex = Math.floor(Math.random() * userFeedbacks.length);
+                const selectedFeedback = userFeedbacks[randomIndex];
+                newMarketingFeedbackIds.add(selectedFeedback.id);
             }
             
-            // Update all feedbacks: approve selected ones and set marketing display
+            // Update all feedbacks: set marketing display for selected ones
             for (const feedback of allFeedbacks) {
                 const shouldDisplay = newMarketingFeedbackIds.has(feedback.id);
                 
                 // If this feedback should be displayed on marketing
                 if (shouldDisplay) {
-                    // Auto-approve it if not already approved
-                    if (feedback.status !== "Approved") {
-                        await FeedbackRepository.updateFeedbackStatus(feedback.id, "Approved");
-                    }
                     // Set to display on marketing
                     if (!feedback.displayOnMarketing) {
                         await FeedbackRepository.updateDisplayOnMarketing(feedback.id, true);
@@ -145,8 +117,6 @@ const useUserFeedbackViewModel = () => {
         marketingFeedbacks,
         loading,
         error,
-        approveFeedback,
-        retrackFeedback,
         toggleDisplayOnMarketing,
         automateMarketingFeedbacks,
         fetchFeedbacks

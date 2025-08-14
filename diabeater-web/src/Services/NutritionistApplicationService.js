@@ -4,7 +4,7 @@ import { doc, setDoc, getDoc, updateDoc, getDocs, writeBatch, Timestamp } from '
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../firebase';
 import { db } from "../firebase";
-import EmailService from './EmailService'; // Import EmailService
+import EmailService from './EmailService'; // Use the correct EmailService
 
 class NutritionistApplicationService {
     async saveNutritionistData(userId, data) {
@@ -109,13 +109,20 @@ class NutritionistApplicationService {
             await batch.commit();
             console.log("Database updates completed successfully");
 
-            // Send approval email
+            // FIXED: Send approval email using EmailService
             try {
-                await EmailService.sendApprovalEmail(
+                console.log("Attempting to send approval email...");
+                const emailResult = await EmailService.sendApprovalEmail(
                     applicationData.email,
                     `${applicationData.firstName} ${applicationData.lastName}`
                 );
-                console.log("Approval email sent successfully");
+                
+                if (emailResult.success) {
+                    console.log("Approval email sent successfully");
+                } else {
+                    console.error("Approval email failed:", emailResult.message);
+                    // Don't throw - approval was successful even if email failed
+                }
             } catch (emailError) {
                 console.error("Error sending approval email:", emailError);
                 // Don't throw here - the approval was successful even if email failed
@@ -166,14 +173,21 @@ class NutritionistApplicationService {
             await batch.commit();
             console.log("Database updates completed successfully");
 
-            // Send rejection email
+            // FIXED: Send rejection email using EmailService
             try {
-                await EmailService.sendRejectionEmail(
+                console.log("Attempting to send rejection email...");
+                const emailResult = await EmailService.sendRejectionEmail(
                     applicationData.email,
                     `${applicationData.firstName} ${applicationData.lastName}`,
                     reason || "No specific reason provided"
                 );
-                console.log("Rejection email sent successfully");
+                
+                if (emailResult.success) {
+                    console.log("Rejection email sent successfully");
+                } else {
+                    console.error("Rejection email failed:", emailResult.message);
+                    // Don't throw - rejection was successful even if email failed
+                }
             } catch (emailError) {
                 console.error("Error sending rejection email:", emailError);
                 // Don't throw here - the rejection was successful even if email failed
