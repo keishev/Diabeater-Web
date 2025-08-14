@@ -85,6 +85,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     const [showDetailView, setShowDetailView] = useState(false);
 
     const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
+    const processedMealPlanId = useRef(null);
 
     // Destructure the computed counts from MealPlanViewModel
     const { searchTerm, selectedCategory, error, pendingCount, approvedCount, rejectedCount } = MealPlanViewModel;
@@ -145,11 +146,23 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     }, [currentTab]);
 
     // Handle meal plan detail view from URL parameter
+    // Handle meal plan detail view from URL parameter
     useEffect(() => {
-        if (params.mealPlanId && !showDetailView) {
-            handleCardClick(params.mealPlanId);
-        }
-    }, [params.mealPlanId]);
+        const loadDetailFromParams = async () => {
+            if (params.mealPlanId &&
+                params.mealPlanId !== processedMealPlanId.current &&
+                !showDetailView) {
+
+                processedMealPlanId.current = params.mealPlanId;
+                await MealPlanViewModel.loadMealPlanDetails(params.mealPlanId);
+                if (MealPlanViewModel.selectedMealPlanForDetail) {
+                    setShowDetailView(true);
+                }
+            }
+        };
+
+        loadDetailFromParams();
+    }, [params.mealPlanId, showDetailView]);
 
     const handleApproveClick = useCallback((id, event) => {
         console.log('Approve clicked for plan:', id); // Debug log
@@ -191,8 +204,6 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     }, []);
 
     const handleRejectClick = useCallback((id, event) => {
-        console.log('Reject clicked for plan:', id); // Debug log
-        console.log('Event details:', event); // Debug log
         event.preventDefault();
         event.stopPropagation();
         
@@ -200,8 +211,6 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         setSelectedRejectReason('');
         setOtherReasonText('');
         setShowRejectModal(true);
-        
-        console.log('Modal should show now, showRejectModal:', true); // Debug log
     }, []);
 
     const handleReasonButtonClick = useCallback((reason) => {
@@ -284,10 +293,11 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         }
     }, [navigate]);
 
-    // Updated close detail handler to navigate back
     const handleCloseDetailView = useCallback(() => {
         MealPlanViewModel.clearSelectedMealPlans();
         setShowDetailView(false);
+        processedMealPlanId.current = null; 
+
         // Navigate back to the current tab
         const currentTabRoute = {
             'POPULAR': '/admin/meal-plans/popular',
@@ -359,9 +369,6 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         return categories;
     };
 
-    // Debug log to check state
-    console.log('showRejectModal state:', showRejectModal);
-    console.log('selectedPlanToReject:', selectedPlanToReject);
 
     // Get categorized popular meal plans
     const popularCategories = categorizePopularMealPlans(MealPlanViewModel.mealPlans);
