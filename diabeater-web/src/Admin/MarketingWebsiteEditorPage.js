@@ -122,6 +122,7 @@ function MarketingWebsiteEditorPage() {
                 <MarketingEditorSection title="Nutritionist 2 Bio" initialContent={websiteContent?.nutritionist2Bio} onSave={handleSaveContent} contentKey="nutritionist2Bio" contentType="textarea" />
                 <MarketingEditorSection title="Nutritionist 3 Name" initialContent={websiteContent?.nutritionist3Name} onSave={handleSaveContent} contentKey="nutritionist3Name" />
                 <MarketingEditorSection title="Nutritionist 3 Bio" initialContent={websiteContent?.nutritionist3Bio} onSave={handleSaveContent} contentKey="nutritionist3Bio" contentType="textarea" />
+                <MarketingEditorSection title="Join Us Link" initialContent={websiteContent?.joinUsLink} onSave={handleSaveContent} contentKey="joinUsLink" />
 
                 <MarketingEditorSection title="Gamification Section Title" initialContent={websiteContent?.gamificationSectionTitle} onSave={handleSaveContent} contentKey="gamificationSectionTitle" />
                 <MarketingEditorSection title="Gamification Description" initialContent={websiteContent?.gamificationDescription} onSave={handleSaveContent} contentKey="gamificationDescription" contentType="textarea" />

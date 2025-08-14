@@ -48,6 +48,7 @@ const defaultMarketingContent = {
     nutritionist2Bio: "A registered dietitian passionate about holistic health and personalized care plans.",
     nutritionist3Name: "Sophia Chen, MPH",
     nutritionist3Bio: "Focuses on preventative care and lifestyle modifications for long-term wellness.",
+    joinUsLink: "https://diabeaters-4cf9e.web.app/", 
 
     // Gamification Section Content
     gamificationSectionTitle: "Stay Motivated with Gamification",

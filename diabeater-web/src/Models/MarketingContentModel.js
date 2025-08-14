@@ -48,6 +48,7 @@ class MarketingContentModel {
         this.nutritionist2Bio = data.nutritionist2Bio ?? "A registered dietitian passionate about holistic health and personalized care plans.";
         this.nutritionist3Name = data.nutritionist3Name ?? "Sophia Chen, MPH";
         this.nutritionist3Bio = data.nutritionist3Bio ?? "Focuses on preventative care and lifestyle modifications for long-term wellness.";
+        this.joinUsLink = data.joinUsLink ?? "https://diabeaters-4cf9e.web.app/";
 
         // Gamification Section Content
         this.gamificationSectionTitle = data.gamificationSectionTitle ?? "Stay Motivated with Gamification";
