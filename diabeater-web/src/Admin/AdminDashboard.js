@@ -555,8 +555,11 @@ const Pagination = observer(({ currentData, itemsPerPage = 10, onPageChange, cur
     );
 });
 
-// FIXED USER ACCOUNTS CONTENT WITH PROPER PAGINATION
-const UserAccountsContent = observer(() => {
+// FIXED USER ACCOUNTS CONTENT WITH PROPER PAGINATION AND URL ROUTING
+const UserAccountsContent = observer(({ activeUserAccountTab }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const {
         activeTab,
         filteredPendingAccounts,
@@ -584,6 +587,31 @@ const UserAccountsContent = observer(() => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Determine current tab from URL or prop
+    const getCurrentTab = () => {
+        if (activeUserAccountTab) {
+            const tabMap = {
+                'all': 'ALL_ACCOUNTS',
+                'pending': 'PENDING_APPROVAL',
+                'createAdmin': 'CREATE_ADMIN'
+            };
+            return tabMap[activeUserAccountTab] || 'ALL_ACCOUNTS';
+        }
+
+        const pathname = location.pathname;
+        if (pathname.includes('/user-accounts/pending')) return 'PENDING_APPROVAL';
+        if (pathname.includes('/user-accounts/create-admin')) return 'CREATE_ADMIN';
+        if (pathname.includes('/user-accounts/all')) return 'ALL_ACCOUNTS';
+        return 'ALL_ACCOUNTS'; // default
+    };
+
+    const currentTab = getCurrentTab();
+
+    // Update ViewModel tab when URL changes
+    useEffect(() => {
+        AdminDashboardViewModel.setActiveTab(currentTab);
+    }, [currentTab]);
+
     useEffect(() => {
         AdminDashboardViewModel.fetchAccounts();
     }, [activeTab]);
@@ -593,30 +621,42 @@ const UserAccountsContent = observer(() => {
         setCurrentPage(1);
     }, [activeTab, searchTerm]);
 
-     // FIXED: Enhanced handleOpenModal to fetch premium data like PremiumPage does
+    // Updated tab navigation handlers to use URL routing
+    const handleTabNavigation = (tab) => {
+        const routeMap = {
+            'ALL_ACCOUNTS': '/admin/user-accounts/all',
+            'PENDING_APPROVAL': '/admin/user-accounts/pending',
+            'CREATE_ADMIN': '/admin/user-accounts/create-admin'
+        };
+
+        if (routeMap[tab]) {
+            navigate(routeMap[tab]);
+        }
+    };
+
     const handleOpenModal = async (user) => {
         console.log("[AdminDashboard] Opening user detail modal for:", user);
-        
+
         try {
             // First set the basic user data
             setSelectedUser(user);
-            
+
             // Try to enrich the user with premium subscription data
             if (user.id || user._id) {
                 const userId = user.id || user._id;
-                
+
                 // Check if premiumStatViewModel has the required methods
                 if (typeof premiumStatViewModel.loadPremiumData === 'function') {
                     // Load premium data if not already loaded
                     if (premiumStatViewModel.allPremiumUserAccounts.length === 0) {
                         await premiumStatViewModel.loadPremiumData();
                     }
-                    
+
                     // Find the user in premium accounts
                     const premiumUser = premiumStatViewModel.allPremiumUserAccounts.find(
                         premiumAccount => premiumAccount._id === userId || premiumAccount.id === userId
                     );
-                    
+
                     if (premiumUser) {
                         console.log("[AdminDashboard] Found premium user data:", premiumUser);
                         setSelectedUser(premiumUser);
@@ -626,8 +666,8 @@ const UserAccountsContent = observer(() => {
                         const enrichedUser = {
                             ...user,
                             _id: userId,
-                            displayName: user.firstName && user.lastName 
-                                ? `${user.firstName} ${user.lastName}` 
+                            displayName: user.firstName && user.lastName
+                                ? `${user.firstName} ${user.lastName}`
                                 : (user.name || user.email),
                             displayStatus: 'inactive',
                             displayRenewalDate: 'N/A',
@@ -639,10 +679,10 @@ const UserAccountsContent = observer(() => {
                     console.log("[AdminDashboard] PremiumStatViewModel methods not available, using basic user data");
                 }
             }
-            
+
             // Open the modal
             setShowUserDetailModal(true);
-            
+
         } catch (error) {
             console.error("[AdminDashboard] Error enriching user data:", error);
             // Still open the modal with basic user data even if premium data fetch fails
@@ -741,19 +781,19 @@ const UserAccountsContent = observer(() => {
             <div className="admin-tabs">
                 <button
                     className={`tab-button ${activeTab === 'ALL_ACCOUNTS' ? 'active' : ''}`}
-                    onClick={() => AdminDashboardViewModel.setActiveTab('ALL_ACCOUNTS')}
+                    onClick={() => handleTabNavigation('ALL_ACCOUNTS')}
                 >
                     ALL ACCOUNTS
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'PENDING_APPROVAL' ? 'active' : ''}`}
-                    onClick={() => AdminDashboardViewModel.setActiveTab('PENDING_APPROVAL')}
+                    onClick={() => handleTabNavigation('PENDING_APPROVAL')}
                 >
                     PENDING APPROVAL
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'CREATE_ADMIN' ? 'active' : ''}`}
-                    onClick={() => AdminDashboardViewModel.setActiveTab('CREATE_ADMIN')}
+                    onClick={() => handleTabNavigation('CREATE_ADMIN')}
                 >
                     CREATE ADMIN
                 </button>
@@ -768,7 +808,7 @@ const UserAccountsContent = observer(() => {
                     {(error || userAccountsError) && <p className="error-message">{error || userAccountsError}</p>}
 
                     <div className="table-container">
-                        
+
 <table>
     <thead>
         <tr>
@@ -810,11 +850,11 @@ const UserAccountsContent = observer(() => {
         )}
     </tbody>
 </table>
-                        
+
                         {/* FIXED PAGINATION */}
                         {currentData.length > 0 && (
-                            <Pagination 
-                                currentData={currentData} 
+                            <Pagination
+                                currentData={currentData}
                                 itemsPerPage={itemsPerPage}
                                 currentPage={currentPage}
                                 onPageChange={handlePageChange}
@@ -860,7 +900,7 @@ const UserAccountsContent = observer(() => {
 });
 
 // AdminDashboard Main Component
-const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab }) => {
+const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab, activeUserAccountTab }) => {
     const location = useLocation();
 
     // Determine the current view from the URL path if activeSection is not provided
@@ -899,7 +939,7 @@ const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab })
             <div className="admin-main-content">
                 {currentView === 'myProfile' && <AdminProfile />}
                 {currentView === 'dashboard' && <AdminStatDashboard />}
-                {currentView === 'userAccounts' && <UserAccountsContent />}
+                {currentView === 'userAccounts' && <UserAccountsContent activeUserAccountTab={activeUserAccountTab} />}
                 {currentView === 'premiumAccounts' && <PremiumPage />}
                 {(currentView === 'mealPlans' || currentView === 'mealPlanDetail') && <AdminMealPlans activeMealPlanTab={activeMealPlanTab} />}
                 {currentView === 'exportReport' && <AdminExportReport />}
@@ -912,3 +952,4 @@ const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab })
 });
 
 export default AdminDashboard;
+

@@ -146,6 +146,15 @@ function App() {
                             <Route path="user-accounts" element={
                                 <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" />
                             } />
+                            <Route path="user-accounts/all" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="all" />
+                            } />
+                            <Route path="user-accounts/pending" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="pending" />
+                            } />
+                            <Route path="user-accounts/create-admin" element={
+                                <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="userAccounts" activeUserAccountTab="createAdmin" />
+                            } />
                             <Route path="premium-accounts" element={
                                 <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} activeSection="premiumAccounts" />
                             } />
