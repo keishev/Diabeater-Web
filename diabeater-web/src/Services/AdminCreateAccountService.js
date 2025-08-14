@@ -17,10 +17,10 @@ const AdminCreateAccountService = {
       if (!dob) throw new Error('Date of birth is required');
       
       console.log('Creating admin account via Cloud Function...');
-      
+
       const functions = getFunctions();
       const createAdminWithVerification = httpsCallable(functions, 'createAdminWithVerification');
-      
+
       const result = await createAdminWithVerification({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -33,9 +33,9 @@ const AdminCreateAccountService = {
         // You can either:
         // 1. Return the verification link and let frontend handle email sending
         // 2. Or just return success and let user know to check their email
-        
+
         console.log('Admin account created. Verification link:', result.data.verificationLink);
-        
+
         return {
           success: true,
           email: result.data.email,
@@ -46,7 +46,7 @@ const AdminCreateAccountService = {
       } else {
         throw new Error(result.data.error || 'Failed to create admin account');
       }
-      
+
     } catch (error) {
       console.error('Error creating admin account:', error);
       
@@ -70,16 +70,16 @@ const AdminCreateAccountService = {
       const functions = getFunctions();
       const checkEmailVerification = httpsCallable(functions, 'checkEmailVerification');
       const result = await checkEmailVerification({ email: email.trim() });
-      
+
       return result.data;
-      
+
     } catch (error) {
       console.error('Error checking email verification:', error);
-      
+
       if (error.code && error.message) {
         throw new Error(error.message);
       }
-      
+
       throw new Error(`Failed to check verification status: ${error.message}`);
     }
   },
@@ -95,7 +95,7 @@ const AdminCreateAccountService = {
 
       // For now, just tell user to check spam or use the original link
       // You could also implement a resend function in your cloud functions if needed
-      
+
       return {
         success: true,
         message: 'Please check your email (including spam folder) for the verification link. The link should still be valid.'
@@ -112,39 +112,39 @@ const AdminCreateAccountService = {
    */
   validateAdminForm(formData) {
     const errors = {};
-    
+
     if (!formData.firstName?.trim() || formData.firstName.trim().length < 2) {
       errors.firstName = 'First name must be at least 2 characters';
     }
-    
+
     if (!formData.lastName?.trim() || formData.lastName.trim().length < 2) {
       errors.lastName = 'Last name must be at least 2 characters';
     }
-    
+
     if (!formData.email?.trim() || !/\S+@\S+\.\S+/.test(formData.email.trim())) {
       errors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData.password || formData.password.length < 6) {
       errors.password = 'Password must be at least 6 characters';
     }
-    
+
     if (!formData.confirmPassword || formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
-    
+
     if (!formData.dob) {
       errors.dob = 'Date of birth is required';
     } else {
       const dobDate = new Date(formData.dob);
       const today = new Date();
       const age = today.getFullYear() - dobDate.getFullYear();
-      
+
       if (age < 18) {
         errors.dob = 'Admin must be at least 18 years old';
       }
     }
-    
+
     return {
       isValid: Object.keys(errors).length === 0,
       errors

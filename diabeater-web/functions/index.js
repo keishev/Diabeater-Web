@@ -66,7 +66,12 @@ const isAdmin = async (context) => {
  */
 exports.verifyEmailToken = onRequest({
     cors: {
-        origin: ['http://localhost:3000', 'https://your-domain.com'],
+        origin: ['https://diabeaters-4cf9e.web.app',
+                'https://diabeaters-4cf9e.firebaseapp.com',
+                'http://localhost:3000',
+                'http://127.0.0.1:3000',
+                'http://localhost:5173',
+                'http://127.0.0.1:5173',],
         methods: ['GET'],
         allowedHeaders: ['Content-Type'],
         credentials: true

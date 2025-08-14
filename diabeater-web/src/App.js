@@ -1,5 +1,6 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './Nutritionist/LoginPage';
 import NutritionistDashboard from './Nutritionist/NutritionistDashboard';
 import AdminDashboard from './Admin/AdminDashboard';
@@ -18,8 +19,6 @@ function App() {
     const [userId, setUserId] = useState(null); // New state for userId
     const [verifiedLogin, setVerifiedLogin] = useState(false);
     const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
-    const [showResetPassword, setShowResetPassword] = useState(false);
-    const [showCreateAccount, setShowCreateAccount] = useState(false);
 
     useEffect(() => {
         const auth = getAuth(app);
@@ -90,23 +89,9 @@ function App() {
         // We still update local state for immediate rendering.
         setUserRole(role);
         setVerifiedLogin(true);
-        setShowResetPassword(false);
-        setShowCreateAccount(false);
-    };
-
-    const handleResetPasswordRequest = () => {
-        setShowResetPassword(true);
-        setShowCreateAccount(false);
-    };
-
-    const handleCreateAccountRequest = () => {
-        setShowCreateAccount(true);
-        setShowResetPassword(false);
     };
 
     const handleBackToLogin = () => {
-        setShowResetPassword(false);
-        setShowCreateAccount(false);
         setUserRole(null);
         setVerifiedLogin(false);
         const auth = getAuth(app);
@@ -119,37 +104,62 @@ function App() {
         setUserRole(null);
         setUserId(null); // Clear userId
         setVerifiedLogin(false);
-        setShowCreateAccount(false);
-        setShowResetPassword(false);
         mealPlanViewModel.initializeUser(); // Re-initialize ViewModel to clear state
+    };
+
+    // Auth guard component for protected routes
+    const ProtectedRoute = ({ children, allowedRole }) => {
+        if (isFirebaseLoading) {
+            return <div>Loading authentication...</div>;
+        }
+        
+        if (!verifiedLogin || userRole !== allowedRole) {
+            return <Navigate to="/" replace />;
+        }
+        
+        return children;
     };
 
     if (isFirebaseLoading) return <div>Loading authentication...</div>;
 
-    if (showCreateAccount) {
-        return <CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />;
-    }
-
-    if (showResetPassword) {
-        return <ResetPasswordPage onBackToLogin={handleBackToLogin} />;
-    }
-
-    if (verifiedLogin && userRole === 'nutritionist') {
-        // Pass currentUserId and currentUserRole to NutritionistDashboard
-        return <NutritionistDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />;
-    }
-
-    if (verifiedLogin && userRole === 'admin') {
-        // Pass currentUserId and currentUserRole to AdminDashboard
-        return <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />;
-    }
-
     return (
-        <LoginPage
-            onLoginSuccess={handleLoginSuccess}
-            onResetPasswordRequest={handleResetPasswordRequest}
-            onCreateAccountRequest={handleCreateAccountRequest}
-        />
+        <Router>
+            <Routes>
+                {/* Public routes */}
+                <Route path="/" element={
+                    verifiedLogin ? (
+                        userRole === 'admin' ? 
+                            <Navigate to="/admin/dashboard" replace /> : 
+                            <Navigate to="/nutritionist/dashboard" replace />
+                    ) : (
+                        <LoginPage
+                            onLoginSuccess={handleLoginSuccess}
+                            onResetPasswordRequest={() => window.location.href = '/reset-password'}
+                            onCreateAccountRequest={() => window.location.href = '/create-account'}
+                        />
+                    )
+                } />
+                <Route path="/reset-password" element={<ResetPasswordPage onBackToLogin={handleBackToLogin} />} />
+                <Route path="/create-account" element={<CreateAccountPage onAccountCreated={handleBackToLogin} onBackToLogin={handleBackToLogin} />} />
+                
+                {/* Protected routes - Admin */}
+                <Route path="/admin/dashboard/*" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />
+                    </ProtectedRoute>
+                } />
+                
+                {/* Protected routes - Nutritionist */}
+                <Route path="/nutritionist/dashboard/*" element={
+                    <ProtectedRoute allowedRole="nutritionist">
+                        <NutritionistDashboard onLogout={handleLogout} currentUserId={userId} currentUserRole={userRole} />
+                    </ProtectedRoute>
+                } />
+                
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </Router>
     );
 }
 

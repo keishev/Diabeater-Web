@@ -21,11 +21,27 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
-// Allow requests from your Firebase hosting domain
+// Allow requests from your Firebase hosting domain and local hosted
+const allowlist = [
+    'https://diabeaters-4cf9e.web.app',
+    'https://diabeaters-4cf9e.firebaseapp.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+];
+
 app.use(cors({
-    origin: ['https://diabeaters-4cf9e.web.app', 'https://diabeaters-4cf9e.firebaseapp.com'],
-    credentials: true
+    origin(origin, callback) {
+        // allow REST clients / server-to-server with no origin
+        if (!origin || allowlist.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
 }));
+
 app.use(express.json());
 
 // --- Authentication and Authorization Middleware ---

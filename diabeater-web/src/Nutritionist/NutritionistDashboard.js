@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite'; // Import observer for MobX
+import {Routes, Route, Link, useNavigate, useLocation, Navigate} from 'react-router-dom';
 import './NutritionistDashboard.css';
 import CreateMealPlan from './CreateMealPlan';
 import NutritionistProfile from './NutritionistProfile';
@@ -304,9 +305,11 @@ const MyMealPlansContent = observer(({
 // --- Sidebar component ---
 // This component does not need to be an observer, but receives props
 // Fixed Sidebar component with better structure for notification badge
-const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
+const Sidebar = observer(({ onLogout, userRole }) => {
     // Directly access unreadNotificationCount from the ViewModel
     const unreadCount = mealPlanViewModel.unreadNotificationCount;
+    const location = useLocation();
+    const currentPath = location.pathname;
 
     return (
         <div className="sidebar">
@@ -316,34 +319,34 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
             </div>
             <nav className="navigation">
                 {userRole === 'nutritionist' && (
-                    <div
-                        className={`nav-item ${currentView === 'nutritionistProfile' ? 'active' : ''}`}
-                        onClick={() => onNavigate('nutritionistProfile')}
+                    <Link 
+                        to="/nutritionist/dashboard/profile"
+                        className={`nav-item ${currentPath.includes('/profile') ? 'active' : ''}`}
                     >
                         <i className="fas fa-user"></i>
                         <span>My Profile</span>
-                    </div>
+                    </Link>
                 )}
-                <div
-                    className={`nav-item ${currentView === 'myMealPlans' ? 'active' : ''}`}
-                    onClick={() => onNavigate('myMealPlans')}
+                <Link
+                    to="/nutritionist/dashboard/meal-plans"
+                    className={`nav-item ${currentPath.includes('/meal-plans') && !currentPath.includes('/create') ? 'active' : ''}`}
                 >
                     <i className="fas fa-clipboard-list"></i>
                     <span>Meal Plans</span>
-                </div>
+                </Link>
                 {userRole === 'nutritionist' && (
-                    <div
-                        className={`nav-item ${currentView === 'createMealPlan' ? 'active' : ''}`}
-                        onClick={() => onNavigate('createMealPlan')}
+                    <Link
+                        to="/nutritionist/dashboard/create-meal-plan"
+                        className={`nav-item ${currentPath.includes('/create-meal-plan') ? 'active' : ''}`}
                     >
                         <i className="fas fa-plus-circle"></i>
                         <span>Create Meal Plan</span>
-                    </div>
+                    </Link>
                 )}
                 {userRole === 'nutritionist' && (
-                    <div
-                        className={`nav-item ${currentView === 'notifications' ? 'active' : ''}`}
-                        onClick={() => onNavigate('notifications')}
+                    <Link
+                        to="/nutritionist/dashboard/notifications"
+                        className={`nav-item ${currentPath.includes('/notifications') ? 'active' : ''}`}
                     >
                         <i className="fas fa-bell"></i>
                         <span>
@@ -352,7 +355,7 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
                                 <span className="notification-badge">{unreadCount}</span>
                             )}
                         </span>
-                    </div>
+                    </Link>
                 )}
             </nav>
             <button className="logout-button" onClick={onLogout}>
@@ -365,7 +368,8 @@ const Sidebar = observer(({ currentView, onNavigate, onLogout, userRole }) => {
 
 // --- NutritionistDashboard Main Component ---
 const NutritionistDashboard = observer(({ onLogout }) => {
-    const [currentView, setCurrentView] = useState('myMealPlans');
+    const navigate = useNavigate();
+    const location = useLocation();
 
     // Destructure properties and actions from the MobX ViewModel
     const {
@@ -388,6 +392,7 @@ const NutritionistDashboard = observer(({ onLogout }) => {
         fetchNutritionistMealPlans,
         fetchAdminMealPlans
     } = mealPlanViewModel;
+    
     // Effect to initialize user and fetch initial data through the ViewModel
     useEffect(() => {
         mealPlanViewModel.initializeUser(); // This will trigger initial data fetching based on role
@@ -396,17 +401,23 @@ const NutritionistDashboard = observer(({ onLogout }) => {
         };
     }, []); // Run once on mount
 
+    // Redirect to meal-plans by default if at the root dashboard path
+    useEffect(() => {
+        if (location.pathname === '/nutritionist/dashboard' || location.pathname === '/admin/dashboard') {
+            navigate(`${location.pathname}/meal-plans`, { replace: true });
+        }
+    }, [location.pathname, navigate]);
+
     // Handlers that call ViewModel actions
     const handleSelectMealPlan = (mealPlanId) => {
         loadMealPlanDetails(mealPlanId); // ViewModel fetches details and sets selectedMealPlanForDetail
-        setCurrentView('mealPlanDetail');
+        navigate(`${location.pathname.split('/').slice(0, 3).join('/')}/meal-plan-detail/${mealPlanId}`);
     };
 
     const handleUpdateMealPlan = (mealPlanId) => {
-        // This is the crucial part: set the view to 'updateMealPlan'
-        // and also tell the ViewModel which meal plan to prepare for update.
+        // This is the crucial part: tell the ViewModel which meal plan to prepare for update.
         mealPlanViewModel.selectMealPlanForUpdate(mealPlanId); // Ensure this is called
-        setCurrentView('updateMealPlan');
+        navigate(`${location.pathname.split('/').slice(0, 3).join('/')}/update-meal-plan/${mealPlanId}`);
     };
 
     const handleDeleteMealPlan = async (mealPlanId, imageFileName) => {
@@ -414,11 +425,9 @@ const NutritionistDashboard = observer(({ onLogout }) => {
             const success = await deleteMealPlan(mealPlanId, imageFileName);
             if (success) {
                 // If deletion was successful, the ViewModel's internal list is already updated.
-                // You might not need to explicitly navigate back to 'myMealPlans' if the current list
-                // automatically re-renders due to MobX's observation.
-                // However, if you were in MealPlanDetail, you'd want to go back.
-                if (currentView === 'mealPlanDetail') {
-                    setCurrentView('myMealPlans');
+                // Navigate back to meal plans if we're in detail view
+                if (location.pathname.includes('/meal-plan-detail/')) {
+                    navigate(`${location.pathname.split('/').slice(0, 3).join('/')}/meal-plans`);
                 }
             }
         }
@@ -442,18 +451,17 @@ const NutritionistDashboard = observer(({ onLogout }) => {
             }
             await approveOrRejectMealPlan(mealPlanId, newStatus, authorId, adminName, adminId, rejectionReason);
             // ViewModel will re-fetch meal plans automatically after approval/rejection
-            // No explicit setCurrentView needed as the list will update due to MobX
         }
     };
 
     const handleBack = () => {
         clearSelectedMealPlans(); // Clear selected meal plans in ViewModel
-        setCurrentView('myMealPlans');
+        navigate(`${location.pathname.split('/').slice(0, 3).join('/')}/meal-plans`);
     };
 
     // Handler for when a new meal plan is successfully submitted (from CreateMealPlan)
     const handleMealPlanSubmitted = async () => {
-        setCurrentView('myMealPlans'); // Go back to the main list view
+        navigate(`${location.pathname.split('/').slice(0, 3).join('/')}/meal-plans`);
         // The ViewModel's createMealPlan method already triggers a re-fetch of meal plans,
         // so the list will refresh automatically.
     };
@@ -470,11 +478,9 @@ const NutritionistDashboard = observer(({ onLogout }) => {
         await markNotificationAsRead(notificationId);
     };
 
-     return (
+    return (
         <div className="nutritionist-dashboard-page">
             <Sidebar
-                currentView={currentView}
-                onNavigate={setCurrentView}
                 onLogout={onLogout}
                 userRole={currentUserRole}
             />
@@ -499,46 +505,59 @@ const NutritionistDashboard = observer(({ onLogout }) => {
                     </div>
                 )}
 
-                {currentView === 'nutritionistProfile' && currentUserRole === 'nutritionist' && <NutritionistProfile />}
-
-                {currentView === 'myMealPlans' && (
-                    <MyMealPlansContent
-                        onSelectMealPlan={handleSelectMealPlan}
-                        onUpdateMealPlan={handleUpdateMealPlan}
-                        onDeleteMealPlan={handleDeleteMealPlan}
-                        onApproveMealPlan={handleApproveOrRejectMealPlan}
-                        onRejectMealPlan={handleApproveOrRejectMealPlan}
-                        userRole={currentUserRole}
-                    />
-                )}
-
-                {currentView === 'createMealPlan' && currentUserRole === 'nutritionist' && (
-                    <CreateMealPlan onMealPlanSubmitted={handleMealPlanSubmitted} />
-                )}
-
-                {currentView === 'mealPlanDetail' && (
-                    <MealPlanDetail
-                        onBack={handleBack}
-                        userRole={currentUserRole}
-                        currentUserId={currentUserId}
-                        onDeleteMealPlan={handleDeleteMealPlan}
-                    />
-                )}
-
-                {currentView === 'updateMealPlan' && selectedMealPlanForUpdate && (
-                    <UpdateMealPlan
-                        mealPlan={selectedMealPlanForUpdate}
-                        onBack={handleBack}
-                    />
-                )}
-
-                {/* Updated NotificationList to use filtered notifications */}
-                {currentView === 'notifications' && currentUserRole === 'nutritionist' && (
-                    <NotificationList
-                        notifications={filteredNotifications} // Use filtered notifications
-                        onMarkAsRead={handleMarkNotificationAsRead}
-                    />
-                )}
+                <Routes>
+                    {currentUserRole === 'nutritionist' && (
+                        <Route path="profile" element={<NutritionistProfile />} />
+                    )}
+                    
+                    <Route path="meal-plans" element={
+                        <MyMealPlansContent
+                            onSelectMealPlan={handleSelectMealPlan}
+                            onUpdateMealPlan={handleUpdateMealPlan}
+                            onDeleteMealPlan={handleDeleteMealPlan}
+                            onApproveMealPlan={handleApproveOrRejectMealPlan}
+                            onRejectMealPlan={handleApproveOrRejectMealPlan}
+                            userRole={currentUserRole}
+                        />
+                    } />
+                    
+                    {currentUserRole === 'nutritionist' && (
+                        <Route path="create-meal-plan" element={
+                            <CreateMealPlan onMealPlanSubmitted={handleMealPlanSubmitted} />
+                        } />
+                    )}
+                    
+                    <Route path="meal-plan-detail/:mealPlanId" element={
+                        <MealPlanDetail
+                            onBack={handleBack}
+                            userRole={currentUserRole}
+                            currentUserId={currentUserId}
+                            onDeleteMealPlan={handleDeleteMealPlan}
+                        />
+                    } />
+                    
+                    <Route path="update-meal-plan/:mealPlanId" element={
+                        selectedMealPlanForUpdate ? (
+                            <UpdateMealPlan
+                                mealPlan={selectedMealPlanForUpdate}
+                                onBack={handleBack}
+                            />
+                        ) : (
+                            <div>Loading meal plan data...</div>
+                        )
+                    } />
+                    
+                    {currentUserRole === 'nutritionist' && (
+                        <Route path="notifications" element={
+                            <NotificationList
+                                notifications={filteredNotifications}
+                                onMarkAsRead={handleMarkNotificationAsRead}
+                            />
+                        } />
+                    )}
+                    
+                    <Route path="*" element={<Navigate to="meal-plans" replace />} />
+                </Routes>
             </div>
         </div>
     );
