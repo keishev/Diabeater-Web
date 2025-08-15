@@ -381,25 +381,25 @@ startxref
 
    return (
         <>
-            <button
-                onClick={insertData}
-                disabled={isInserting}
-                style={{
-                    backgroundColor: isInserting ? '#9ca3af' : '#059669',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 18px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    marginTop: '-200px',
-                    cursor: isInserting ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    whiteSpace: 'nowrap'
-                }}
-            >
-                {isInserting ? '⏳ Inserting...' : '🔥 Insert Complete Dataset + PDFs'}
-            </button>
+            {/*<button*/}
+            {/*    onClick={insertData}*/}
+            {/*    disabled={isInserting}*/}
+            {/*    style={{*/}
+            {/*        backgroundColor: isInserting ? '#9ca3af' : '#059669',*/}
+            {/*        color: 'white',*/}
+            {/*        border: 'none',*/}
+            {/*        padding: '10px 18px',*/}
+            {/*        borderRadius: '6px',*/}
+            {/*        fontSize: '13px',*/}
+            {/*        fontWeight: '600',*/}
+            {/*        marginTop: '-200px',*/}
+            {/*        cursor: isInserting ? 'not-allowed' : 'pointer',*/}
+            {/*        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',*/}
+            {/*        whiteSpace: 'nowrap'*/}
+            {/*    }}*/}
+            {/*>*/}
+            {/*    {isInserting ? '⏳ Inserting...' : '🔥 Insert Complete Dataset + PDFs'}*/}
+            {/*</button>*/}
 
       {/* Progress Modal */}
       {showModal && (

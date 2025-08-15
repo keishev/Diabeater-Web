@@ -241,24 +241,24 @@ const ImprovedDeleteDummyData = () => {
 
   return (
         <div>
-            <button
-                onClick={handleDeleteClick}
-                disabled={isDeleting}
-                style={{
-                    backgroundColor: isDeleting ? '#9ca3af' : '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 18px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: isDeleting ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    whiteSpace: 'nowrap'
-                }}
-            >
-                {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete Dummy Data'}
-            </button>
+            {/*<button*/}
+            {/*    onClick={handleDeleteClick}*/}
+            {/*    disabled={isDeleting}*/}
+            {/*    style={{*/}
+            {/*        backgroundColor: isDeleting ? '#9ca3af' : '#dc2626',*/}
+            {/*        color: 'white',*/}
+            {/*        border: 'none',*/}
+            {/*        padding: '10px 18px',*/}
+            {/*        borderRadius: '6px',*/}
+            {/*        fontSize: '13px',*/}
+            {/*        fontWeight: '600',*/}
+            {/*        cursor: isDeleting ? 'not-allowed' : 'pointer',*/}
+            {/*        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',*/}
+            {/*        whiteSpace: 'nowrap'*/}
+            {/*    }}*/}
+            {/*>*/}
+            {/*    {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete Dummy Data'}*/}
+            {/*</button>*/}
       {/* Confirmation Modal */}
       {showConfirm && (
         <div style={{
