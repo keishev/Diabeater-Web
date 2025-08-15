@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import premiumStatViewModel from '../ViewModels/PremiumStatViewModel';
@@ -14,9 +13,18 @@ const PremiumPage = observer(() => {
     const [newFeatureName, setNewFeatureName] = useState('');
     const [editingFeature, setEditingFeature] = useState(null);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const accountsPerPage = 10;
+
     useEffect(() => {
         premiumStatViewModel.loadPremiumData();
     }, []);
+
+    // Reset to first page when search query changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [premiumStatViewModel.searchQuery]);
 
     
     const handleSearchChange = (e) => {
@@ -118,6 +126,47 @@ const PremiumPage = observer(() => {
     }
 };
 
+    // Pagination calculations
+    const totalAccounts = premiumStatViewModel.filteredPremiumUserAccounts.length;
+    const totalPages = Math.ceil(totalAccounts / accountsPerPage);
+    const startIndex = (currentPage - 1) * accountsPerPage;
+    const endIndex = startIndex + accountsPerPage;
+    const currentAccounts = premiumStatViewModel.filteredPremiumUserAccounts.slice(startIndex, endIndex);
+
+    // Pagination handlers
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    // Generate page numbers for pagination
+    const getPageNumbers = () => {
+        const pageNumbers = [];
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage < maxVisiblePages - 1) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.push(i);
+        }
+        return pageNumbers;
+    };
+
     
     console.log("PremiumPage render - Modal states:", {
         isUserDetailModalOpen: premiumStatViewModel.isUserDetailModalOpen,
@@ -168,6 +217,13 @@ const PremiumPage = observer(() => {
                     />
                 </div>
 
+                {/* Results Summary */}
+                {totalAccounts > 0 && (
+                    <div className="premium-results-summary">
+                        Showing {startIndex + 1}-{Math.min(endIndex, totalAccounts)} of {totalAccounts} accounts
+                    </div>
+                )}
+
                 {/* Subscription Table */}
                 <div className="premium-table-container">
                     <table className="premium-table">
@@ -182,8 +238,8 @@ const PremiumPage = observer(() => {
                             </tr>
                         </thead>
                         <tbody>
-                            {premiumStatViewModel.filteredPremiumUserAccounts.length > 0 ? (
-                                premiumStatViewModel.filteredPremiumUserAccounts.map((user) => (
+                            {currentAccounts.length > 0 ? (
+                                currentAccounts.map((user) => (
                                     <tr key={user._id}>
                                         <td>{user.displayName}</td>
                                         <td>{user.email}</td>
@@ -222,6 +278,41 @@ const PremiumPage = observer(() => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="premium-pagination">
+                        <button 
+                            onClick={handlePreviousPage}
+                            disabled={currentPage === 1}
+                            className="premium-pagination-button premium-pagination-prev"
+                        >
+                            Previous
+                        </button>
+                        
+                        <div className="premium-pagination-numbers">
+                            {getPageNumbers().map((pageNum) => (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`premium-pagination-button premium-pagination-number ${
+                                        currentPage === pageNum ? 'active' : ''
+                                    }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                            className="premium-pagination-button premium-pagination-next"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </section>
 
             {/* --- Section 2: Premium Price Management --- */}

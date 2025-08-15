@@ -17,7 +17,8 @@ import AdminRewards from './AdminRewards';
 import adminStatViewModel from '../ViewModels/AdminStatViewModel';
 import PremiumPage from './PremiumPage';
 import premiumStatViewModel from '../ViewModels/PremiumStatViewModel'; 
-
+import BulkInsertButton from './BulkInsertButton';
+import DeleteDummyData from './DeleteDummyData';
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
 
@@ -603,11 +604,21 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         error: userAccountsError,
     } = userAccountsVM;
 
-    
+    // Account type filter state
+    const [selectedAccountType, setSelectedAccountType] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    
+    // Account type options
+    const accountTypeOptions = [
+        { value: 'all', label: 'All Account Types', count: 0 },
+        { value: 'basic', label: 'Basic Users', count: 0 },
+        { value: 'premium', label: 'Premium Users', count: 0 },
+        { value: 'nutritionist', label: 'Nutritionists', count: 0 },
+        { value: 'admin', label: 'Administrators', count: 0 }
+    ];
+
+    // Get current tab
     const getCurrentTab = () => {
         if (activeUserAccountTab) {
             const tabMap = {
@@ -627,21 +638,56 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
 
     const currentTab = getCurrentTab();
 
-    
-    useEffect(() => {
-        AdminDashboardViewModel.setActiveTab(currentTab);
-    }, [currentTab]);
+    // Filter data by account type
+    const getFilteredData = () => {
+        const baseData = activeTab === 'ALL_ACCOUNTS' ? filteredAllAccounts : filteredPendingAccounts;
+        
+        if (selectedAccountType === 'all') {
+            return baseData;
+        }
+        
+        return baseData.filter(user => user.role === selectedAccountType);
+    };
 
-    useEffect(() => {
-        AdminDashboardViewModel.fetchAccounts();
-    }, [activeTab]);
+    // Calculate counts for each account type
+    const getAccountTypeCounts = () => {
+        const baseData = activeTab === 'ALL_ACCOUNTS' ? filteredAllAccounts : filteredPendingAccounts;
+        
+        const counts = {
+            all: baseData.length,
+            basic: baseData.filter(user => user.role === 'basic').length,
+            premium: baseData.filter(user => user.role === 'premium').length,
+            nutritionist: baseData.filter(user => user.role === 'nutritionist').length,
+            admin: baseData.filter(user => user.role === 'admin').length
+        };
 
+        return accountTypeOptions.map(option => ({
+            ...option,
+            count: counts[option.value] || 0
+        }));
+    };
+
+    // Get current filtered data
+    const currentData = getFilteredData();
+    const accountTypeOptionsWithCounts = getAccountTypeCounts();
     
-    useEffect(() => {
+    // Pagination logic
+    const totalItems = currentData.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPageData = currentData.slice(startIndex, endIndex);
+
+    // Event handlers
+    const handleAccountTypeChange = (accountType) => {
+        setSelectedAccountType(accountType);
         setCurrentPage(1);
-    }, [activeTab, searchTerm]);
+    };
 
-    
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+    };
+
     const handleTabNavigation = (tab) => {
         const routeMap = {
             'ALL_ACCOUNTS': '/admin/user-accounts/all',
@@ -658,21 +704,16 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         console.log("[AdminDashboard] Opening user detail modal for:", user);
 
         try {
-            
             setSelectedUser(user);
 
-            
             if (user.id || user._id) {
                 const userId = user.id || user._id;
 
-                
                 if (typeof premiumStatViewModel.loadPremiumData === 'function') {
-                    
                     if (premiumStatViewModel.allPremiumUserAccounts.length === 0) {
                         await premiumStatViewModel.loadPremiumData();
                     }
 
-                    
                     const premiumUser = premiumStatViewModel.allPremiumUserAccounts.find(
                         premiumAccount => premiumAccount._id === userId || premiumAccount.id === userId
                     );
@@ -700,12 +741,10 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 }
             }
 
-            
             setShowUserDetailModal(true);
 
         } catch (error) {
             console.error("[AdminDashboard] Error enriching user data:", error);
-            
             setShowUserDetailModal(true);
         }
     };
@@ -725,9 +764,9 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         setSelectedUser(adminStatViewModel.selectedUserForManagement);
         setShowRejectionReasonModal(true);
     };
-     const handleRejectNutritionist = async (userId, reasonParam) => {
+
+    const handleRejectNutritionist = async (userId, reasonParam) => {
         try {
-            
             const finalReason = reasonParam || rejectionReason;
             
             console.log('Rejecting nutritionist:', userId, 'with reason:', finalReason);
@@ -737,14 +776,11 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 return;
             }
             
-            
             await AdminDashboardViewModel.rejectNutritionist(userId, finalReason.trim());
-            
             
             setShowRejectionReasonModal(false);
             setSelectedUser(null);
             setRejectionReason('');
-            
             
             await AdminDashboardViewModel.fetchAccounts();
             
@@ -794,22 +830,19 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         }
     };
 
-    
-    const getCurrentData = () => {
-        return activeTab === 'ALL_ACCOUNTS' ? filteredAllAccounts : filteredPendingAccounts;
-    };
+    // Effects
+    useEffect(() => {
+        AdminDashboardViewModel.setActiveTab(currentTab);
+    }, [currentTab]);
 
-    
-    const currentData = getCurrentData();
-    const totalItems = currentData.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentPageData = currentData.slice(startIndex, endIndex);
+    useEffect(() => {
+        AdminDashboardViewModel.fetchAccounts();
+    }, [activeTab]);
 
-    const handlePageChange = (newPage) => {
-        setCurrentPage(newPage);
-    };
+    useEffect(() => {
+        setSelectedAccountType('all');
+        setCurrentPage(1);
+    }, [activeTab, searchTerm]);
 
     return (
         <>
@@ -826,6 +859,12 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                         <i className="fas fa-search"></i>
                     </div>
                 </header>
+                <div style={{ padding: '10px 0' }}>
+                    <BulkInsertButton />
+                </div>
+                <div style={{ padding: '10px 0' }}>
+                    <DeleteDummyData />
+                </div>
             </div>
 
             <div className="admin-tabs">
@@ -848,6 +887,68 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                     CREATE ADMIN
                 </button>
             </div>
+
+            
+            {activeTab === 'ALL_ACCOUNTS' && (
+                <div style={{
+                    padding: '20px',
+                    backgroundColor: '#fffaf3'
+                }}>
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px', 
+                        flexWrap: 'wrap' 
+                    }}>
+                        <span style={{ 
+                            fontWeight: '600', 
+                            color: '#374151',
+                            fontSize: '14px',
+                            marginRight: '8px'
+                        }}>
+                            Filter by Account Type:
+                        </span>
+                        
+                        {accountTypeOptionsWithCounts.map((option) => (
+                            <button
+                                key={option.value}
+                                onClick={() => handleAccountTypeChange(option.value)}
+                                style={{
+                                    padding: '6px 12px',
+                                    border: selectedAccountType === option.value ? '2px solid #1e525c' : '1px solid #d1d5db',
+                                    borderRadius: '6px',
+                                    backgroundColor: selectedAccountType === option.value ? '#1e525c' : 'white',
+                                    color: selectedAccountType === option.value ? 'white' : '#1e525c',
+                                    fontSize: '13px',
+                                    fontWeight: selectedAccountType === option.value ? '600' : '500',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    boxShadow: selectedAccountType === option.value ? '0 2px 4px rgba(79, 70, 229, 0.2)' : '0 1px 2px rgba(0, 0, 0, 0.05)'
+                                }}
+                            >
+                                <span>{option.label}</span>
+                                <span style={{
+                                    backgroundColor: selectedAccountType === option.value ? 'rgba(255,255,255,0.2)' : '#f3f4f6',
+                                    color: selectedAccountType === option.value ? 'white' : '#6b7280',
+                                    padding: '1px 6px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    minWidth: '18px',
+                                    textAlign: 'center'
+                                }}>
+                                    {option.count}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                    
+                    
+                </div>
+            )}
 
             {activeTab === 'CREATE_ADMIN' ? (
                 <AdminCreateAccountContent />
@@ -891,14 +992,18 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                                 ) : (
                                     <tr>
                                         <td colSpan={activeTab === 'ALL_ACCOUNTS' ? '6' : '7'} className="no-data-message">
-                                            {(isLoading || userAccountsLoading) ? '' : (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')}
+                                            {(isLoading || userAccountsLoading) ? '' : (
+                                                selectedAccountType === 'all' 
+                                                    ? (activeTab === 'ALL_ACCOUNTS' ? 'No user accounts found.' : 'No accounts pending approval.')
+                                                    : `No ${selectedAccountType} accounts found.`
+                                            )}
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
 
-                        {/* FIXED PAGINATION */}
+                        {/* Pagination */}
                         {currentData.length > 0 && (
                             <Pagination
                                 currentData={currentData}
@@ -911,6 +1016,7 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 </>
             )}
 
+            {/* Modals */}
             {showUserDetailModal && selectedUser && (
                 <UserDetailModal
                     user={selectedUser}
@@ -937,7 +1043,6 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                     reason={rejectionReason}
                     setReason={(value) => setRejectionReason(value)}
                     onConfirm={(reasonFromModal) => {
-                        
                         const finalReason = reasonFromModal || rejectionReason;
                         handleRejectNutritionist(selectedUser.id, finalReason);
                     }}
