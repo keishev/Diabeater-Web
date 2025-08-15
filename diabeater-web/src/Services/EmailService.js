@@ -1,20 +1,20 @@
-// src/Services/EmailService.js
+
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { auth } from '../firebase'; // Make sure this points to your firebase config
+import { auth } from '../firebase'; 
 
 class EmailService {
     constructor() {
         this.functions = getFunctions();
     }
 
-    // ADDED: Helper method to ensure user is authenticated
+    
     async ensureAuthenticated() {
         const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error('User must be authenticated to send emails');
         }
 
-        // Force token refresh to ensure we have latest claims
+        
         try {
             await currentUser.getIdToken(true);
             console.log('User authentication verified');
@@ -33,7 +33,7 @@ class EmailService {
                 throw new Error('Email and name are required for sending approval email');
             }
 
-            // ADDED: Ensure user is authenticated before making the call
+            
             await this.ensureAuthenticated();
 
             const sendApprovalEmail = httpsCallable(this.functions, 'sendApprovalEmail');
@@ -56,7 +56,7 @@ class EmailService {
                 details: error.details
             });
             
-            // Enhanced error handling for authentication issues
+            
             let errorMessage = error.message;
             if (error.code === 'unauthenticated') {
                 errorMessage = 'You must be logged in as an admin to send approval emails';
@@ -64,8 +64,8 @@ class EmailService {
                 errorMessage = 'You do not have permission to send approval emails. Admin privileges required.';
             }
             
-            // Don't throw the error - return error info instead
-            // This allows the approval process to continue even if email fails
+            
+            
             return {
                 success: false,
                 message: `Failed to send approval email: ${errorMessage}`,
@@ -82,7 +82,7 @@ class EmailService {
                 throw new Error('Email and name are required for sending rejection email');
             }
 
-            // ADDED: Ensure user is authenticated before making the call
+            
             await this.ensureAuthenticated();
 
             const sendRejectionEmail = httpsCallable(this.functions, 'sendRejectionEmail');
@@ -106,7 +106,7 @@ class EmailService {
                 details: error.details
             });
             
-            // Enhanced error handling for authentication issues
+            
             let errorMessage = error.message;
             if (error.code === 'unauthenticated') {
                 errorMessage = 'You must be logged in as an admin to send rejection emails';
@@ -114,8 +114,8 @@ class EmailService {
                 errorMessage = 'You do not have permission to send rejection emails. Admin privileges required.';
             }
             
-            // Don't throw the error - return error info instead
-            // This allows the rejection process to continue even if email fails
+            
+            
             return {
                 success: false,
                 message: `Failed to send rejection email: ${errorMessage}`,
@@ -124,18 +124,18 @@ class EmailService {
         }
     }
 
-    // Helper method to validate email format
+    
     isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
 
-    // Method to test email service connectivity
+    
     async testConnection() {
         try {
             console.log('Testing email service connection...');
             
-            // ADDED: Ensure user is authenticated for testing
+            
             await this.ensureAuthenticated();
             
             const testFunction = httpsCallable(this.functions, 'testEmailService');
@@ -156,7 +156,7 @@ class EmailService {
         }
     }
 
-    // ADDED: Method to check if current user is authenticated and has admin privileges
+    
     async checkAdminStatus() {
         try {
             const currentUser = auth.currentUser;

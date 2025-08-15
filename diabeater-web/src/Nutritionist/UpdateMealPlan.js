@@ -1,11 +1,11 @@
-// src/components/UpdateMealPlan.js
+
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
 import './UpdateMealPlan.css';
 
 const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
-    // Initialize form state with existing meal plan data
+    
     const [mealName, setMealName] = useState('');
     const [categories, setCategories] = useState([]);
     const [imageFile, setImageFile] = useState(null);
@@ -15,13 +15,13 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     const [preparationSteps, setPreparationSteps] = useState('');
     const [generalNotes, setGeneralNotes] = useState('');
 
-    // Basic Nutrients
+    
     const [calories, setCalories] = useState('');
     const [protein, setProtein] = useState('');
     const [carbohydrates, setCarbohydrates] = useState('');
     const [fats, setFats] = useState('');
 
-    // Advanced Nutrients
+    
     const [sugar, setSugar] = useState('');
     const [saturatedFat, setSaturatedFat] = useState('');
     const [unsaturatedFat, setUnsaturatedFat] = useState('');
@@ -29,7 +29,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
     const [sodium, setSodium] = useState('');
     const [potassium, setPotassium] = useState('');
 
-    // FIXED: More robust initialization logic
+    
     useEffect(() => {
         if (mealPlan) {
             console.log('Initializing UpdateMealPlan with data:', mealPlan);
@@ -40,7 +40,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             console.log('📋 Description:', mealPlan.description);
             console.log('📄 General notes:', mealPlan.generalNotes);
             
-            // Check for alternative property names
+            
             console.log('🔍 Checking alternatives:');
             console.log('ingredients:', mealPlan.ingredients);
             console.log('steps:', mealPlan.steps);
@@ -48,10 +48,10 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             console.log('cookingSteps:', mealPlan.cookingSteps);
             console.log('recipeSteps:', mealPlan.recipeSteps);
             
-            // Set basic info - always update when mealPlan changes
+            
             setMealName(mealPlan.name || '');
             
-            // Handle categories - support both formats
+            
             let categoryArray = [];
             if (mealPlan.category) {
                 if (Array.isArray(mealPlan.category)) {
@@ -64,24 +64,24 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             }
             setCategories(categoryArray);
             
-            // Set image URL with fallbacks
+            
             const existingImageUrl = mealPlan.imageUrl || 
                 (mealPlan.imageFileName ? `/assetscopy/${mealPlan.imageFileName}` : '');
             setImageUrl(existingImageUrl);
             
-            // Set text fields with fallbacks - FIXED: Use correct property names
+            
             setDescription(mealPlan.description || '');
-            setRecipe(mealPlan.ingredients || '');  // ✅ Changed from recipe to ingredients
-            setPreparationSteps(mealPlan.steps || '');  // ✅ Changed from preparationSteps to steps
+            setRecipe(mealPlan.ingredients || '');  
+            setPreparationSteps(mealPlan.steps || '');  
             setGeneralNotes(mealPlan.generalNotes || mealPlan.description || '');
 
-            // Handle nutrients - support both old and new format
+            
             let nutrientsData = {};
             if (mealPlan.nutrients && typeof mealPlan.nutrients === 'object') {
-                // New format: nutrients object
+                
                 nutrientsData = mealPlan.nutrients;
             } else {
-                // Old format: direct properties
+                
                 nutrientsData = {
                     calories: mealPlan.calories,
                     protein: mealPlan.protein,
@@ -96,13 +96,13 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                 };
             }
 
-            // Basic Nutrients - ensure they're strings for input fields
+            
             setCalories(nutrientsData.calories?.toString() || '');
             setProtein(nutrientsData.protein?.toString() || '');
             setCarbohydrates(nutrientsData.carbohydrates?.toString() || '');
             setFats(nutrientsData.fats?.toString() || '');
 
-            // Advanced Nutrients
+            
             setSugar(nutrientsData.sugar?.toString() || '');
             setSaturatedFat(nutrientsData.saturatedFat?.toString() || '');
             setUnsaturatedFat(nutrientsData.unsaturatedFat?.toString() || '');
@@ -110,7 +110,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             setSodium(nutrientsData.sodium?.toString() || '');
             setPotassium(nutrientsData.potassium?.toString() || '');
 
-            // Clear any previously selected image file
+            
             setImageFile(null);
             
             console.log('Form initialized with:', {
@@ -119,48 +119,48 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
                 nutrients: nutrientsData
             });
         }
-    }, [mealPlan]); // Re-run whenever mealPlan changes
+    }, [mealPlan]); 
 
-    // Handle category checkbox changes
+   
     const handleCategoryChange = (categoryName, isChecked) => {
         setCategories(prevCategories => {
             if (isChecked) {
-                // Add category if not already present
+             
                 return prevCategories.includes(categoryName) 
                     ? prevCategories 
                     : [...prevCategories, categoryName];
             } else {
-                // Remove category
+             
                 return prevCategories.filter(cat => cat !== categoryName);
             }
         });
     };
 
-    // Handle image file selection
+    
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             setImageFile(file);
-            // Create preview URL for new file
+        
             const previewUrl = URL.createObjectURL(file);
             setImageUrl(previewUrl);
         } else {
             setImageFile(null);
-            // Revert to original image
+           
             const originalImageUrl = mealPlan?.imageUrl || 
                 (mealPlan?.imageFileName ? `/assetscopy/${mealPlan?.imageFileName}` : '');
             setImageUrl(originalImageUrl);
         }
     };
 
-    // ENHANCED: Better validation and error handling
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Clear previous errors
+    
         mealPlanViewModel.setError('');
 
-        // Validation
+   
         const requiredFields = [];
         if (!mealName.trim()) requiredFields.push('Meal Name');
         if (categories.length === 0) requiredFields.push('At least one Category');
@@ -177,7 +177,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             return;
         }
 
-        // Validate numeric values
+  
         const numericFields = [calories, protein, carbohydrates, fats];
         const optionalNumericFields = [sugar, saturatedFat, unsaturatedFat, cholesterol, sodium, potassium];
         
@@ -201,8 +201,8 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
             category: categories,
             categories: categories,
             description: generalNotes.trim(),
-            ingredients: recipe.trim(),  // ✅ Changed from recipe to ingredients
-            steps: preparationSteps.trim(),  // ✅ Changed from preparationSteps to steps
+            ingredients: recipe.trim(),  
+            steps: preparationSteps.trim(),  
             generalNotes: generalNotes.trim(),
 
             nutrients: {
@@ -234,7 +234,7 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
 
     const { loading, error, success, allCategories } = mealPlanViewModel;
 
-    // IMPROVED: Better loading states
+    
     if (!mealPlan) {
         return (
             <div className="update-meal-plan-container">

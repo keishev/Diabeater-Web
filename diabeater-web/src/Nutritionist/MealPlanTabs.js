@@ -1,7 +1,6 @@
-// Components for specific meal plan tabs
+
 import React from 'react';
 
-// Import the MealPlanCard component for reuse
 const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, isAdmin }) => {
     const displayStatus = mealPlan.status === 'UPLOADED' ? 'DRAFT / UNSUBMITTED' : mealPlan.status.replace(/_/g, ' ');
     const imageUrl = mealPlan.imageUrl || `/assetscopy/${mealPlan.imageFileName}`;

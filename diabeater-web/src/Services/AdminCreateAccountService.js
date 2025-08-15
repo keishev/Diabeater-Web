@@ -4,14 +4,12 @@ import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInW
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const AdminCreateAccountService = {
-  /**
-   * Creates admin account entirely on client-side using Firebase Auth
-   */
+
   async createAdminAccount(adminData) {
     try {
       const { firstName, lastName, email, password, dob } = adminData;
       
-      // Validation
+  
       if (!email?.trim()) throw new Error('Email is required');
       if (!firstName?.trim()) throw new Error('First name is required');
       if (!lastName?.trim()) throw new Error('Last name is required');
@@ -52,7 +50,7 @@ const AdminCreateAccountService = {
       await setDoc(doc(db, 'user_accounts', user.uid), adminData_firestore);
       console.log('Admin user document created in Firestore');
       
-      // Step 3: Send Firebase verification email
+      
       await sendEmailVerification(user);
       console.log('Firebase verification email sent');
       
@@ -60,7 +58,7 @@ const AdminCreateAccountService = {
         success: true,
         email: email.trim(),
         uid: user.uid,
-        password: password, // Return password for resend functionality
+        password: password,
         message: 'Admin account created and Firebase verification email sent. Please check your email.'
       };
 
@@ -105,8 +103,7 @@ const AdminCreateAccountService = {
       }
       
       console.log('Checking email verification status...');
-      
-      // Use cloud function to check verification and set admin claims
+   
       const functions = getFunctions();
       const checkEmailVerification = httpsCallable(functions, 'checkEmailVerification');
       
@@ -153,7 +150,7 @@ const AdminCreateAccountService = {
       const auth = getAuth();
       const currentUser = auth.currentUser;
       
-      // If there's already a signed-in user, just send verification email
+
       if (currentUser && currentUser.email === email.trim()) {
         console.log('Using current signed-in user for resend');
         
@@ -169,7 +166,7 @@ const AdminCreateAccountService = {
           message: 'Verification email resent successfully. Please check your email.'
         };
       } else {
-        // If no matching user signed in, sign in temporarily then keep signed in
+    
         console.log('Signing in to resend verification email');
         
         const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);

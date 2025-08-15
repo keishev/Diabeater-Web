@@ -1,26 +1,26 @@
-// src/ViewModels/PremiumStatViewModel.js
+
 import { makeAutoObservable, runInAction, computed } from 'mobx';
 import PremiumRepository from '../Repositories/PremiumRepository';
-import { format, addDays } from 'date-fns'; // Import addDays for renewal date calculation
+import { format, addDays } from 'date-fns'; 
 
 class PremiumStatViewModel {
     premiumSubscriptionPrice = 0;
     premiumFeatures = [];
-    allPremiumUserAccounts = []; // Stores all fetched user accounts
-    filteredPremiumUserAccounts = []; // Stores user accounts after applying search filter
+    allPremiumUserAccounts = []; 
+    filteredPremiumUserAccounts = []; 
 
-    searchQuery = ''; // State for the search bar
+    searchQuery = ''; 
 
     loading = false;
     error = null;
     success = null;
 
-    // Modals state
+    
     isUserDetailModalOpen = false;
     isUserHistoryModalOpen = false;
-    selectedUser = null; // Stores the user object for the currently open modal
+    selectedUser = null; 
 
-    // History-specific states
+    
     userSubscriptionHistory = [];
     loadingHistory = false;
     historyError = null;
@@ -29,7 +29,7 @@ class PremiumStatViewModel {
         makeAutoObservable(this);
     }
 
-    // --- State Management Actions ---
+    
     setLoading = (status) => {
         runInAction(() => {
             this.loading = status;
@@ -67,7 +67,7 @@ class PremiumStatViewModel {
     setSearchQuery = (query) => {
         runInAction(() => {
             this.searchQuery = query;
-            this.applySearchFilter(); // Apply filter whenever search query changes
+            this.applySearchFilter(); 
         });
     }
 
@@ -88,11 +88,11 @@ class PremiumStatViewModel {
     openUserHistoryModal = async (user) => {
         console.log("[PremiumStatViewModel] Opening user history modal for:", user);
         
-        // FIXED: Open the modal immediately and set loading state
+        
         runInAction(() => {
             this.selectedUser = user;
-            this.isUserHistoryModalOpen = true; // Open modal immediately
-            this.userSubscriptionHistory = []; // Clear previous history
+            this.isUserHistoryModalOpen = true; 
+            this.userSubscriptionHistory = []; 
             this.loadingHistory = true;
             this.historyError = null;
         });
@@ -121,13 +121,13 @@ class PremiumStatViewModel {
         runInAction(() => {
             this.isUserHistoryModalOpen = false;
             this.selectedUser = null;
-            this.userSubscriptionHistory = []; // Clear history when closing
+            this.userSubscriptionHistory = []; 
             this.historyError = null;
             this.loadingHistory = false;
         });
     }
 
-    // --- Data Loading ---
+    
     loadPremiumData = async () => {
         console.log("[PremiumStatViewModel] Starting loadPremiumData...");
         this.setLoading(true);
@@ -146,11 +146,11 @@ class PremiumStatViewModel {
                 this.premiumSubscriptionPrice = typeof premiumPrice === 'number' ? premiumPrice : 0;
                 this.premiumFeatures = premiumFeaturesData || [];
                 this.allPremiumUserAccounts = premiumUsers || [];
-                this.applySearchFilter(); // Apply initial filter
+                this.applySearchFilter(); 
                 console.log("[PremiumStatViewModel] Premium data loaded successfully.");
                 this.success = 'Premium data refreshed.';
                 this.error = null;
-                // Auto-clear success message after 5 seconds
+                
                 setTimeout(() => {
                     runInAction(() => {
                         if (this.success === 'Premium data refreshed.') {
@@ -168,7 +168,7 @@ class PremiumStatViewModel {
                 this.premiumFeatures = [];
                 this.allPremiumUserAccounts = [];
                 this.filteredPremiumUserAccounts = [];
-                // Auto-clear error message after 5 seconds
+                
                 setTimeout(() => {
                     runInAction(() => {
                         if (this.error === `Failed to load premium data: ${error.message}`) {
@@ -182,7 +182,7 @@ class PremiumStatViewModel {
         }
     }
 
-    // --- Search Filtering ---
+    
     applySearchFilter = () => {
         const query = this.searchQuery.toLowerCase().trim();
         if (!query) {
@@ -203,7 +203,7 @@ class PremiumStatViewModel {
             .map(user => this.processUserData(user));
     }
 
-    // --- Data Processing for Display ---
+    
     processUserData = (user) => {
         const renewalDate = user.currentSubscription?.endDate
             ? this.calculateRenewalDate(user.currentSubscription.endDate.toDate())
@@ -212,7 +212,7 @@ class PremiumStatViewModel {
         const name = `${user.firstName || ''} ${user.lastName || ''}`.trim();
 
         return {
-            ...user, // Keep original user data for modals
+            ...user, 
             displayName: name || user.email,
             displayStatus: status,
             displayRenewalDate: renewalDate,
@@ -221,12 +221,12 @@ class PremiumStatViewModel {
 
     calculateRenewalDate = (endDate) => {
         if (!endDate) return 'N/A';
-        // Add one day to the end date
+        
         const renewal = addDays(new Date(endDate), 1);
-        return format(renewal, 'dd/MM/yyyy'); // Format as DD/MM/YYYY
+        return format(renewal, 'dd/MM/yyyy'); 
     }
 
-    // --- Premium Price Management ---
+    
     updatePremiumSubscriptionPrice = async (newPrice) => {
         console.log(`[PremiumStatViewModel] Attempting to update premium subscription price to: ${newPrice}`);
         this.setLoading(true);
@@ -251,7 +251,7 @@ class PremiumStatViewModel {
         }
     }
 
-    // --- Premium Feature Management (CRUD) ---
+    
     createPremiumFeature = async (featureName) => {
         this.setLoading(true);
         try {

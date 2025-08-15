@@ -1,6 +1,4 @@
-/* ==============================================
-   UPDATE MEAL PLAN - COMPONENT-SPECIFIC STYLES
-   ============================================== */
+
 
 .update-meal-plan-container {
   background: var(--background-cream);
@@ -8,9 +6,7 @@
   font-family: var(--font-family);
 }
 
-/* ==============================================
-   HEADER SECTION
-   ============================================== */
+
 
 .update-meal-plan-header {
   background: #fffaf3;
@@ -29,9 +25,7 @@
   margin: 0;
 }
 
-/* ==============================================
-   FORM LAYOUT
-   ============================================== */
+
 
 .update-meal-plan-form {
   max-width: 1400px;
@@ -63,9 +57,7 @@
    margin-left: -100px;
 }
 
-/* ==============================================
-   FORM ELEMENTS
-   ============================================== */
+
 
 .update-meal-plan-form-group {
   margin-bottom: var(--spacing-lg);
@@ -105,9 +97,7 @@
   min-height: 120px;
 }
 
-/* ==============================================
-   IMAGE UPLOAD SECTION
-   ============================================== */
+
 
 .update-meal-plan-upload-photo-group {
   border: 2px dashed var(--border-light);
@@ -147,9 +137,7 @@
   font-style: italic;
 }
 
-/* ==============================================
-   SECTION TITLES
-   ============================================== */
+
 
 .update-meal-plan-section-title {
   font-size: var(--font-size-2xl);
@@ -180,9 +168,7 @@
   border-bottom-color: var(--border-medium);
 }
 
-/* ==============================================
-   NUTRIENTS SECTION
-   ============================================== */
+
 
 .update-meal-plan-nutrients-grid {
   display: grid;
@@ -246,9 +232,7 @@
   text-align: left;
 }
 
-/* ==============================================
-   FORM ACTIONS
-   ============================================== */
+
 
 .update-meal-plan-form-actions {
   display: flex;
@@ -300,9 +284,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* ==============================================
-   MESSAGE STYLING
-   ============================================== */
+
 
 .update-meal-plan-form-message {
   padding: var(--spacing-md) var(--spacing-lg);
@@ -330,9 +312,7 @@
   border: 1px solid #28a745;
 }
 
-/* ==============================================
-   UTILITY ANIMATIONS
-   ============================================== */
+
 
 .update-meal-plan-fade-in {
   animation: updateMealPlanFadeIn 0.5s ease-in;
@@ -358,9 +338,7 @@
   }
 }
 
-/* ==============================================
-   RESPONSIVE DESIGN
-   ============================================== */
+
 
 @media (max-width: 1200px) {
   .update-meal-plan-sections-wrapper {
@@ -406,7 +384,7 @@
     padding: var(--spacing-lg);
   }
 }
-/* Multi-Category Checkbox Styles */
+
 .update-meal-plan-categories-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

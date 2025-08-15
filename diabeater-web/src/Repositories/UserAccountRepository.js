@@ -13,13 +13,13 @@ class UserAccountRepository {
         return await currentUser.getIdToken();
     }
 
-    // Helper method to format dates consistently
+
     formatDate(timestamp, format = 'long') {
         if (!timestamp) return 'N/A';
         
         let date;
         if (timestamp && typeof timestamp.toDate === 'function') {
-            // Firestore Timestamp
+         
             date = timestamp.toDate();
         } else if (timestamp instanceof Date) {
             date = timestamp;
@@ -56,13 +56,13 @@ class UserAccountRepository {
             const users = usersSnapshot.docs.map(doc => {
                 const data = doc.data();
                 
-                // Format the userSince date properly
+                
                 const userSince = this.formatDate(data.createdAt, 'long');
                 
                 return {
                     id: doc.id,
                     ...data,
-                    userSince: userSince // Add the formatted userSince field
+                    userSince: userSince
                 };
             });
             return users;

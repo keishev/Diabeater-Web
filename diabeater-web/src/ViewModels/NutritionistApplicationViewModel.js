@@ -1,4 +1,4 @@
-// src/ViewModels/NutritionistApplicationViewModel.js
+
 import { makeAutoObservable } from 'mobx';
 import NutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword } from 'firebase/auth';
@@ -144,7 +144,7 @@ class NutritionistApplicationViewModel {
         try {
             const auth = getAuth();
             
-            // Create temporary user for email verification
+            
             const userCredential = await createUserWithEmailAndPassword(
                 auth, 
                 this.application.email, 
@@ -154,10 +154,10 @@ class NutritionistApplicationViewModel {
             this.setTempUser(userCredential.user);
             this.setVerifiedUserId(userCredential.user.uid);
             
-            // Send verification email
+            
             await sendEmailVerification(userCredential.user);
             
-            // Sign out the temp user immediately
+            
             await signOut(auth);
             
             this.setShowEmailVerificationModal(true);
@@ -186,14 +186,14 @@ class NutritionistApplicationViewModel {
         try {
             const auth = getAuth();
             
-            // Sign in to check verification status
+            
             const userCredential = await signInWithEmailAndPassword(
                 auth,
                 this.application.email,
                 this.application.password
             );
 
-            // Reload user to get latest verification status
+            
             await userCredential.user.reload();
             
             if (userCredential.user.emailVerified) {
@@ -201,7 +201,7 @@ class NutritionistApplicationViewModel {
                 this.setShowEmailVerificationModal(false);
                 this.setError('');
                 
-                // Pass the authenticated user directly to submitApplication
+                
                 await this.submitApplicationWithUser(userCredential.user);
                 
             } else {
@@ -211,7 +211,7 @@ class NutritionistApplicationViewModel {
         } catch (error) {
             console.error("Email verification check error:", error);
             this.setError('Failed to check email verification status.');
-            // Make sure to sign out on error
+            
             try {
                 await signOut(getAuth());
             } catch (signOutError) {
@@ -225,14 +225,14 @@ class NutritionistApplicationViewModel {
     async submitApplicationWithUser(user) {
         this.setLoading(true);
         try {
-            // Submit application with the authenticated user
+            
             await NutritionistApplicationRepository.submitNutritionistApplication(
                 this.application, 
                 this.document,
-                user.uid // Pass the user ID directly
+                user.uid 
             );
             
-            // Sign out after successful submission
+            
             const auth = getAuth();
             await signOut(auth);
             
@@ -242,7 +242,7 @@ class NutritionistApplicationViewModel {
             console.error("Application submission error:", error);
             this.setError(error.message || 'Submission failed.');
             
-            // Sign out on error too
+            
             try {
                 const auth = getAuth();
                 await signOut(auth);
@@ -266,7 +266,7 @@ class NutritionistApplicationViewModel {
     try {
         const auth = getAuth();
         
-        // Sign in to resend verification
+        
         const userCredential = await signInWithEmailAndPassword(
             auth,
             this.application.email,
@@ -276,12 +276,12 @@ class NutritionistApplicationViewModel {
         await sendEmailVerification(userCredential.user);
         await signOut(auth);
         
-        // Use custom alert instead of browser alert
+        
         const message = 'Verification email sent again. Please check your email.';
         if (window.showSuccess) {
             window.showSuccess(message);
         } else {
-            alert(message); // Fallback
+            alert(message); 
         }
     } catch (error) {
         console.error("Resend verification error:", error);
@@ -294,14 +294,14 @@ class NutritionistApplicationViewModel {
     async submitApplication() {
         this.setLoading(true);
         try {
-            // Submit application - user should be signed in at this point
+            
             await NutritionistApplicationRepository.submitNutritionistApplication(
                 this.application, 
                 this.document,
-                null // Don't pass userUid, let it use the currently signed-in user
+                null 
             );
             
-            // Sign out after successful submission
+            
             const auth = getAuth();
             await signOut(auth);
             
@@ -311,7 +311,7 @@ class NutritionistApplicationViewModel {
             console.error("Application submission error:", error);
             this.setError(error.message || 'Submission failed.');
             
-            // Sign out on error too
+            
             try {
                 const auth = getAuth();
                 await signOut(auth);
@@ -358,7 +358,7 @@ class NutritionistApplicationViewModel {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
             return;
         }
@@ -371,7 +371,7 @@ class NutritionistApplicationViewModel {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
             return;
         }
@@ -386,7 +386,7 @@ class NutritionistApplicationViewModel {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
         }
 
@@ -398,7 +398,7 @@ class NutritionistApplicationViewModel {
         if (window.showError) {
             window.showError(errorMessage);
         } else {
-            alert(errorMessage); // Fallback
+            alert(errorMessage); 
         }
     } finally {
         this.setLoading(false);
@@ -420,7 +420,7 @@ async approveNutritionist(userId) {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
             return;
         }
@@ -433,7 +433,7 @@ async approveNutritionist(userId) {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
             return;
         }
@@ -441,13 +441,13 @@ async approveNutritionist(userId) {
         await nutritionistApplicationRepository.approveNutritionist(userId);
         await AdminDashboardViewModel.fetchAccounts(); 
 
-        // Custom success message for approval
+        
         const successMessage = "Nutritionist account has been approved and notification email sent!";
         
         if (window.showSuccess) {
             window.showSuccess(successMessage);
         } else {
-            alert(successMessage); // Fallback
+            alert(successMessage); 
         }
     } catch (error) {
         console.error("Error approving nutritionist:", error);
@@ -458,7 +458,7 @@ async approveNutritionist(userId) {
         if (window.showError) {
             window.showError(errorMessage);
         } else {
-            alert(errorMessage); // Fallback
+            alert(errorMessage); 
         }
     } finally {
         this.setLoading(false);
@@ -480,7 +480,7 @@ async rejectNutritionist(userId, rejectionReason = '') {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
             return;
         }
@@ -493,7 +493,7 @@ async rejectNutritionist(userId, rejectionReason = '') {
             if (window.showError) {
                 window.showError(errorMessage);
             } else {
-                alert(errorMessage); // Fallback
+                alert(errorMessage); 
             }
             return;
         }
@@ -501,13 +501,13 @@ async rejectNutritionist(userId, rejectionReason = '') {
         await nutritionistApplicationRepository.rejectNutritionist(userId, rejectionReason);
         await AdminDashboardViewModel.fetchAccounts(); 
 
-        // Custom success message for rejection
+        
         const successMessage = "Nutritionist application has been rejected and notification email sent!";
         
         if (window.showSuccess) {
             window.showSuccess(successMessage);
         } else {
-            alert(successMessage); // Fallback
+            alert(successMessage); 
         }
     } catch (error) {
         console.error("Error rejecting nutritionist:", error);
@@ -518,7 +518,7 @@ async rejectNutritionist(userId, rejectionReason = '') {
         if (window.showError) {
             window.showError(errorMessage);
         } else {
-            alert(errorMessage); // Fallback
+            alert(errorMessage); 
         }
     } finally {
         this.setLoading(false);

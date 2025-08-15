@@ -1,4 +1,4 @@
-import app from '../firebase'; // Assuming your firebase config is here
+import app from '../firebase'; 
 import moment from 'moment';
 import {
     getFirestore,
@@ -35,7 +35,7 @@ const AdminStatService = {
             throw new Error(`Failed to fetch count for ${collectionName}.`);
         }
     },
-// Add this method to your AdminStatService.js
+
 
 /**
  * Get current month's revenue from subscriptions
@@ -47,13 +47,13 @@ async getCurrentMonthRevenue(year = null, month = null) {
     try {
         const now = new Date();
         const targetYear = year || now.getFullYear();
-        const targetMonth = month || (now.getMonth() + 1); // getMonth() is 0-indexed
+        const targetMonth = month || (now.getMonth() + 1); 
         
         console.log(`[Service] Calculating revenue for ${targetMonth}/${targetYear}`);
         
-        // Create start and end dates for the target month
-        const startDate = new Date(targetYear, targetMonth - 1, 1); // Month is 0-indexed in Date constructor
-        const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999); // Last day of month
+        
+        const startDate = new Date(targetYear, targetMonth - 1, 1); 
+        const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999); 
         
         console.log(`[Service] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
         
@@ -72,7 +72,7 @@ async getCurrentMonthRevenue(year = null, month = null) {
 
         console.log(`[Service] Found ${subscriptions.length} subscriptions for ${targetMonth}/${targetYear}`);
 
-        // Calculate total revenue from current month's subscriptions
+        
         let totalRevenue = 0;
         let processedCount = 0;
         
@@ -84,7 +84,7 @@ async getCurrentMonthRevenue(year = null, month = null) {
                 priceType: typeof sub.price
             });
             
-            // Only count subscriptions with valid prices
+            
             if (typeof sub.price === 'number' && !isNaN(sub.price) && sub.price > 0) {
                 totalRevenue += sub.price;
                 processedCount++;
@@ -123,15 +123,10 @@ async getCurrentMonthCancelledSubscriptions(year = null, month = null) {
         const targetMonth = month || (now.getMonth() + 1);
         
         console.log(`[Service] Calculating cancelled subscriptions for ${targetMonth}/${targetYear}`);
-        
-        // For cancelled subscriptions, we might want to filter by when they were cancelled
-        // or by when they were created. Let's use when they were cancelled (updatedAt or cancelledAt)
-        
-        // First, get all cancelled subscriptions
         const subscriptionsRef = collection(db, 'subscriptions');
         const q = query(
             subscriptionsRef,
-            where('status', '==', 'canceled') // Note: using 'canceled' not 'cancelled'
+            where('status', '==', 'canceled') 
         );
 
         const querySnapshot = await getDocs(q);
@@ -142,12 +137,12 @@ async getCurrentMonthCancelledSubscriptions(year = null, month = null) {
 
         console.log(`[Service] Found ${allCancelledSubs.length} total cancelled subscriptions`);
 
-        // Filter by current month using updatedAt field (when the cancellation happened)
+        
         const startDate = new Date(targetYear, targetMonth - 1, 1);
         const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
         
         const currentMonthCancelled = allCancelledSubs.filter(sub => {
-            // Use updatedAt for when cancellation happened, fallback to createdAt
+            
             const cancelDate = sub.updatedAt?.toDate() || sub.createdAt?.toDate();
             
             if (!cancelDate) {
@@ -217,18 +212,18 @@ async getCurrentMonthCancelledSubscriptions(year = null, month = null) {
             console.log("[Service] Fetching all subscriptions grouped by user...");
             const snapshot = await getDocs(collection(db, 'subscriptions'));
 
-            const grouped = {}; // Using a plain object for grouping in JS
+            const grouped = {}; 
 
             for (const doc of snapshot.docs) {
                 const data = doc.data();
                 const userId = data['userId'];
-                if (userId) { // Ensure userId exists
+                if (userId) { 
                     if (!grouped[userId]) {
                         grouped[userId] = [];
                     }
                     grouped[userId].push({
                         ...data,
-                        id: doc.id, // Use 'id' as per the Dart example for doc ID
+                        id: doc.id, 
                     });
                 }
             }
@@ -283,13 +278,13 @@ async getCurrentMonthCancelledSubscriptions(year = null, month = null) {
         }
     },
 
-    // This method is available for fetching subscriptions by month (e.g., for charting)
-    // but the main dashboard's monthly revenue and cancelled count now use getAllSubscriptions for aggregation in ViewModel.
+    
+    
     async getSubscriptionsByMonth(year, month) {
         try {
-            // Create start and end dates for the month
-            const startDate = new Date(year, month - 1, 1); // Month is 0-indexed in Date object
-            const endDate = new Date(year, month, 0); // Last day of the month (e.g., new Date(2025, 8, 0) is July 31, 2025)
+            
+            const startDate = new Date(year, month - 1, 1); 
+            const endDate = new Date(year, month, 0); 
 
             const subscriptionsRef = collection(db, 'subscriptions');
             const q = query(
@@ -300,7 +295,7 @@ async getCurrentMonthCancelledSubscriptions(year = null, month = null) {
 
             const querySnapshot = await getDocs(q);
             const subscriptions = querySnapshot.docs.map(doc => ({
-                id: doc.id, // Using 'id' for doc ID consistency
+                id: doc.id, 
                 ...doc.data()
             }));
 
@@ -341,7 +336,7 @@ async getWeeklyTopMealPlans(count = 3) {
     try {
         console.log("=== Starting getWeeklyTopMealPlans (No Index Version) ===");
         
-        // Get all saved_meal_plans and filter manually (no index needed)
+        
         console.log("Step 1: Fetching all saved_meal_plans...");
         const allSavedPlansSnapshot = await getDocs(collection(db, 'saved_meal_plans'));
         console.log("Total saved_meal_plans documents:", allSavedPlansSnapshot.size);
@@ -351,18 +346,18 @@ async getWeeklyTopMealPlans(count = 3) {
             return await this.getFallbackTopMealPlans(count);
         }
 
-        // Calculate 7 days ago
+        
         const sevenDaysAgo = moment().subtract(7, 'days').toDate();
         console.log("Filtering saves from:", sevenDaysAgo);
         
-        // Manually filter saves from last 7 days and count by mealPlanId
+        
         const recentMealPlanSaves = {};
         let totalRecentSaves = 0;
         
         allSavedPlansSnapshot.docs.forEach(doc => {
             const data = doc.data();
             
-            // Check if document has required fields
+            
             if (!data.mealPlanId) {
                 console.log("Missing mealPlanId in document:", doc.id);
                 return;
@@ -373,7 +368,7 @@ async getWeeklyTopMealPlans(count = 3) {
                 return;
             }
             
-            // Check if save is from last 7 days
+            
             const createdAt = data.createdAt.toDate();
             if (createdAt >= sevenDaysAgo) {
                 recentMealPlanSaves[data.mealPlanId] = (recentMealPlanSaves[data.mealPlanId] || 0) + 1;
@@ -384,20 +379,20 @@ async getWeeklyTopMealPlans(count = 3) {
         console.log(`Found ${totalRecentSaves} saves in last 7 days for ${Object.keys(recentMealPlanSaves).length} meal plans`);
         console.log("Recent meal plan saves:", recentMealPlanSaves);
 
-        // If no recent saves, use fallback
+        
         if (Object.keys(recentMealPlanSaves).length === 0) {
             console.log("No recent saves found - using fallback to top meal plans by saveCount");
             return await this.getFallbackTopMealPlans(count);
         }
 
-        // Sort meal plans by recent save count
+        
         const sortedMealPlans = Object.entries(recentMealPlanSaves)
             .sort(([, countA], [, countB]) => countB - countA)
             .slice(0, count);
 
         console.log("Top meal plans by recent saves:", sortedMealPlans);
 
-        // Fetch meal plan details
+        
         const mealPlanPromises = sortedMealPlans.map(async ([mealPlanId, recentSaveCount]) => {
             try {
                 const docRef = doc(db, 'meal_plans', mealPlanId);
@@ -412,13 +407,13 @@ async getWeeklyTopMealPlans(count = 3) {
                         totalSaves: data.saveCount
                     });
                     
-                    // Only include approved meal plans
+                    
                     if (data.status === 'APPROVED') {
                         return {
                             _id: docSnap.id,
                             ...data,
-                            saveCount: recentSaveCount, // Show recent save count
-                            totalSaveCount: data.saveCount || 0 // Keep original total
+                            saveCount: recentSaveCount, 
+                            totalSaveCount: data.saveCount || 0 
                         };
                     } else {
                         console.log(`Meal plan ${mealPlanId} not approved (status: ${data.status})`);
@@ -437,7 +432,7 @@ async getWeeklyTopMealPlans(count = 3) {
         
         console.log(`Returning ${validMealPlans.length} approved meal plans with recent saves`);
         
-        // If no approved meal plans from recent saves, use fallback
+        
         if (validMealPlans.length === 0) {
             console.log("No approved meal plans from recent saves - using fallback");
             return await this.getFallbackTopMealPlans(count);
@@ -447,17 +442,17 @@ async getWeeklyTopMealPlans(count = 3) {
         
     } catch (error) {
         console.error('[Service] ERROR fetching weekly top meal plans:', error);
-        // Use fallback on any error
+        
         return await this.getFallbackTopMealPlans(count);
     }
 },
 
-// Helper method for fallback (gets top meal plans by overall saveCount)
+
 async getFallbackTopMealPlans(count = 3) {
     try {
         console.log("=== Using Fallback: Top Meal Plans by Overall SaveCount ===");
         
-        // Try with orderBy first (needs index for status + saveCount)
+        
         try {
             const topMealPlansQuery = query(
                 collection(db, 'meal_plans'),
@@ -481,7 +476,7 @@ async getFallbackTopMealPlans(count = 3) {
             console.log("OrderBy query failed (missing index), trying manual sort...");
         }
         
-        // Manual fallback: get all approved meal plans and sort manually
+        
         const allApprovedQuery = query(
             collection(db, 'meal_plans'),
             where('status', '==', 'APPROVED')
@@ -499,7 +494,7 @@ async getFallbackTopMealPlans(count = 3) {
             ...doc.data()
         }));
         
-        // Sort by saveCount manually and take top ones
+        
         const sortedByTotalSaves = allApproved
             .sort((a, b) => (b.saveCount || 0) - (a.saveCount || 0))
             .slice(0, count);

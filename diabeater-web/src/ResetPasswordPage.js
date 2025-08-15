@@ -1,11 +1,11 @@
-// src/ResetPasswordPage.js
+
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import ResetPasswordViewModel from './ViewModels/ResetPasswordViewModel';
 import bloodDropLogo from './assets/blood_drop_logo.png';
 import './ResetPasswordPage.css';
 
-// The 'observer' HOC makes the component reactive to MobX state changes.
+
 const ResetPasswordPage = observer(() => {
     const viewModel = ResetPasswordViewModel;
 
@@ -41,7 +41,7 @@ const ResetPasswordPage = observer(() => {
                         onChange={(e) => viewModel.setEmail(e.target.value)}
                         className="input-field"
                         required
-                        disabled={viewModel.isLoading} // Disable input while request is in progress
+                        disabled={viewModel.isLoading} 
                     />
 
                     {viewModel.message && <p className="success-message">{viewModel.message}</p>}

@@ -1,4 +1,4 @@
-// src/Repositories/PremiumRepository.js
+
 import SubscriptionService from '../Services/SubscriptionService';
 import app from '../firebase';
 import {
@@ -165,7 +165,7 @@ class PremiumRepository {
             const historyQuery = query(
                 collection(db, 'subscriptions'),
                 where('userId', '==', userId),
-                orderBy('createdAt', 'desc') // Order to show most recent first
+                orderBy('createdAt', 'desc') 
             );
             const historySnapshot = await getDocs(historyQuery);
             const history = historySnapshot.docs.map(doc => ({

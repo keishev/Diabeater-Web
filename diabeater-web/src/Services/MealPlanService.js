@@ -16,8 +16,8 @@ import {
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 import { onSnapshot } from 'firebase/firestore';
-import app from '../firebase'; // Assuming 'app' is your Firebase app instance
-import AuthService from './AuthService'; // Assuming AuthService provides getCurrentUser
+import app from '../firebase'; 
+import AuthService from './AuthService'; 
 
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -30,7 +30,7 @@ class MealPlanService {
         this.auth = auth;
     }
 
-    // Helper method to get user's full name
+    
     async getUserDisplayName(uid) {
         try {
             const userDocRef = doc(this.db, 'user_accounts', uid);
@@ -39,30 +39,30 @@ class MealPlanService {
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
                 
-                // Try to construct full name from firstName and lastName
+                
                 if (userData.firstName || userData.lastName) {
                     const firstName = userData.firstName || '';
                     const lastName = userData.lastName || '';
                     return `${firstName} ${lastName}`.trim();
                 }
                 
-                // Fallback to name field
+                
                 if (userData.name && !userData.name.includes('@')) {
                     return userData.name;
                 }
                 
-                // Fallback to username if it's not an email
+                
                 if (userData.username && !userData.username.includes('@')) {
                     return userData.username;
                 }
                 
-                // If we still have an email, try to make it more presentable
+                
                 if (userData.email) {
                     return this.formatEmailAsName(userData.email);
                 }
             }
             
-            // Final fallback to auth user's email
+            
             const user = this.auth.currentUser;
             if (user && user.email) {
                 return this.formatEmailAsName(user.email);
@@ -75,11 +75,11 @@ class MealPlanService {
         }
     }
 
-    // Helper to format email as a more readable name
+    
     formatEmailAsName(email) {
         if (!email) return 'Unknown Author';
         
-        // Extract the part before @ and capitalize first letters
+        
         const namePart = email.split('@')[0];
         return namePart
             .split(/[._-]/)
@@ -107,7 +107,7 @@ class MealPlanService {
             throw new Error('Please upload a meal plan image.');
         }
 
-        // Get the nutritionist's properly formatted name
+        
         const authorDisplayName = await this.getUserDisplayName(user.uid);
 
         const newMealPlan = {
@@ -125,14 +125,14 @@ class MealPlanService {
         return { id: docRef.id, ...newMealPlan };
     }
 
-    // Helper method to enhance meal plans with better author names
+    
     async enhanceMealPlansWithAuthorNames(mealPlans) {
         const enhanced = [];
         
         for (const plan of mealPlans) {
             let enhancedPlan = { ...plan };
             
-            // If author is an email or not a proper name, try to get better name
+            
             if (plan.author && (plan.author.includes('@') || plan.author === 'Unknown Author')) {
                 const betterName = await this.getUserDisplayName(plan.authorId);
                 enhancedPlan.author = betterName;
@@ -216,7 +216,7 @@ class MealPlanService {
         if (docSnap.exists()) {
             const mealPlan = { _id: docSnap.id, ...docSnap.data() };
             
-            // Enhance with better author name if needed
+            
             if (mealPlan.author && (mealPlan.author.includes('@') || mealPlan.author === 'Unknown Author')) {
                 mealPlan.author = await this.getUserDisplayName(mealPlan.authorId);
             }
@@ -296,11 +296,11 @@ class MealPlanService {
     async deleteMealPlan(mealPlanId, imageFileName) {
         const user = this.auth.currentUser;
 
-        // 1. Delete the Firestore document
+        
         const mealPlanDocRef = doc(this.db, 'meal_plans', mealPlanId);
         await deleteDoc(mealPlanDocRef);
 
-        // 2. Delete the image from Firebase Storage (if imageFileName is provided)
+        
         if (imageFileName) {
             const imageRef = ref(this.storage, `meal_plan_images/${user.uid}/${imageFileName}`);
             try {
@@ -328,7 +328,7 @@ class MealPlanService {
         const updatePayload = { ...mealPlanData };
 
         if (newImageFile) {
-            // Delete old image if it exists and a new one is being uploaded
+            
             if (originalImageFileName) {
                 const oldImageRef = ref(this.storage, `meal_plan_images/${user.uid}/${originalImageFileName}`);
                 try {
@@ -343,7 +343,7 @@ class MealPlanService {
                 }
             }
 
-            // Upload new image
+            
             const newImageFileName = `${Date.now()}_${newImageFile.name}`;
             const storageRef = ref(this.storage, `meal_plan_images/${user.uid}/${newImageFileName}`);
             const snapshot = await uploadBytes(storageRef, newImageFile);
@@ -352,8 +352,8 @@ class MealPlanService {
             updatePayload.imageUrl = newImageUrl;
             updatePayload.imageFileName = newImageFileName;
         } else if (originalImageFileName && !mealPlanData.imageUrl) {
-            // If originalImageFileName exists but no new image and no imageUrl in updatePayload,
-            // it means the user removed the image. Delete from storage.
+            
+            
             const oldImageRef = ref(this.storage,  `meal_plan_images/${user.uid}/${originalImageFileName}`);
             try {
                 await deleteObject(oldImageRef);

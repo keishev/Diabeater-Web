@@ -1,14 +1,14 @@
-/* src/Nutritionist/NutritionistProfile.css */
 
-/* --- Variables for consistent theming --- */
+
+
 :root {
-  --theme-bg-light: #FFFAF3; /* Creamy white background */
-  --theme-orange: #F79554;   /* Accent/Button color */
-  --theme-orange-hover: #e07f43; /* Darker orange for hover */
-  --theme-blue-dark: #1E525C; /* Dark blue for primary text/borders */
-  --theme-grey-dark: #4c4c4c; /* General content text */
-  --theme-grey-light: #a0a0a0; /* Placeholder text / secondary */
-  --active-orange: #E65100; /* Even darker orange for active states */
+  --theme-bg-light: #FFFAF3;
+  --theme-orange: #F79554;  
+  --theme-orange-hover: #e07f43;
+  --theme-blue-dark: #1E525C;
+  --theme-grey-dark: #4c4c4c;
+  --theme-grey-light: #a0a0a0;
+  --active-orange: #E65100;
   --error-red: #F44336;
   --red-hover: #D32F2F;
 }
@@ -92,7 +92,7 @@
     color: var(--theme-grey-light);
 }
 
-/* Container for the single 'Upload Photo' button (when no image is present) */
+
 .profile-image-upload-area {
     display: flex;
     flex-direction: column;
@@ -127,7 +127,7 @@
     box-shadow: 0 6px 16px rgba(247, 149, 84, 0.4);
 }
 
-/* Container for 'Change Picture' and 'Remove Picture' buttons (when image is present) */
+
 .uploaded-image-actions {
     display: flex;
     flex-direction: row;
@@ -278,7 +278,7 @@
     box-shadow: none;
 }
 
-/* Error message styling */
+
 .error-message {
     color: var(--error-red);
     text-align: center;
@@ -289,7 +289,7 @@
     margin: 20px;
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
     .my-profile-content {
         padding: 20px 15px;
@@ -317,7 +317,7 @@
         margin-bottom: 20px;
     }
 
-    /* For mobile, stack change/remove buttons */
+   
     .uploaded-image-actions {
         flex-direction: column;
         gap: 10px;

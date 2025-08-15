@@ -1,10 +1,10 @@
-// src/Services/NutritionistApplicationService.js
+
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../firebase';
 import { db } from "../firebase";
-import EmailService from './EmailService'; // Use the correct EmailService
+import EmailService from './EmailService'; 
 
 class NutritionistApplicationService {
     async saveNutritionistData(userId, data) {
@@ -13,7 +13,7 @@ class NutritionistApplicationService {
 
             const currentTimestamp = Timestamp.now();
 
-            // First, create user account data (this must exist for permission checks)
+            
             const userAccountData = {
                 userId: userId,
                 email: data.email,
@@ -26,27 +26,27 @@ class NutritionistApplicationService {
                 isPremium: false,
                 points: 0,
                 profileCompleted: false,
-                status: 'Suspended', // Suspended until approved
+                status: 'Suspended', 
                 username: "",
-                createdAt: currentTimestamp // Use Firestore Timestamp
+                createdAt: currentTimestamp 
             };
 
-            // Add user account to batch
+            
             const userAccountRef = doc(db, "user_accounts", userId);
             batch.set(userAccountRef, userAccountData);
 
-            // Then, save to nutritionist_application collection
+            
             const applicationData = {
                 ...data,
-                status: 'pending', // For application tracking
-                appliedDate: currentTimestamp, // Use Firestore Timestamp for application date
-                createdAt: currentTimestamp    // Also keep createdAt for consistency
+                status: 'pending', 
+                appliedDate: currentTimestamp, 
+                createdAt: currentTimestamp    
             };
 
             const applicationRef = doc(db, "nutritionist_application", userId);
             batch.set(applicationRef, applicationData);
 
-            // Execute the batch
+            
             await batch.commit();
 
             console.log("Nutritionist data saved successfully for user:", userId);
@@ -77,7 +77,7 @@ class NutritionistApplicationService {
         try {
             console.log(`Starting approval process for nutritionist: ${userId}`);
             
-            // Get the application document
+            
             const applicationRef = doc(db, "nutritionist_application", userId);
             const applicationSnap = await getDoc(applicationRef);
 
@@ -88,26 +88,26 @@ class NutritionistApplicationService {
             const applicationData = applicationSnap.data();
             console.log("Application data found:", applicationData);
 
-            // Use batch to ensure atomic updates
+            
             const batch = writeBatch(db);
 
-            // Update the user account status to Active
+            
             const userAccountRef = doc(db, "user_accounts", userId);
             batch.update(userAccountRef, {
                 status: 'Active'
             });
 
-            // Update application status
+            
             batch.update(applicationRef, {
                 status: "approved",
                 approvedAt: Timestamp.now(),
             });
 
-            // Execute the batch
+            
             await batch.commit();
             console.log("Database updates completed successfully");
 
-            // FIXED: Send approval email using EmailService
+            
             try {
                 console.log("Attempting to send approval email...");
                 const emailResult = await EmailService.sendApprovalEmail(
@@ -119,11 +119,11 @@ class NutritionistApplicationService {
                     console.log("Approval email sent successfully");
                 } else {
                     console.error("Approval email failed:", emailResult.message);
-                    // Don't throw - approval was successful even if email failed
+                    
                 }
             } catch (emailError) {
                 console.error("Error sending approval email:", emailError);
-                // Don't throw here - the approval was successful even if email failed
+                
                 console.warn("Nutritionist approved but email notification failed");
             }
 
@@ -131,7 +131,7 @@ class NutritionistApplicationService {
             return { 
                 success: true, 
                 message: "Nutritionist approved successfully",
-                emailSent: true // You could track this if needed
+                emailSent: true 
             };
         } catch (error) {
             console.error("Service: Error approving nutritionist:", error);
@@ -153,25 +153,25 @@ class NutritionistApplicationService {
             const applicationData = applicationSnap.data();
             console.log("Application data found:", applicationData);
 
-            // Use batch to update application and delete user account atomically
+            
             const batch = writeBatch(db);
 
-            // Update application status
+            
             batch.update(applicationRef, {
                 status: "rejected",
                 rejectionReason: reason || "No reason provided", 
                 rejectedAt: Timestamp.now(),
             });
 
-            // Delete the user account since application is rejected
+            
             const userAccountRef = doc(db, "user_accounts", userId);
             batch.delete(userAccountRef);
 
-            // Execute the batch
+            
             await batch.commit();
             console.log("Database updates completed successfully");
 
-            // FIXED: Send rejection email using EmailService
+            
             try {
                 console.log("Attempting to send rejection email...");
                 const emailResult = await EmailService.sendRejectionEmail(
@@ -184,11 +184,11 @@ class NutritionistApplicationService {
                     console.log("Rejection email sent successfully");
                 } else {
                     console.error("Rejection email failed:", emailResult.message);
-                    // Don't throw - rejection was successful even if email failed
+                    
                 }
             } catch (emailError) {
                 console.error("Error sending rejection email:", emailError);
-                // Don't throw here - the rejection was successful even if email failed
+                
                 console.warn("Nutritionist rejected but email notification failed");
             }
 
@@ -204,13 +204,13 @@ class NutritionistApplicationService {
         }
     }
 
-    // Helper method to format dates consistently
+    
     formatDate(timestamp, format = 'short') {
         if (!timestamp) return 'N/A';
         
         let date;
         if (timestamp.toDate) {
-            // Firestore Timestamp
+            
             date = timestamp.toDate();
         } else if (timestamp instanceof Date) {
             date = timestamp;

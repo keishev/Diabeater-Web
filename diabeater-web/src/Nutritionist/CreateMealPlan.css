@@ -1,9 +1,6 @@
-/* ==============================================
-   CREATE MEAL PLAN COMPONENT STYLES
-   Scoped styles to prevent conflicts with other components
-   ============================================== */
 
-/* CSS Variables for Create Meal Plan Component */
+
+
 :root {
   --create-meal-primary-orange: #ff9800;
   --create-meal-primary-orange-hover: #e65100;
@@ -21,9 +18,7 @@
   --create-meal-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* ==============================================
-   MAIN CONTAINER
-   ============================================== */
+
 
 .create-meal-plan-content {
   padding: 30px;
@@ -45,9 +40,7 @@
   letter-spacing: -0.02em;
 }
 
-/* ==============================================
-   FORM CONTAINER
-   ============================================== */
+
 
 .create-meal-plan-form {
   background-color: var(--create-meal-background-cream);
@@ -58,9 +51,7 @@
   width: 100%;
 }
 
-/* ==============================================
-   FORM LAYOUT ROWS
-   ============================================== */
+
 
 .create-meal-plan-form-row-top {
   display: flex;
@@ -77,9 +68,7 @@
   flex-wrap: wrap;
 }
 
-/* ==============================================
-   FORM GROUPS
-   ============================================== */
+
 
 .create-meal-plan-form-group {
   flex: 1;
@@ -126,15 +115,13 @@
   font-family: inherit;
 }
 
-/* Special styling for description textarea */
+
 .create-meal-plan-form-group.create-meal-plan-description textarea {
   border: 2px solid var(--create-meal-border-color);
   min-height: 100px;
 }
 
-/* ==============================================
-   PHOTO UPLOAD SECTION
-   ============================================== */
+
 
 .create-meal-plan-form-group.create-meal-plan-upload-photo {
   align-items: center;
@@ -218,9 +205,7 @@
   box-shadow: 0 4px 12px rgba(201, 60, 60, 0.4);
 }
 
-/* ==============================================
-   CATEGORY DROPDOWN
-   ============================================== */
+
 
 .create-meal-plan-form-group.create-meal-plan-category {
   margin-bottom: 25px;
@@ -351,9 +336,7 @@
   flex-grow: 1;
 }
 
-/* ==============================================
-   SECTION TITLES
-   ============================================== */
+
 
 .create-meal-plan-section-title {
   font-size: 22px;
@@ -376,9 +359,7 @@
   background: linear-gradient(135deg, var(--create-meal-primary-orange) 0%, var(--create-meal-secondary-teal) 100%);
 }
 
-/* ==============================================
-   NUTRIENTS GRID
-   ============================================== */
+
 
 .create-meal-plan-nutrients-grid {
   display: grid;
@@ -446,9 +427,7 @@
   font-weight: 500;
 }
 
-/* ==============================================
-   FORM MESSAGES
-   ============================================== */
+
 
 .create-meal-plan-error-message {
   background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
@@ -470,9 +449,7 @@
   font-weight: 500;
 }
 
-/* ==============================================
-   CREATE BUTTON
-   ============================================== */
+
 
 .create-meal-plan-create-button {
   display: block;
@@ -504,9 +481,7 @@
   box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
 }
 
-/* ==============================================
-   RESPONSIVE DESIGN
-   ============================================== */
+
 
 @media (max-width: 768px) {
   .create-meal-plan-form-row-top,

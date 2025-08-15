@@ -62,4 +62,4 @@ class AdminRewardsViewModel {
     }
 }
 
-export default new AdminRewardsViewModel(); // Export an instance
+export default new AdminRewardsViewModel();

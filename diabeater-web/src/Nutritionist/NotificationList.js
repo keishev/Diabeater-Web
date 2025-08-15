@@ -5,11 +5,11 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
     const [selectedNotifications, setSelectedNotifications] = useState(new Set());
     const [hiddenNotifications, setHiddenNotifications] = useState(new Set());
 
-    // Filter notifications to only show meal plan related ones
+    
     const filteredNotifications = useMemo(() => {
         return notifications
             .filter(notification => {
-                // Only show meal plan related notifications and not hidden ones
+                
                 const isMealPlanNotification = 
                     notification.type === 'MEAL_PLAN_STATUS_UPDATE' || 
                     notification.type === 'mealPlanApproval' || 
@@ -18,7 +18,7 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
                 return isMealPlanNotification && !hiddenNotifications.has(notification._id);
             })
             .sort((a, b) => {
-                // Sort by timestamp, newest first
+                
                 if (!a.timestamp && !b.timestamp) return 0;
                 if (!a.timestamp) return 1;
                 if (!b.timestamp) return -1;

@@ -1,4 +1,4 @@
-// src/ViewModels/UserFeedbackViewModel.js
+
 import { useState, useEffect, useCallback } from 'react';
 import FeedbackRepository from '../Repositories/FeedbackRepository';
 
@@ -55,10 +55,10 @@ const useUserFeedbackViewModel = () => {
         try {
             const allFeedbacks = await FeedbackRepository.getFeedbacks();
 
-            // Get 5-star feedbacks and group by userId
+            
             const fiveStarFeedbacks = allFeedbacks.filter(fb => fb.rating === 5);
             
-            // Group feedbacks by userId to ensure we select from different users
+            
             const feedbacksByUser = {};
             fiveStarFeedbacks.forEach(feedback => {
                 if (!feedbacksByUser[feedback.userId]) {
@@ -67,34 +67,34 @@ const useUserFeedbackViewModel = () => {
                 feedbacksByUser[feedback.userId].push(feedback);
             });
 
-            // Get array of unique userIds and shuffle them randomly
+            
             const userIds = Object.keys(feedbacksByUser);
             const shuffledUserIds = userIds.sort(() => Math.random() - 0.5);
             
             const newMarketingFeedbackIds = new Set();
             
-            // Select up to 3 random users, picking one random feedback per user
+            
             for (let i = 0; i < Math.min(3, shuffledUserIds.length); i++) {
                 const userId = shuffledUserIds[i];
                 const userFeedbacks = feedbacksByUser[userId];
-                // Randomly select one feedback from this user
+                
                 const randomIndex = Math.floor(Math.random() * userFeedbacks.length);
                 const selectedFeedback = userFeedbacks[randomIndex];
                 newMarketingFeedbackIds.add(selectedFeedback.id);
             }
             
-            // Update all feedbacks: set marketing display for selected ones
+            
             for (const feedback of allFeedbacks) {
                 const shouldDisplay = newMarketingFeedbackIds.has(feedback.id);
                 
-                // If this feedback should be displayed on marketing
+                
                 if (shouldDisplay) {
-                    // Set to display on marketing
+                    
                     if (!feedback.displayOnMarketing) {
                         await FeedbackRepository.updateDisplayOnMarketing(feedback.id, true);
                     }
                 } else {
-                    // Remove from marketing if currently displayed
+                    
                     if (feedback.displayOnMarketing) {
                         await FeedbackRepository.updateDisplayOnMarketing(feedback.id, false);
                     }

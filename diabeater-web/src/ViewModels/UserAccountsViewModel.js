@@ -95,7 +95,7 @@ findUserById(userId) {
     this.setLoading(true);
     this.setError('');
     
-    // Get user details BEFORE the API call
+    
     const user = this.findUserById(userId);
     const userName = this.getUserDisplayName(user);
     
@@ -108,14 +108,14 @@ findUserById(userId) {
                 this.allAccounts[userIndex].disabled = true;
             }
             
-            // Custom success message with user name
+            
             const message = result.message || `${userName} has been successfully suspended.`;
             
-            // Use custom alert instead of browser alert
+            
             if (window.showSuccess) {
                 window.showSuccess(message);
             } else {
-                alert(message); // Fallback
+                alert(message); 
             }
         });
     } catch (error) {
@@ -127,7 +127,7 @@ findUserById(userId) {
         if (window.showError) {
             window.showError(errorMessage);
         } else {
-            alert(errorMessage); // Fallback
+            alert(errorMessage); 
         }
         throw error;
     } finally {
@@ -141,7 +141,7 @@ async unsuspendUser(userId) {
     this.setLoading(true);
     this.setError('');
     
-    // Get user details BEFORE the API call
+    
     const user = this.findUserById(userId);
     const userName = this.getUserDisplayName(user);
     
@@ -154,14 +154,14 @@ async unsuspendUser(userId) {
                 this.allAccounts[userIndex].disabled = false;
             }
             
-            // Custom success message with user name
+            
             const message = result.message || `${userName} has been successfully reactivated.`;
             
-            // Use custom alert instead of browser alert
+            
             if (window.showSuccess) {
                 window.showSuccess(message);
             } else {
-                alert(message); // Fallback
+                alert(message); 
             }
         });
     } catch (error) {
@@ -173,7 +173,7 @@ async unsuspendUser(userId) {
         if (window.showError) {
             window.showError(errorMessage);
         } else {
-            alert(errorMessage); // Fallback
+            alert(errorMessage); 
         }
         throw error;
     } finally {
@@ -228,7 +228,7 @@ async unsuspendUser(userId) {
                 
                 const message = "Admin profile updated successfully.";
                 
-                // Use toast if available, otherwise fallback to alert
+                
                 if (window.showSuccess) {
                     window.showSuccess(message);
                 } else if (window.showToast) {
@@ -243,7 +243,7 @@ async unsuspendUser(userId) {
             
             const errorMessage = `Failed to update admin profile: ${error.message}`;
             
-            // Use toast if available, otherwise fallback to alert
+            
             if (window.showError) {
                 window.showError(errorMessage);
             } else if (window.showToast) {
@@ -299,7 +299,7 @@ async unsuspendUser(userId) {
                 
                 const message = "Nutritionist profile updated successfully.";
                 
-                // Use toast if available, otherwise fallback to alert
+                
                 if (window.showSuccess) {
                     window.showSuccess(message);
                 } else if (window.showToast) {
@@ -314,7 +314,7 @@ async unsuspendUser(userId) {
             
             const errorMessage = `Failed to update nutritionist profile: ${error.message}`;
             
-            // Use toast if available, otherwise fallback to alert
+            
             if (window.showError) {
                 window.showError(errorMessage);
             } else if (window.showToast) {

@@ -1,4 +1,4 @@
-/* src/components/TermsAndConditionsModal.css */
+
 
 .terms-modal-overlay {
     position: fixed;
@@ -184,7 +184,7 @@
     transform: translateY(0);
 }
 
-/* Scrollbar styling */
+
 .terms-modal-body::-webkit-scrollbar {
     width: 6px;
 }
@@ -202,7 +202,7 @@
     background: #a8a8a8;
 }
 
-/* Mobile responsiveness */
+
 @media (max-width: 768px) {
     .terms-modal-content {
         width: 95%;

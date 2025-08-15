@@ -1,4 +1,4 @@
-// src/services/FeedbackService.js
+
 import { collection, getDocs, updateDoc, doc, query, where, limit } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -7,7 +7,7 @@ class FeedbackService {
         this.feedbackCollectionRef = collection(db, "feedbacks");
     }
 
-    // Method for the Admin Website
+    
     async getFeedbacks() {
         try {
             const querySnapshot = await getDocs(this.feedbackCollectionRef);
@@ -21,7 +21,7 @@ class FeedbackService {
         }
     }
 
-    // Method for the Admin Website
+    
     async updateDisplayOnMarketing(feedbackId, displayStatus) {
         try {
             const feedbackDocRef = doc(db, "feedbacks", feedbackId);
@@ -34,7 +34,7 @@ class FeedbackService {
         }
     }
 
-    // ENHANCED: Batch update for automation efficiency
+    
     async batchUpdateFeedbacks(updates) {
         try {
             const promises = updates.map(async ({ feedbackId, displayOnMarketing }) => {
@@ -57,7 +57,7 @@ class FeedbackService {
         }
     }
 
-    // Method for the Marketing Website - gets feedbacks featured for marketing
+    
     async getPublicFeaturedMarketingFeedbacks() {
         try {
             const q = query(
@@ -80,7 +80,7 @@ class FeedbackService {
         }
     }
 
-    // Get all 5-star feedbacks for automation
+    
     async getFiveStarFeedbacks() {
         try {
             const q = query(

@@ -1,10 +1,8 @@
 // src/Services/FirebaseMarketingContentService.js
-
-// ALL IMPORTS MUST BE AT THE TOP OF THE FILE
 import { doc, getDoc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import MarketingContentModel from '../Models/MarketingContentModel'; // Assuming this exists at this path
 
-// Define the default content directly here, as it's specific to this service's domain.
+
 const defaultMarketingContent = {
     // Header Content
     headerLogoText: "DiaBeater",
@@ -18,7 +16,7 @@ const defaultMarketingContent = {
     heroTitle: "Welcome to DiaBeater - Manage Your Diabetes Easily!",
     heroSubtitle: "Empowering you with tools for better health management.",
     heroCtaText: "Start Your Journey",
-    youtubeVideoLink: "https://www.youtube.com/embed/your_video_id", // New field with a default link
+    youtubeVideoLink: "https://www.youtube.com/embed/your_video_id",
 
     // Features Section Content
     featuresSectionTitle: "Key Features",
@@ -93,20 +91,17 @@ const defaultMarketingContent = {
 
 
 class FirebaseMarketingContentService {
-    // Accept db and auth instances via constructor
     constructor(firestoreInstance, authInstance) {
         if (!firestoreInstance) {
             throw new Error("FirebaseMarketingContentService requires a Firestore instance.");
         }
         this.db = firestoreInstance;
-        this.auth = authInstance; // Auth might not be used directly in this service, but good practice to pass if needed.
+        this.auth = authInstance; 
         this.collectionName = "marketingWebsite";
         this.documentId = "currentContent";
         this.documentRef = doc(this.db, this.collectionName, this.documentId);
         console.log("FirebaseMarketingContentService initialized with Firestore.");
     }
-
-    // Helper to initialize default content if it doesn't exist
     async _initializeContentIfMissing() {
         const docSnap = await getDoc(this.documentRef);
         if (!docSnap.exists()) {
@@ -118,7 +113,7 @@ class FirebaseMarketingContentService {
 
     async fetchContent() {
         try {
-            await this._initializeContentIfMissing(); // Ensure default content exists
+            await this._initializeContentIfMissing();
             const docSnap = await getDoc(this.documentRef);
             if (docSnap.exists()) {
                 return new MarketingContentModel(docSnap.data());
@@ -141,13 +136,13 @@ class FirebaseMarketingContentService {
     onContentChange(callback) {
         return onSnapshot(this.documentRef, (docSnap) => {
             if (docSnap.exists()) {
-                callback(new MarketingContentModel(docSnap.data()), null); // Pass null for error on success
+                callback(new MarketingContentModel(docSnap.data()), null);
             } else {
-                callback(null, null); // Document deleted or not found, no error
+                callback(null, null);
             }
         }, (error) => {
             console.error("Error listening to marketing content changes:", error);
-            callback(null, error); // Pass error to callback
+            callback(null, error);
         });
     }
 
@@ -174,11 +169,9 @@ class FirebaseMarketingContentService {
 
     async stopHosting() {
         console.log("Firebase Service: Initiating stop hosting process (simulated).");
-        // In a real scenario, you'd call a Cloud Function or another backend endpoint here
-        // or update a specific document field that triggers hosting changes.
-        // For now, let's update a field to reflect "stopped" status in Firestore.
+  
         try {
-            await updateDoc(this.documentRef, { isHosted: false }); // Example field
+            await updateDoc(this.documentRef, { isHosted: false });
             console.log("Website hosting status updated to disabled in Firestore.");
             return true;
         } catch (error) {

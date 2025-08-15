@@ -1,7 +1,7 @@
-// src/Services/SubscriptionService.js
-// This file remains unchanged from your provided code,
-// as it provides generic subscription plan operations.
-import app from '../firebase'; // Assuming your firebase config is here
+
+
+
+import app from '../firebase'; 
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const db = getFirestore(app);
@@ -55,14 +55,14 @@ const SubscriptionService = {
      * @param {string} planId - The ID of the subscription plan (e.g., 'premium').
      * @returns {Promise<string[]|null>} An array of feature strings, or null if not found.
      */
-    async getPremiumFeatures(planId = 'premium') { // Default to 'premium' as per requirement
+    async getPremiumFeatures(planId = 'premium') { 
         try {
             const docRef = doc(db, 'plans', planId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                const features = data.features || []; // Assuming features is an array
+                const features = data.features || []; 
                 console.log(`[SubscriptionService] Fetched features for ${planId}:`, features);
                 return features;
             } else {

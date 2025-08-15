@@ -27,7 +27,7 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
 
     const mealPlan = selectedMealPlanForDetail;
 
-    // Helper to render nutrient boxes
+
     const NutrientBox = ({ label, value, unit, type = 'square' }) => {
         const numericValue = Number(value);
         if (isNaN(numericValue) || value === null || value === '') {
@@ -85,7 +85,6 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                     <div className="detail-section general-description-section">
                         <h2>General Description & Notes</h2>
                         <p className="pre-formatted-text">
-                            {/* Fixed: Use description instead of generalNotes */}
                             {mealPlan.description || 'No general notes available.'}
                         </p>
                     </div>
@@ -93,7 +92,6 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                     <div className="detail-section ingredients-section">
                         <h2>Ingredients</h2>
                         <p className="pre-formatted-text">
-                            {/* Fixed: Use ingredients instead of recipe */}
                             {mealPlan.ingredients || 'No ingredients listed.'}
                         </p>
                     </div>
@@ -101,7 +99,6 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                     <div className="detail-section preparation-section">
                         <h2>Preparation Steps</h2>
                         <p className="pre-formatted-text">
-                            {/* Fixed: Use steps instead of preparationSteps */}
                             {mealPlan.steps || 'No preparation steps provided.'}
                         </p>
                     </div>
@@ -113,7 +110,7 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                     <div className="detail-section nutrients-section">
                         <h2>Nutrient Information</h2>
                         <div className="nutrients-display-grid">
-                            {/* Fixed: Access nutrients directly from mealPlan instead of nested object */}
+                      
                             <NutrientBox label="Calories" value={mealPlan.calories} unit="kcal" type="circle" />
                             <NutrientBox label="Protein" value={mealPlan.protein} unit="g" />
                             <NutrientBox label="Carbs" value={mealPlan.carbohydrates} unit="g" />
@@ -130,7 +127,7 @@ const MealPlanDetail = observer(({ mealPlanId, onBack }) => {
                     <div className="detail-section category-buttons-section">
                         <h2>Category</h2>
                         <div className="category-buttons">
-                            {/* Fixed: Use categories array instead of category */}
+                           
                             {Array.isArray(mealPlan.categories) ? (
                                 mealPlan.categories.map((cat, index) => (
                                     <span key={index} className="category-tag">{cat}</span>

@@ -34,21 +34,20 @@ const AuthRepository = {
     async requestPasswordReset(email) {
         try {
             await AuthService.sendPasswordResetLink(email);
-            // Return a generic success message as a security best practice
+           
             return { 
                 success: true, 
                 message: "If an account with that email exists, a password reset link has been sent to your email."
             };
         } catch (error) {
-            // It's a security best practice to return the same generic message even on failure
-            // to prevent email enumeration. So we catch the error but return success with the same message.
+         
             if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
                 return {
                     success: true,
                     message: "If an account with that email exists, a password reset link has been sent to your email."
                 };
             }
-            // For other errors (e.g., network), we should return a real error.
+          
             return { 
                 success: false, 
                 error: error.message 

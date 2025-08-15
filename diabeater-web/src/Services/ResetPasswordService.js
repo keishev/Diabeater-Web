@@ -1,4 +1,4 @@
-// src/services/ResetPasswordService.js
+
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
 class ResetPasswordService {
@@ -18,7 +18,7 @@ class ResetPasswordService {
             return Promise.resolve();
         } catch (error) {
             console.error('Error sending password reset email:', error);
-            // Re-throw the error to be handled by the repository and view model
+            
             return Promise.reject(error);
         }
     }

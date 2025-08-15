@@ -1,4 +1,4 @@
-// src/components/TermsAndConditionsModal.js
+
 import React from 'react';
 import './TermsAndConditionsModal.css';
 

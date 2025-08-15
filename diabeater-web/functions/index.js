@@ -1,4 +1,4 @@
-// functions/index.js - COMPLETE FIXED VERSION
+
 const { onRequest, onCall } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 const { FieldValue } = require('firebase-admin/firestore');
@@ -8,7 +8,7 @@ const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
 
-// Ensure Firebase Admin SDK is initialized only once
+
 if (!admin.apps.length) {
     admin.initializeApp();
 }
@@ -17,17 +17,17 @@ const db = getFirestore();
 const auth = getAuth();
 const storage = admin.storage();
 
-// Define secrets for Gen 2 functions
+
 const gmailEmail = defineSecret('GMAIL_EMAIL');
 const gmailPassword = defineSecret('GMAIL_PASSWORD');
 
-// FIXED: Helper to get transporter with better error handling
-// FIXED: Helper to get transporter with correct method name
+
+
 const getTransporter = () => {
     try {
         console.log('=== Creating email transporter ===');
         
-        // Check if secrets are available
+        
         const emailValue = gmailEmail.value();
         const passwordValue = gmailPassword.value();
         
@@ -48,7 +48,7 @@ const getTransporter = () => {
             throw new Error(`Gmail password should be 16 characters (App Password), got ${passwordValue.length} characters`);
         }
         
-        // FIXED: Use createTransport instead of createTransporter
+        
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -67,7 +67,7 @@ const getTransporter = () => {
     }
 };
 
-// Helper to check if a user has the 'admin' custom claim
+
 const isAdmin = async (context) => {
     if (!context.auth) {
         console.warn("Attempt to call admin function by unauthenticated user.");
@@ -87,7 +87,7 @@ const isAdmin = async (context) => {
     }
 };
 
-// ADD THIS DEBUG FUNCTION
+
 exports.debugEmailConfig = onCall({
     region: 'us-central1',
     memory: '256MiB',
@@ -99,7 +99,7 @@ exports.debugEmailConfig = onCall({
         
         console.log('=== EMAIL CONFIG DEBUG ===');
         
-        // Check if secrets are accessible
+        
         const emailValue = gmailEmail.value();
         const passwordValue = gmailPassword.value();
         
@@ -108,12 +108,12 @@ exports.debugEmailConfig = onCall({
         console.log('Gmail password secret exists:', !!passwordValue);
         console.log('Gmail password length:', passwordValue ? passwordValue.length : 0);
         
-        // Try to create transporter
+        
         let transporterError = null;
         try {
             const transporter = getTransporter();
             
-            // Try to verify connection
+            
             console.log('Testing SMTP connection...');
             await transporter.verify();
             console.log('Transporter verification: SUCCESS');
@@ -143,7 +143,7 @@ exports.debugEmailConfig = onCall({
     }
 });
 
-// FIXED: Test email function
+
 exports.testEmailService = onCall({
     region: 'us-central1',
     memory: '256MiB',
@@ -157,15 +157,15 @@ exports.testEmailService = onCall({
         
         const transporter = getTransporter();
         
-        // Test the connection
+        
         console.log('Verifying SMTP connection...');
         await transporter.verify();
         console.log('SMTP connection verified successfully');
         
-        // Send a test email to the admin
+        
         const testEmail = {
             from: `"DiaBeater Team" <${gmailEmail.value()}>`,
-            to: gmailEmail.value(), // Send to yourself
+            to: gmailEmail.value(), 
             subject: 'Email Service Test - DiaBeater',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -200,7 +200,7 @@ exports.testEmailService = onCall({
     }
 });
 
-// FIXED: Send approval email function
+
 exports.sendApprovalEmail = onCall({
     region: 'us-central1',
     memory: '256MiB',
@@ -222,7 +222,7 @@ exports.sendApprovalEmail = onCall({
 
         const transporter = getTransporter();
         
-        // Test the connection first
+        
         try {
             console.log('Verifying SMTP connection...');
             await transporter.verify();
@@ -292,7 +292,7 @@ exports.sendApprovalEmail = onCall({
             throw error;
         }
         
-        // Provide more specific error messages
+        
         let errorMessage = error.message;
         if (error.code === 'EAUTH') {
             errorMessage = 'Gmail authentication failed. Please check your app password.';
@@ -306,7 +306,7 @@ exports.sendApprovalEmail = onCall({
     }
 });
 
-// FIXED: Send rejection email function
+
 exports.sendRejectionEmail = onCall({
     region: 'us-central1',
     memory: '256MiB',
@@ -328,7 +328,7 @@ exports.sendRejectionEmail = onCall({
 
         const transporter = getTransporter();
         
-        // Test the connection first
+        
         try {
             console.log('Verifying SMTP connection...');
             await transporter.verify();
@@ -405,7 +405,7 @@ exports.sendRejectionEmail = onCall({
             throw error;
         }
         
-        // Provide more specific error messages
+        
         let errorMessage = error.message;
         if (error.code === 'EAUTH') {
             errorMessage = 'Gmail authentication failed. Please check your app password.';
@@ -436,7 +436,7 @@ exports.approveNutritionist = onCall({
 
         console.log(`Approving nutritionist: ${userId}`);
 
-        // Get nutritionist data first
+        
         const nutritionistRef = db.collection('nutritionists').doc(userId);
         const nutritionistDoc = await nutritionistRef.get();
 
@@ -446,13 +446,13 @@ exports.approveNutritionist = onCall({
 
         const nutritionistData = nutritionistDoc.data();
 
-        // Update nutritionist status
+        
         await nutritionistRef.update({
             status: 'approved',
             approvedAt: FieldValue.serverTimestamp()
         });
 
-        // Set custom claims
+        
         await auth.setCustomUserClaims(userId, {
             nutritionist: true,
             approved: true,
@@ -462,7 +462,7 @@ exports.approveNutritionist = onCall({
 
         console.log(`Nutritionist ${userId} approved successfully`);
 
-        // AUTO-SEND APPROVAL EMAIL
+        
         try {
             const email = nutritionistData.email;
             const name = nutritionistData.firstName && nutritionistData.lastName 
@@ -500,7 +500,7 @@ exports.approveNutritionist = onCall({
 
         } catch (emailError) {
             console.error('Error sending auto-approval email:', emailError);
-            // Don't fail the whole process if email fails
+            
         }
         
         return { 
@@ -535,7 +535,7 @@ exports.rejectNutritionist = onCall({
 
         console.log(`Rejecting nutritionist: ${userId} with reason: ${rejectionReason}`);
 
-        // Get nutritionist data first
+        
         const nutritionistRef = db.collection('nutritionists').doc(userId);
         const nutritionistDoc = await nutritionistRef.get();
 
@@ -545,14 +545,14 @@ exports.rejectNutritionist = onCall({
 
         const nutritionistData = nutritionistDoc.data();
 
-        // Update nutritionist status
+        
         await nutritionistRef.update({
             status: 'rejected',
             rejectedAt: FieldValue.serverTimestamp(),
             rejectionReason: rejectionReason || 'No reason provided'
         });
 
-        // Set custom claims
+        
         await auth.setCustomUserClaims(userId, {
             nutritionist: false,
             approved: false,
@@ -562,7 +562,7 @@ exports.rejectNutritionist = onCall({
 
         console.log(`Nutritionist ${userId} rejected successfully`);
 
-        // AUTO-SEND REJECTION EMAIL
+        
         try {
             const email = nutritionistData.email;
             const name = nutritionistData.firstName && nutritionistData.lastName 
@@ -606,7 +606,7 @@ exports.rejectNutritionist = onCall({
 
         } catch (emailError) {
             console.error('Error sending auto-rejection email:', emailError);
-            // Don't fail the whole process if email fails
+            
         }
         
         return { 

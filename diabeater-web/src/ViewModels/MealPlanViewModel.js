@@ -1,12 +1,12 @@
-// MealPlanViewModel.js
+
 import { makeAutoObservable, runInAction, computed } from 'mobx';
 
-// Lazy import repositories and services to prevent circular dependencies
+
 let MealPlanRepository = null;
 let AuthService = null;
 let CategoryRepository = null;
 
-// Import function to load dependencies
+
 const loadDependencies = async () => {
     if (!MealPlanRepository) {
         MealPlanRepository = (await import('../Repositories/MealPlanRepository')).default;
@@ -51,7 +51,7 @@ class MealPlanViewModel {
             unreadNotificationCount: computed
         });
         
-        // Initialize dependencies and user asynchronously
+        
         this.initializeAsync();
     }
 
@@ -670,6 +670,6 @@ class MealPlanViewModel {
     }
 }
 
-// Create and export a single instance
+
 const mealPlanViewModel = new MealPlanViewModel();
 export default mealPlanViewModel;

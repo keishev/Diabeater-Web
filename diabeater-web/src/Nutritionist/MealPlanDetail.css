@@ -1,9 +1,7 @@
-/* ==============================================
-   CSS VARIABLES & GLOBAL SETTINGS
-   ============================================== */
+
 
 :root {
-  /* Colors */
+ 
   --primary-orange: #ff9800;
   --primary-orange-hover: #f57c00;
   --primary-orange-light: rgba(255, 152, 0, 0.1);
@@ -16,7 +14,7 @@
   --border-medium: #d0d0d0;
   --background-cream: #fffaf3;
 
-  /* Spacing */
+ 
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -24,7 +22,7 @@
   --spacing-xl: 32px;
   --spacing-xxl: 48px;
 
-  /* Typography */
+ 
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -33,21 +31,19 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 2rem;
 
-  /* Radius */
+ 
   --radius-sm: 4px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-pill: 50px;
 
-  /* Shadows */
+ 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-/* ==============================================
-   MEAL PLAN DETAIL STYLES
-   ============================================== */
+
 
 .meal-plan-detail-container {
   background: var(--background-cream);
@@ -55,7 +51,7 @@
   font-family: var(--font-family);
 }
 
-/* Header with Back Button */
+
 .back-button-wrapper {
   padding: var(--spacing-lg) var(--spacing-xl);
   background: var(--surface-white);
@@ -88,7 +84,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Main Layout */
+
 .detail-main-layout {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -127,7 +123,7 @@
   gap: var(--spacing-lg);
 }
 
-/* Meal Header */
+
 .meal-header {
   text-align: left;
   margin-bottom: var(--spacing-lg);
@@ -153,7 +149,7 @@
   margin: 0;
 }
 
-/* Image Display */
+
 .detail-image-wrapper {
   border-radius: var(--radius-xl);
   overflow: hidden;
@@ -185,7 +181,7 @@
   letter-spacing: 1px;
 }
 
-/* Section Styling */
+
 .detail-section {
   margin-bottom: var(--spacing-lg);
 }
@@ -222,7 +218,7 @@
   border-left: 4px solid var(--primary-orange);
 }
 
-/* Nutrients Grid */
+
 .nutrients-display-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -285,7 +281,7 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Category Tags */
+
 .category-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -310,7 +306,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Action Buttons */
+
 .detail-actions {
   margin-top: auto;
   padding-top: var(--spacing-lg);

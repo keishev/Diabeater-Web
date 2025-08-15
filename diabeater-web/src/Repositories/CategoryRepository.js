@@ -1,8 +1,8 @@
 // src/Repositories/CategoryRepository.js
-import { db } from '../firebase'; // Adjust this path to your firebase config
+import { db } from '../firebase'; 
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
-const CATEGORIES_COLLECTION = 'meal_plan_categories'; // Changed to meal_plan_categories
+const CATEGORIES_COLLECTION = 'meal_plan_categories'; 
 
 class CategoryRepository {
     constructor() {
@@ -13,7 +13,7 @@ class CategoryRepository {
         try {
             const querySnapshot = await getDocs(this.collectionRef);
             const categories = querySnapshot.docs.map(doc => ({
-                id: doc.id, // Firestore document ID
+                id: doc.id,
                 ...doc.data()
             }));
             return categories;

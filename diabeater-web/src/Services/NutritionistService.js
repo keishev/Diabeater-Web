@@ -1,7 +1,7 @@
-// src/Services/FirestoreService.js
+
 import { db } from '../firebase';
 import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import Nutritionist from '../Models/Nutritionist'; // Import the Nutritionist model
+import Nutritionist from '../Models/Nutritionist'; 
 
 class NutritionistService {
     async getPendingNutritionists() {

@@ -1,5 +1,5 @@
 const Notification = require('../Models/Notification');
-const User = require('../Models/User'); // Assuming you have a User model to find admins
+const User = require('../Models/User'); 
 
 class NotificationService {
     /**
@@ -26,7 +26,7 @@ class NotificationService {
             return newNotification;
         } catch (error) {
             console.error('Error creating user notification:', error);
-            // Decide how to handle this error (e.g., log, but don't fail the primary operation)
+            
         }
     }
 
@@ -39,7 +39,7 @@ class NotificationService {
      */
     static async createAdminNotification({ type, message, mealPlanId = null, link = null }) {
         try {
-            const admins = await User.find({ role: 'admin' }); // Find all admin users
+            const admins = await User.find({ role: 'admin' }); 
 
             if (admins.length === 0) {
                 console.warn('No admin users found to send notification to.');
@@ -56,7 +56,7 @@ class NotificationService {
                 createdAt: new Date()
             }));
 
-            await Notification.insertMany(notificationsToCreate); // Insert many notifications at once
+            await Notification.insertMany(notificationsToCreate); 
             console.log(`Admin notification created for ${admins.length} admins: ${message}`);
         } catch (error) {
             console.error('Error creating admin notification:', error);

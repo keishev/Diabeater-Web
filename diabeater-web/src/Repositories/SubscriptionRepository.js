@@ -1,10 +1,10 @@
-// src/Repositories/SubscriptionRepository.js
+
 import SubscriptionService from '../Services/SubscriptionService';
 
 class SubscriptionRepository {
     constructor() {
         this.subscriptionService = SubscriptionService;
-        this.PLAN_ID = 'premium'; // Hardcoding for premium plan as per request
+        this.PLAN_ID = 'premium'; 
     }
 
     async getSubscriptionPrice() {
@@ -16,7 +16,7 @@ class SubscriptionRepository {
     }
 
     async getPremiumFeatures() {
-        // Returns an array of strings
+        
         return this.subscriptionService.getPremiumFeatures(this.PLAN_ID);
     }
 
@@ -31,10 +31,10 @@ class SubscriptionRepository {
             if (result.success) {
                 return { success: true, message: result.message, newFeature: featureName };
             }
-            return result; // Propagate failure from service
+            return result; 
         } catch (error) {
             console.error("[SubscriptionRepository] Error adding premium feature:", error);
-            throw error; // Re-throw to be caught by ViewModel
+            throw error; 
         }
     }
 

@@ -1,4 +1,4 @@
-// src/viewmodels/ResetPasswordViewModel.js
+
 import { makeObservable, observable, action } from 'mobx';
 import AuthRepository from '../Repositories/AuthRepository';
 
@@ -9,7 +9,7 @@ class ResetPasswordViewModel {
     isLoading = false;
 
     constructor() {
-        // Initialize MobX observables and actions using makeObservable
+        
         makeObservable(this, {
             email: observable,
             message: observable,
@@ -20,12 +20,12 @@ class ResetPasswordViewModel {
         });
     }
 
-    // Action to update the email input state
+    
     setEmail(email) {
         this.email = email;
     }
 
-    // Main action to handle the password reset submission
+    
     async handleSubmit() {
         this.message = '';
         this.error = '';
@@ -50,5 +50,5 @@ class ResetPasswordViewModel {
     }
 }
 
-// Export a singleton instance of the ViewModel
+
 export default new ResetPasswordViewModel();

@@ -1,4 +1,4 @@
-/* NotificationList.css */
+
 
 .notification-list-content {
     padding: 20px;
@@ -235,7 +235,7 @@
     border: 1px solid #e0e0e0;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .notification-list-content {
         padding: 15px;
@@ -269,16 +269,16 @@
     }
 }
 .sidebar .notification-badge {
-    background-color: #dc3545; /* Red color for alerts */
+    background-color: #dc3545;
     color: white;
     border-radius: 50%;
     margin-top: 405px;
     padding: 2px 7px;
     font-size: 0.7em;
     position: absolute;
-    top: 5px; /* Adjust as needed */
-    right: 5px; /* Adjust as needed */
-    transform: translate(50%, -50%); /* Center badge relative to its parent corner */
+    top: 5px;
+    right: 5px;
+    transform: translate(50%, -50%);
     display: flex;
     justify-content: center;
     align-items: center;

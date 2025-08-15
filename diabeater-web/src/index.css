@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 html, body, #root {
-  margin: 0;          /* Removes default outer spacing from all sides */
-  padding: 0;         /* Removes default inner spacing (though less common on these) */
-  width: 100%;        /* Ensures they occupy the full width of the viewport */
-  min-height: 100vh;  /* Ensures they occupy at least the full height of the viewport */
-  overflow-x: hidden; /* Prevents horizontal scrollbars from appearing unintentionally */
+  margin: 0;          
+  padding: 0;         
+  width: 100%;        
+  min-height: 100vh;  
+  overflow-x: hidden; 
   box-sizing: border-box;
 }
 
@@ -13,7 +13,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   display: flex;
-  justify-content: center; /* Centers the login container horizontally */
-  align-items: center; /* Centers the login container vertically */
-  background-color: #F7F1EB; /* Light cream background for the overall page */
+  justify-content: center; 
+  align-items: center; 
+  background-color: #F7F1EB; 
 }

@@ -1,12 +1,9 @@
-// repositories/AdminCreateAccountRepository.js - SIMPLIFIED
+
 import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 class AdminCreateAccountRepository {
-  /**
-   * Creates admin account (delegates to service)
-   */
   async createAdminAccount(adminData) {
     try {
       return await AdminCreateAccountService.createAdminAccount(adminData);
@@ -15,10 +12,6 @@ class AdminCreateAccountRepository {
       throw error;
     }
   }
-
-  /**
-   * Checks email verification status (delegates to service)
-   */
   async checkEmailVerification(email) {
     try {
       return await AdminCreateAccountService.checkEmailVerification(email);
@@ -28,9 +21,6 @@ class AdminCreateAccountRepository {
     }
   }
 
-  /**
-   * Resends verification email (delegates to service)
-   */
   async resendVerificationEmail(email) {
     try {
       return await AdminCreateAccountService.resendVerificationEmail(email);
@@ -41,9 +31,6 @@ class AdminCreateAccountRepository {
   }
 
 
-  /**
-   * Validates form data (delegates to service)
-   */
   validateAdminForm(formData) {
     return AdminCreateAccountService.validateAdminForm(formData);
   }

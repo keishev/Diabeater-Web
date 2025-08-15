@@ -1,4 +1,4 @@
-// src/repositories/AdminReportRepository.js
+
 import app from '../firebase';
 import {
     getFirestore,
@@ -15,9 +15,7 @@ import {
 const db = getFirestore(app);
 
 const AdminReportRepository = {
-    /**
-     * Get count of documents in a collection, with optional filtering.
-     */
+    
     async getDocumentCount(collectionName, field = null, operator = null, value = null) {
         try {
             let collRef = collection(db, collectionName);
@@ -33,9 +31,6 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get all users with role 'premium' - this gives us total subscriptions
-     */
     async getPremiumUsers() {
         try {
             const q = query(
@@ -53,9 +48,7 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * FIXED: Get active subscriptions from subscriptions collection with status "active"
-     */
+  
     async getActiveSubscriptions() {
         try {
             const q = query(
@@ -73,9 +66,7 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get all subscriptions data for revenue calculations
-     */
+  
     async getAllSubscriptions() {
         try {
             const q = collection(db, 'subscriptions');
@@ -90,9 +81,7 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get all meal plans and calculate total save count
-     */
+   
     async getAllMealPlansWithSaveCounts() {
         try {
             const q = collection(db, 'meal_plans');
@@ -102,7 +91,7 @@ const AdminReportRepository = {
                 ...doc.data()
             }));
 
-            // Calculate total saves from all meal plans
+            
             const totalSaves = mealPlans.reduce((total, mealPlan) => {
                 const saveCount = mealPlan.saveCount || 0;
                 return total + (typeof saveCount === 'number' ? saveCount : 0);
@@ -123,9 +112,6 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get subscriptions for a specific month
-     */
     async getSubscriptionsByMonth(year, month) {
         try {
             const startDate = new Date(year, month - 1, 1);
@@ -148,9 +134,7 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get user signups for a specific time period
-     */
+  
     async getUserSignupsByPeriod(startDate, endDate) {
         try {
             const q = query(
@@ -170,9 +154,7 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get premium users who signed up in a specific period
-     */
+   
     async getPremiumUsersByPeriod(startDate, endDate) {
         try {
             const q = query(
@@ -189,7 +171,7 @@ const AdminReportRepository = {
             }));
         } catch (error) {
             console.error('Repo Error: Failed to get premium users by period:', error);
-            // Fallback: get all users in period and filter for premium
+            
             try {
                 const allUsers = await this.getUserSignupsByPeriod(startDate, endDate);
                 return allUsers.filter(user => user.role === 'premium');
@@ -200,9 +182,6 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get meal plans created in a specific time period
-     */
     async getMealPlansByPeriod(startDate, endDate) {
         try {
             const q = query(
@@ -222,9 +201,7 @@ const AdminReportRepository = {
         }
     },
 
-    /**
-     * Get all user accounts data
-     */
+
     async getAllUserAccounts() {
         try {
             const q = collection(db, 'user_accounts');

@@ -1,4 +1,4 @@
-// src/App.js
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './Nutritionist/LoginPage';
@@ -7,7 +7,7 @@ import AdminDashboard from './Admin/AdminDashboard';
 import ResetPasswordPage from './ResetPasswordPage';
 import CreateAccountPage from './CreateAccountPage';
 
-// ADD THESE IMPORTS
+
 import { AlertProvider, useAlert } from './Admin/AlertProvider';
 
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -17,33 +17,33 @@ import app from './firebase';
 import AuthRepository from './Repositories/AuthRepository';
 import mealPlanViewModel from './ViewModels/MealPlanViewModel';
 
-// Create a wrapper component that can use useNavigate AND useAlert
+
 const AppContent = () => {
     const navigate = useNavigate();
-    const alert = useAlert(); // ADD THIS LINE
+    const alert = useAlert(); 
     
     const [userRole, setUserRole] = useState(null);
     const [userId, setUserId] = useState(null);
     const [verifiedLogin, setVerifiedLogin] = useState(false);
     const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
 
-    // ADD THIS useEffect to make alert functions available globally
+    
     useEffect(() => {
     window.showCustomAlert = alert.showAlert;
     window.showSuccess = alert.showSuccess;
     window.showError = alert.showError;
     window.showWarning = alert.showWarning;
     window.showInfo = alert.showInfo;
-    window.showConfirm = alert.showConfirm; // ADD THIS LINE
+    window.showConfirm = alert.showConfirm; 
 
     return () => {
-        // Cleanup
+        
         delete window.showCustomAlert;
         delete window.showSuccess;
         delete window.showError;
         delete window.showWarning;
         delete window.showInfo;
-        delete window.showConfirm; // ADD THIS LINE
+        delete window.showConfirm; 
     };
 }, [alert]);
 
@@ -317,7 +317,7 @@ const AppContent = () => {
     );
 };
 
-// WRAP YOUR ENTIRE APP IN THE AlertProvider
+
 function App() {
     return (
         <AlertProvider>

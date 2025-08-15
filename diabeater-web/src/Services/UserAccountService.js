@@ -1,4 +1,4 @@
-// services/UserAccountService.js - Improved version
+
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -85,7 +85,7 @@ const UserAccountService = {
       console.log('File size:', file?.size);
       console.log('File type:', file?.type);
 
-      // Check authentication
+      
       const auth = getAuth();
       const currentUser = auth.currentUser;
       
@@ -96,33 +96,33 @@ const UserAccountService = {
         throw new Error('User must be authenticated to upload profile image');
       }
 
-      // Validate file
+      
       if (!file) {
         throw new Error('No file provided');
       }
 
-      // Check file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      const maxSize = 5 * 1024 * 1024; 
       if (file.size > maxSize) {
         throw new Error('File size too large. Maximum size is 5MB.');
       }
 
-      // Check file type
+      
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         throw new Error(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
       }
 
-      // Get user claims to check permissions
+      
       const idTokenResult = await currentUser.getIdTokenResult(true);
       console.log('User claims:', idTokenResult.claims);
       
-      // Check permissions: user can upload their own image OR admin can upload any image
+      
       if (currentUser.uid !== uid && !idTokenResult.claims.admin) {
         throw new Error('Permission denied: Cannot upload image for another user');
       }
 
-      // Create unique filename to avoid conflicts
+      
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       const fileExtension = file.name.split('.').pop().toLowerCase();
@@ -134,12 +134,12 @@ const UserAccountService = {
       const imageRef = ref(storage, imagePath);
       console.log('Storage reference created');
 
-      // Upload the file
+      
       console.log('Starting upload...');
       const snapshot = await uploadBytes(imageRef, file);
       console.log('Upload completed:', snapshot);
 
-      // Get download URL
+      
       console.log('Getting download URL...');
       const downloadURL = await getDownloadURL(snapshot.ref);
       console.log('Download URL:', downloadURL);
@@ -151,7 +151,7 @@ const UserAccountService = {
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
       
-      // Provide more user-friendly error messages
+      
       if (error.code === 'storage/unauthorized') {
         throw new Error('Permission denied: Unable to upload image. Please check your permissions.');
       } else if (error.code === 'storage/canceled') {

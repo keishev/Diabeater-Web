@@ -1,4 +1,4 @@
-// MealPlanRepository.js
+
 import MealPlanService from '../Services/MealPlanService';
 
 class MealPlanRepository {
@@ -50,7 +50,7 @@ class MealPlanRepository {
         return await MealPlanService.deleteMealPlan(mealPlanId, imageFileName);
     }
 
-    // ⭐ CRITICAL FIX: This method was missing! ⭐
+    
     async updateMealPlan(mealPlanId, mealPlanData, newImageFile = null, originalImageFileName = null) {
         return await MealPlanService.updateMealPlan(mealPlanId, mealPlanData, newImageFile, originalImageFileName);
     }

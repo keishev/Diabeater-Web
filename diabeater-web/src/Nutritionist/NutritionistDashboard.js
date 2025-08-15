@@ -9,20 +9,20 @@ import UpdateMealPlan from './UpdateMealPlan';
 import NotificationList from './NotificationList';
 import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
 
-// --- MealPlanCard component ---
-// This component can remain largely the same, as it receives props
+
+
 const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onApproveClick, onRejectClick, isAdmin }) => {
-    // Determine the display status for clarity
-    const displayStatus = mealPlan.status === 'UPLOADED' ? 'DRAFT / UNSUBMITTED' : mealPlan.status.replace(/_/g, ' ');
-    // Use imageUrl from mealPlan data directly, fallback to a local asset path if needed
+    
+const displayStatus = mealPlan.status.replace(/_/g, ' ');
+    
     const imageUrl = mealPlan.imageUrl || `/assetscopy/${mealPlan.imageFileName}`;
 
-    const cardClassName = `meal-plan-card meal-plan-card--${mealPlan.status.toLowerCase().replace(/\s|\//g, '-')}`;
+        const cardClassName = `meal-plan-card meal-plan-card--${mealPlan.status.toLowerCase().replace(/\s|\//g, '-')}`;
 
-    // Determine if update/delete buttons should be disabled for nutritionists
-    // Nutritionists can update/delete if it's PENDING_APPROVAL, REJECTED, or UPLOADED.
-    // They cannot modify APPROVED plans.
-    const isNutritionistActionDisabled = false; // Set to false to always enable for nutritionists
+    
+    
+    
+    const isNutritionistActionDisabled = false; 
 
     return (
         <div className={cardClassName} onClick={() => onClick(mealPlan._id)}> {/* Pass ID to select for detail */}
@@ -49,7 +49,7 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
                             <button
                                 className="button-base update-button"
                                 onClick={(e) => {
-                                    e.stopPropagation(); // Prevents the card's onClick from firing
+                                    e.stopPropagation(); 
                                     onUpdateClick(mealPlan._id);
                                 }}
                                 disabled={isNutritionistActionDisabled}
@@ -93,13 +93,13 @@ const MealPlanCard = ({ mealPlan, onClick, onUpdateClick, onDeleteClick, onAppro
     );
 };
 
-// MyMealPlansContent component
+
 const MyMealPlansContent = observer(({
-    onSelectMealPlan, // Calls ViewModel action for detail view
-    onUpdateMealPlan, // Calls ViewModel action for update view
-    onDeleteMealPlan, // Calls ViewModel action for deletion
-    onApproveMealPlan, // Calls ViewModel action for admin approval
-    onRejectMealPlan, // Calls ViewModel action for admin rejection
+    onSelectMealPlan, 
+    onUpdateMealPlan, 
+    onDeleteMealPlan, 
+    onApproveMealPlan, 
+    onRejectMealPlan, 
     userRole
 }) => {
     const navigate = useNavigate();
@@ -121,12 +121,12 @@ const MyMealPlansContent = observer(({
 
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-    // Get current active tab from URL
+    
     const getCurrentTabFromUrl = () => {
         const pathSegments = location.pathname.split('/');
         const currentTab = pathSegments[pathSegments.length - 1];
 
-        // Map URL segments to status values
+        
         const tabMapping = {
             'published': 'APPROVED',
             'pending': 'PENDING_APPROVAL',
@@ -143,7 +143,7 @@ const MyMealPlansContent = observer(({
                 { id: 'APPROVED', name: 'APPROVED', path: 'published' },
                 { id: 'REJECTED', name: 'REJECTED', path: 'rejected' }
             ];
-        } else { // Nutritionist
+        } else { 
             return [
                 { id: 'APPROVED', name: 'PUBLISHED', path: 'published' },
                 { id: 'PENDING_APPROVAL', name: 'PENDING VERIFICATION', path: 'pending' },
@@ -155,7 +155,7 @@ const MyMealPlansContent = observer(({
     const tabs = getTabs();
     const currentActiveTab = getCurrentTabFromUrl();
 
-    // Effect to sync with admin tab state when user is admin
+    
     useEffect(() => {
         if (userRole === 'admin') {
             mealPlanViewModel.setAdminActiveTab(currentActiveTab);
@@ -166,11 +166,11 @@ const MyMealPlansContent = observer(({
         navigate(`/nutritionist/meal-plans/${tabPath}`);
     };
 
-    // Filter plans based on current active tab from URL
+    
     const displayedMealPlans = filteredMealPlans.filter(plan => {
         if (userRole === 'admin') {
             return plan.status === currentActiveTab;
-        } else { // Nutritionist
+        } else { 
             return plan.status === currentActiveTab;
         }
     });
@@ -343,7 +343,7 @@ const NutritionistDashboard = observer(({ onLogout, activeTab }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Destructure properties and actions from the MobX ViewModel
+    
     const {
         loading,
         error,
@@ -364,9 +364,9 @@ const NutritionistDashboard = observer(({ onLogout, activeTab }) => {
         return () => {
             mealPlanViewModel.dispose();
         };
-    }, []); // Run once on mount
+    }, []); 
 
-    // Handlers that call ViewModel actions
+    
     const handleSelectMealPlan = (mealPlanId) => {
         loadMealPlanDetails(mealPlanId);
         navigate(`/nutritionist/meal-plan-detail/${mealPlanId}`);
@@ -381,7 +381,7 @@ const NutritionistDashboard = observer(({ onLogout, activeTab }) => {
         if (window.confirm("Are you sure you want to delete this meal plan? This action cannot be undone.")) {
             const success = await deleteMealPlan(mealPlanId, imageFileName);
             if (success) {
-                // Navigate back to the current tab after deletion
+                
                 const currentTab = location.pathname.split('/').pop();
                 if (['published', 'pending', 'rejected', 'draft'].includes(currentTab)) {
                     navigate(`/nutritionist/meal-plans/${currentTab}`);
@@ -398,14 +398,14 @@ const NutritionistDashboard = observer(({ onLogout, activeTab }) => {
     };
 
     const handleMealPlanSubmitted = async () => {
-        navigate('/nutritionist/meal-plans/pending'); // Navigate to pending after creating
+        navigate('/nutritionist/meal-plans/pending'); 
     };
 
     const handleMarkNotificationAsRead = async (notificationId) => {
         await markNotificationAsRead(notificationId);
     };
 
-    // Render content based on activeTab
+    
     const renderContent = () => {
         switch (activeTab) {
             case 'profile':

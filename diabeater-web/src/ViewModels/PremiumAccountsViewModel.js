@@ -68,4 +68,4 @@ class PremiumAccountsViewModel {
     }
 }
 
-export default new PremiumAccountsViewModel(); // <--- Important: export the instance
+export default new PremiumAccountsViewModel(); 

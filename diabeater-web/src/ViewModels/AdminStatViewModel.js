@@ -11,27 +11,27 @@ class AdminStatViewModel {
     totalApprovedMealPlans = 0;
     totalPendingMealPlans = 0;
     totalSubscriptions = 0;
-    dailySignupsData = {}; // { 'YYYY-MM-DD': count }
+    dailySignupsData = {}; 
     weeklyTopMealPlans = [];
     userAccounts = [];
     allSubscriptions = [];
     selectedUserForManagement = null;
 
-    // Corrected: New states for Monthly Revenue and Cancelled Subscriptions
+
     monthlyRevenue = 0;
     cancelledSubscriptionsCount = 0;
 
-    // For Nutritionist Application Modals
+  
     showRejectionReasonModal = false;
     rejectionReason = '';
 
-    // For User History Modal
+ 
     selectedUserForHistory = null;
     userSubscriptionHistory = [];
     loadingHistory = false;
     historyError = null;
 
-    // Status messages
+  
     loading = false;
     error = null;
     success = null;
@@ -42,7 +42,7 @@ class AdminStatViewModel {
         this.loadDashboardData();
     }
 
-    // --- State Management Actions ---
+  
     setLoading = (status) => {
         runInAction(() => {
             this.loading = status;
@@ -150,7 +150,7 @@ class AdminStatViewModel {
             });
         }
     }
-// Add this method to your AdminStatViewModel.js for flexibility
+
 
 /**
  * Get revenue for a specific month/year
@@ -227,14 +227,13 @@ getRevenueComparison = async (months) => {
     }
 }
 
-   // Update the loadDashboardData method in your AdminStatViewModel.js
+   
 
 loadDashboardData = async () => {
     console.log("[AdminStatViewModel] Starting loadDashboardData...");
     this.setLoading(true);
 
     try {
-        // Get current month and year
         const now = new Date();
         const currentMonth = now.getMonth() + 1; // 1-12
         const currentYear = now.getFullYear();
@@ -259,8 +258,8 @@ loadDashboardData = async () => {
             AdminStatService.getDocumentCount('subscriptions'),
             AdminStatService.getDailySignups(7),
             AdminStatService.getWeeklyTopMealPlans(3),
-            AdminStatService.getCurrentMonthRevenue(currentYear, currentMonth), // NEW: Get current month revenue
-            AdminStatService.getCurrentMonthCancelledSubscriptions(currentYear, currentMonth), // NEW: Get current month cancellations
+            AdminStatService.getCurrentMonthRevenue(currentYear, currentMonth), 
+            AdminStatService.getCurrentMonthCancelledSubscriptions(currentYear, currentMonth), 
         ]);
 
         console.log("=== MONTHLY REVENUE DATA ===");
@@ -275,7 +274,7 @@ loadDashboardData = async () => {
 
         console.log("[AdminStatViewModel] Raw data fetched successfully.");
 
-        // Process daily signups (keep existing logic)
+    
         const processedDailySignups = {};
         const today = moment().startOf('day');
         for (let i = 6; i >= 0; i--) {
@@ -291,10 +290,10 @@ loadDashboardData = async () => {
             }
         });
 
-        // Get all subscriptions for user account enrichment (keep existing logic)
+       
         const allSubscriptionsData = await AdminStatService.getAllSubscriptions();
         
-        // Group subscriptions by user for `userAccounts` enrichment
+
         const subsByUser = {};
         for (const sub of allSubscriptionsData) {
             const userId = sub.userId;
@@ -302,18 +301,17 @@ loadDashboardData = async () => {
             subsByUser[userId].push(sub);
         }
 
-        // Fetch user accounts for those subscriptions
+    
         const userIds = Object.keys(subsByUser);
         const userFetches = await Promise.all(userIds.map(uid => AdminStatService.getUserAccountById(uid)));
-        const users = userFetches.filter(Boolean); // remove nulls if any
+        const users = userFetches.filter(Boolean);
 
-        // Merge user + latest subscription
         const enrichedUsers = users.map(user => {
             const userSubs = subsByUser[user._id] || [];
             userSubs.sort((a, b) => {
                 const dateA = a.endDate?.toDate?.() || new Date(0);
                 const dateB = b.endDate?.toDate?.() || new Date(0);
-                return dateB - dateA; // Latest end date first
+                return dateB - dateA; 
             });
             const latestSub = userSubs[0];
 
@@ -336,7 +334,6 @@ loadDashboardData = async () => {
             this.allSubscriptions = allSubscriptionsData;
             this.userAccounts = enrichedUsers;
 
-            // FIXED: Use the properly calculated current month values
             this.monthlyRevenue = monthlyRevenueData.revenue || 0;
             this.cancelledSubscriptionsCount = cancelledSubscriptionsData.count || 0;
             
@@ -360,7 +357,7 @@ loadDashboardData = async () => {
     } catch (error) {
         console.error("[AdminStatViewModel] Error in loadDashboardData:", error);
         this.setError(`Failed to load dashboard data: ${error.message}`);
-        // Reset calculated values on error
+  
         runInAction(() => {
             this.monthlyRevenue = 0;
             this.cancelledSubscriptionsCount = 0;
@@ -370,7 +367,7 @@ loadDashboardData = async () => {
     }
 }
 
-    // ... (rest of your methods unchanged)
+
     suspendUserAccount = async (userId, suspend) => {
         this.setLoading(true);
         try {
@@ -479,7 +476,7 @@ loadDashboardData = async () => {
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);
                     if (userIndex > -1) {
                         this.userAccounts[userIndex].status = 'Active';
-                        this.userAccounts[userIndex].role = 'nutritionist'; // Assuming approval sets role to nutritionist
+                        this.userAccounts[userIndex].role = 'nutritionist'; 
                     }
                     this.setSuccess(`Nutritionist ${userId} approved successfully.`);
                 });
@@ -502,7 +499,7 @@ loadDashboardData = async () => {
     rejectNutritionist = async (userId) => {
         this.setLoading(true);
         try {
-            const response = await AdminStatService.updateUserStatus(userId, 'rejected'); // Reason not passed here
+            const response = await AdminStatService.updateUserStatus(userId, 'rejected'); 
             if (response.success) {
                 runInAction(() => {
                     const userIndex = this.userAccounts.findIndex(u => u._id === userId);

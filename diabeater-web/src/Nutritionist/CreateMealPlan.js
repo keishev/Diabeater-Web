@@ -1,6 +1,6 @@
-// src/CreateMealPlan.js
+
 import React, { useState, useEffect, useRef } from 'react';
-import MealPlanViewModel from '../ViewModels/MealPlanViewModel'; // Import the ViewModel
+import MealPlanViewModel from '../ViewModels/MealPlanViewModel'; 
 
 import './CreateMealPlan.css';
 
@@ -31,7 +31,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    // const [success, setSuccess] = useState('');
+    
 
     const categoryOptions = [
         'Improved Energy',
@@ -91,7 +91,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        // setSuccess('');
+        
 
         const mealPlanData = {
             name: mealName,
@@ -103,7 +103,7 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
             protein: parseFloat(protein),
             carbohydrates: parseFloat(carbohydrates),
             fats: parseFloat(fats),
-            sugar: sugar ? parseFloat(sugar) : null, // Send null if empty
+            sugar: sugar ? parseFloat(sugar) : null, 
             saturatedFat: saturatedFat ? parseFloat(saturatedFat) : null,
             unsaturatedFat: unsaturatedFat ? parseFloat(unsaturatedFat) : null,
             cholesterol: cholesterol ? parseFloat(cholesterol) : null,
@@ -114,33 +114,33 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         try {
             const result = await MealPlanViewModel.createMealPlan(mealPlanData, uploadPhoto);
             if (result) {
-                // setSuccess('Meal Plan created successfully and sent for approval!');
+                
                 if (onMealPlanSubmitted) {
                     onMealPlanSubmitted();
                 }
-                // Reset form fields
+                
                 setMealName('');
                 setSelectedCategories([]);
                 setUploadPhoto(null);
                 setImagePreviewUrl(null);
-                setIngredients(''); // Reset new fields
+                setIngredients(''); 
                 setSteps('');
                 setGeneralDescription('');
                 setCalories('');
                 setProtein('');
                 setCarbohydrates('');
                 setFats('');
-                setSugar(''); // Reset premium fields
+                setSugar(''); 
                 setSaturatedFat('');
                 setUnsaturatedFat('');
                 setCholesterol('');
                 setSodium('');
                 setPotassium('');
             } else {
-                setError(MealPlanViewModel.error); // Get error message from ViewModel
+                setError(MealPlanViewModel.error); 
             }
         } catch (err) {
-            setError(err.message); // Catch any unexpected errors during the call
+            setError(err.message); 
         } finally {
             setLoading(false);
         }

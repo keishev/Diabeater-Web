@@ -1,39 +1,39 @@
-/* General body and app styling for centering the login page */
+
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif; /* Poppins applied here */
+  font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #F7F1EB; /* Light cream background for the overall page */
+  background-color: #F7F1EB;
 }
 
-/* Ensure the root React app container also takes full height */
+
 #root, .App {
   height: 100%;
-  width: 100%; /* Ensure App also takes full width */
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Login Page Container */
+
 .login-page-container {
   display: flex;
-  width: 100vw; /* Take 90% of the viewport width */
-  height: 100vh; /* Take 90% of the viewport height */
-  background-color: #FFFAF3; /* Creamy white background for the login form section */
+  width: 100vw;
+  height: 100vh;
+  background-color: #FFFAF3;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* Ensures image doesn't overflow rounded corners */
+  overflow: hidden;
 }
 
-/* Left Section - Image */
+
 .left-section {
-  flex: 1; /* Takes half width of the container */
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -44,44 +44,44 @@ body {
 .login-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Covers the area, cropping if necessary */
-  object-position: center; /* Centers the image */
+  object-fit: cover;
+  object-position: center;
 }
 
-/* Right Section - Login Form */
+
 .right-section {
-  flex: 1; /* Takes half width of the container */
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 40px;
-  text-align: center; /* Center content horizontally */
+  text-align: center;
 }
 
-/* Logo (DiaBeater) */
+
 .logo-container {
   display: flex;
   align-items: center;
   margin-bottom: 30px;
 }
 
-.blood-drop-logo-img { /* Style for your custom image logo */
-  width: 40px; /* Adjust size as needed */
-  height: 50px; /* Adjust size as needed */
-  margin-right: -70px; /* Space between logo and text */
+.blood-drop-logo-img {
+  width: 40px;
+  height: 50px;
+  margin-right: -70px;
   margin-bottom: 100px;
 }
 
 .logo-text {
   font-family: 'Poppins', sans-serif;
   font-size: 2.5em;
-  font-weight: 600; /* Semibold */
-  color: #1E525C; /* Blue color */
+  font-weight: 600;
+  color: #1E525C;
   margin: 0;
 }
 
-/* Form */
+
 .form {
   display: flex;
   flex-direction: column;
@@ -95,8 +95,8 @@ body {
   text-align: left;
   margin-bottom: 5px;
   font-size: 0.9em;
-  color: #1e525c; /* Darker grey for labels */
-  font-weight: 400; /* Regular Poppins */
+  color: #1e525c;
+  font-weight: 400;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -121,8 +121,8 @@ body {
   text-align: left;
   margin-bottom: 5px;
   font-size: 0.9em;
-  color: #1e525c; /* Darker grey for labels */
-  font-weight: 400; /* Regular Poppins */
+  color: #1e525c;
+  font-weight: 400;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -134,7 +134,7 @@ body {
   border-color: #1E525C;
 }
 
-/* Password Input Container for Eye Icon - Specific Overrides */
+
 .password-input-container {
   position: relative;
   margin-bottom: 20px;
@@ -142,18 +142,18 @@ body {
 
 .password-input-container .input-field {
   margin-bottom: 0; 
-  padding-right: 50px; /* Increased padding to ensure enough space for the icon and text */
+  padding-right: 50px;
 }
 
 .password-toggle-icon {
   position: absolute;
-  right: 15px; /* Adjusted position to align icon with the visual right edge of other fields */
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: #888;
-  height: 20px; /* Keep icon size */
-  width: 20px; /* Keep icon size */
+  height: 20px;
+  width: 20px;
 }
 
 
@@ -201,7 +201,7 @@ body {
   width: 18px;
 }
 
-/* Login Button */
+
 .login-button {
   background-color: #FF9F68;
   color: #fff;
@@ -209,7 +209,7 @@ body {
   border: none;
   border-radius: 15px;
   font-size: 1.1em;
-  font-weight: 600; /* Semibold Poppins for button */
+  font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-top: 10px;
@@ -223,12 +223,12 @@ body {
 
 .reset-password-link,
 .create-account-link {
-  color: #1E525C; /* Explicitly set to blue */
+  color: #1E525C;
   text-decoration: none;
   font-size: 0.9em;
   margin-top: 10px;
   font-family: 'Poppins', sans-serif;
-  font-weight: 400; /* Regular Poppins */
+  font-weight: 400;
 }
 
 .create-account-link {
@@ -240,42 +240,42 @@ body {
   text-decoration: underline;
 }
 
-/* General body and app styling for centering the login page */
+
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif; /* Poppins applied here */
+  font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #F7F1EB; /* Light cream background for the overall page */
+  background-color: #F7F1EB;
 }
 
-/* Ensure the root React app container also takes full height */
+
 #root, .App {
   height: 100%;
-  width: 100%; /* Ensure App also takes full width */
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Login Page Container */
+
 .login-page-container {
   display: flex;
-  width: 100vw; /* Take 90% of the viewport width */
-  height: 100vh; /* Take 90% of the viewport height */
-  background-color: #FFFAF3; /* Creamy white background for the login form section */
+  width: 100vw;
+  height: 100vh;
+  background-color: #FFFAF3;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* Ensures image doesn't overflow rounded corners */
+  overflow: hidden;
 }
 
-/* Left Section - Image */
+
 .left-section {
-  flex: 1; /* Takes half width of the container */
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -286,44 +286,44 @@ body {
 .login-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Covers the area, cropping if necessary */
-  object-position: center; /* Centers the image */
+  object-fit: cover;
+  object-position: center;
 }
 
-/* Right Section - Login Form */
+
 .right-section {
-  flex: 1; /* Takes half width of the container */
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 40px;
-  text-align: center; /* Center content horizontally */
+  text-align: center;
 }
 
-/* Logo (DiaBeater) */
+
 .logo-container {
   display: flex;
   align-items: center;
   margin-bottom: 30px;
 }
 
-.blood-drop-logo-img { /* Style for your custom image logo */
-  width: 40px; /* Adjust size as needed */
-  height: 50px; /* Adjust size as needed */
-  margin-right: -70px; /* Space between logo and text */
+.blood-drop-logo-img {
+  width: 40px;
+  height: 50px;
+  margin-right: -70px;
   margin-bottom: 100px;
 }
 
 .logo-text {
   font-family: 'Poppins', sans-serif;
   font-size: 2.5em;
-  font-weight: 600; /* Semibold */
-  color: #1E525C; /* Blue color */
+  font-weight: 600;
+  color: #1E525C;
   margin: 0;
 }
 
-/* Form */
+
 .form {
   display: flex;
   flex-direction: column;
@@ -337,8 +337,8 @@ body {
   text-align: left;
   margin-bottom: 5px;
   font-size: 0.9em;
-  color: #1e525c; /* Darker grey for labels */
-  font-weight: 400; /* Regular Poppins */
+  color: #1e525c;
+  font-weight: 400;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -363,8 +363,8 @@ body {
   text-align: left;
   margin-bottom: 5px;
   font-size: 0.9em;
-  color: #1e525c; /* Darker grey for labels */
-  font-weight: 400; /* Regular Poppins */
+  color: #1e525c;
+  font-weight: 400;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -376,7 +376,7 @@ body {
   border-color: #1E525C;
 }
 
-/* Password Input Container for Eye Icon - Specific Overrides */
+
 .password-input-container {
   position: relative;
   margin-bottom: 20px;
@@ -384,18 +384,18 @@ body {
 
 .password-input-container .input-field {
   margin-bottom: 0; 
-  padding-right: 50px; /* Increased padding to ensure enough space for the icon and text */
+  padding-right: 50px;
 }
 
 .password-toggle-icon {
   position: absolute;
-  right: 15px; /* Adjusted position to align icon with the visual right edge of other fields */
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: #888;
-  height: 20px; /* Keep icon size */
-  width: 20px; /* Keep icon size */
+  height: 20px;
+  width: 20px;
 }
 
 
@@ -443,7 +443,7 @@ body {
   width: 18px;
 }
 
-/* Login Button */
+
 .login-button {
   background-color: #FF9F68;
   color: #fff;
@@ -451,7 +451,7 @@ body {
   border: none;
   border-radius: 15px;
   font-size: 1.1em;
-  font-weight: 600; /* Semibold Poppins for button */
+  font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-top: 10px;
@@ -465,12 +465,12 @@ body {
 
 .reset-password-link,
 .create-account-link {
-  color: #1E525C; /* Explicitly set to blue */
+  color: #1E525C;
   text-decoration: none;
   font-size: 0.9em;
   margin-top: 10px;
   font-family: 'Poppins', sans-serif;
-  font-weight: 400; /* Regular Poppins */
+  font-weight: 400;
 }
 
 .create-account-link {
@@ -482,7 +482,7 @@ body {
   text-decoration: underline;
 }
 
-/* adjustments for small screens (≤767px) */
+
 @media (max-width: 767px) {
   .login-page-container {
     flex-direction: column;
@@ -545,7 +545,7 @@ body {
   }
 }
 
-/* Extra small devices (phones ≤480px) */
+
 @media (max-width: 480px) {
   .left-section {
     height: 140px;

@@ -1,9 +1,9 @@
-/* src/CreateAccountPage.css */
+
 
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #fffaf3; /* Light beige/tan background color from image */
+    background-color: #fffaf3;
 }
 
 .create-account-container {
@@ -20,8 +20,8 @@ body {
     padding: 40px;
     border-radius: 10px;
     width: 100%;
-    /* ADJUSTED: Increased max-width to make inputs longer */
-    max-width: 950px; /* Increased from 800px */
+   
+    max-width: 950px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -31,10 +31,10 @@ body {
 
 .create-account-back-button {
     position: absolute;
-    top: 20px; /* Adjust as needed for vertical position */
-    left: 20px; /* Adjust as needed for horizontal position */
-    background-color: transparent; /* Or a light background if preferred */
-    color: #1e525c; /* Match your existing theme's text color */
+    top: 20px;
+    left: 20px;
+    background-color: transparent;
+    color: #1e525c;
     border: none;
     padding: 10px 15px;
     font-size: 1.1em;
@@ -45,11 +45,11 @@ body {
     gap: 5px;
     font-weight: bold;
     transition: color 0.3s ease;
-    z-index: 10; /* Ensure it's above other content */
+    z-index: 10;
 }
 
 .create-account-back-button:hover {
-    color: #007bff; /* A subtle hover effect */
+    color: #007bff;
 }
 
 
@@ -86,25 +86,25 @@ body {
 .create-account-form {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Spacing between form elements/sections */
+    gap: 20px;
     width: 100%;
-    /* ADJUSTED: Increased max-width to allow inputs to expand */
-    max-width: 850px; /* Increased from 700px */
+   
+    max-width: 850px;
 
 }
 
-/* Grid for two-column layout */
+
 .create-account-form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Two equal columns */
-    gap: 40px; /* Gap between columns */
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
     width: 100%;
 }
 
 .create-account-form-column {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Spacing between elements within a column */
+    gap: 15px;
 }
 
 .create-account-input-label {
@@ -123,22 +123,22 @@ body {
     border-radius: 8px;
     font-size: 1em;
     box-sizing: border-box;
-    background-color: #fefefe; /* Slightly off-white for inputs */
+    background-color: #fefefe;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: border-color 0.3s ease;
 }
 
-/* Upload Certificate Section */
+
 .create-account-upload-section {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 100%;
-    margin-top: 5px; /* Adjust spacing below label */
+    margin-top: 5px;
 }
 
 .create-account-upload-button {
-    background-color: #5a7d8a; /* Darker blue-green, similar to image */
+    background-color: #5a7d8a;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -167,7 +167,7 @@ body {
 .create-account-info-button {
     background: none;
     border: none;
-    font-size: 1.4em; /* Adjust size of the 'i' icon */
+    font-size: 1.4em;
     color: #888;
     cursor: pointer;
     padding: 0;
@@ -181,7 +181,7 @@ body {
     color: #555;
 }
 
-/* Terms and Conditions Checkbox */
+
 .create-account-terms-checkbox {
     display: flex;
     align-items: center;
@@ -224,7 +224,7 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease;
     width: 100;
-    margin-top: 20px; /* Space above submit button */
+    margin-top: 20px;
     margin-left: 200px;
 }
 
@@ -289,7 +289,7 @@ body {
     gap: 12px;
 }
 
-/* Success Modal Specific Styles */
+
 .create-account-modal-content.success-modal h3 {
     color: #2e7d32;
 }
@@ -299,7 +299,7 @@ body {
     font-size: 1.2em;
 }
 
-/* Verification Modal Specific Styles */
+
 .create-account-modal-content.verification-modal h3 {
     color: #1565c0;
 }
@@ -329,7 +329,7 @@ body {
     font-style: italic;
 }
 
-/* Enhanced Button Styles */
+
 .create-account-modal-actions {
     display: flex;
     flex-direction: column;
@@ -405,7 +405,7 @@ body {
     color: #444;
 }
 
-/* Enhanced Error Message Styling */
+
 .create-account-modal-content .create-account-error-message {
     background-color: #ffebee;
     color: #c62828;
@@ -423,7 +423,7 @@ body {
     margin-right: 8px;
 }
 
-/* Loading State */
+
 .create-account-modal-button.loading {
     position: relative;
     color: transparent;
@@ -449,7 +449,7 @@ body {
     }
 }
 
-/* Success Checkmark Animation */
+
 .create-account-verification-success {
     display: flex;
     align-items: center;
@@ -487,7 +487,7 @@ body {
     100% { transform: scale(1); }
 }
 
-/* Responsive Adjustments */
+
 @media (max-width: 768px) {
     .create-account-modal-content {
         padding: 30px 25px;
@@ -511,10 +511,10 @@ body {
 }
 
 
-/* Responsive adjustments for smaller screens */
+
 @media (max-width: 768px) {
     .create-account-form-grid {
-        grid-template-columns: 1fr; /* Stack columns vertically on small screens */
+        grid-template-columns: 1fr;
         gap: 15px;
     }
 

@@ -1,4 +1,4 @@
-// src/services/AuthService.js
+
 import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import app from '../firebase';
@@ -6,7 +6,7 @@ import app from '../firebase';
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Keys for localStorage
+
 const USER_UID_KEY = 'currentUserUid';
 const USER_ROLE_KEY = 'currentUserRole';
 const USER_NAME_KEY = 'currentUserName';

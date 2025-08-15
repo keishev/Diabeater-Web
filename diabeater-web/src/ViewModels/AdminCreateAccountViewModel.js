@@ -1,9 +1,9 @@
-// ViewModels/AdminCreateAccountViewModel.js
+
 import { makeAutoObservable, runInAction } from 'mobx';
 import AdminCreateAccountService from '../Services/AdminCreateAccountService';
 
 class AdminCreateAccountViewModel {
-  // Form data
+  
   formData = {
     firstName: '',
     lastName: '',
@@ -13,18 +13,18 @@ class AdminCreateAccountViewModel {
     dob: ''
   };
 
-  // UI state
+  
   isLoading = false;
   isCreating = false;
   isCheckingVerification = false;
   isSendingVerification = false;
   
-  // Error handling
+  
   errors = {};
   globalError = '';
   successMessage = '';
 
-  // Account creation flow state
+  
   accountCreated = false;
   emailSent = false;
   emailVerified = false;
@@ -36,7 +36,7 @@ class AdminCreateAccountViewModel {
     makeAutoObservable(this);
   }
 
-  // --- Form Management ---
+  
   setFormField = (field, value) => {
     this.formData[field] = value;
     if (this.errors[field]) {
@@ -63,7 +63,7 @@ class AdminCreateAccountViewModel {
     this.storedPassword = '';
   };
 
-  // --- State Management ---
+  
   setLoading = (value) => { this.isLoading = value; };
   setCreating = (value) => { this.isCreating = value; };
   setCheckingVerification = (value) => { this.isCheckingVerification = value; };
@@ -86,7 +86,7 @@ class AdminCreateAccountViewModel {
   setAccountCreated = (value) => { this.accountCreated = value; };
   setStoredPassword = (password) => { this.storedPassword = password; };
 
-  // --- Computed Properties ---
+  
   get isFormValid() {
     const validation = AdminCreateAccountService.validateAdminForm(this.formData);
     return validation.isValid;
@@ -115,19 +115,17 @@ class AdminCreateAccountViewModel {
            !this.emailVerified && 
            !this.accountCreated &&
            !this.isSendingVerification &&
-           this.storedPassword; // Only allow if we have the password
+           this.storedPassword; 
   }
 
-  // --- Actions ---
+  
 
-  /**
-   * Create admin account (keeps user signed in)
-   */
+ 
   createAdminAccount = async () => {
     this.setGlobalError('');
     this.setSuccessMessage('');
     
-    // Validate form first
+    
     const validation = AdminCreateAccountService.validateAdminForm(this.formData);
     if (!validation.isValid) {
       runInAction(() => {
@@ -150,7 +148,7 @@ class AdminCreateAccountViewModel {
             email: result.email
           });
           
-          // Store password for resend functionality
+          
           this.setStoredPassword(result.password);
           
           this.setSuccessMessage(result.message);
@@ -172,9 +170,7 @@ class AdminCreateAccountViewModel {
     }
   };
 
-  /**
-   * Check if Firebase email is verified (uses cloud function for admin claims)
-   */
+
   checkEmailVerification = async () => {
     this.setGlobalError('');
     this.setSuccessMessage('');
@@ -188,7 +184,7 @@ class AdminCreateAccountViewModel {
           this.setEmailVerified(true);
           this.setAccountCreated(true);
           this.setSuccessMessage('🎉 ' + result.message + ' The admin account is now ready to use!');
-          // Clear stored password after successful verification
+          
           this.setStoredPassword('');
         } else {
           this.setGlobalError(result.message || 'Email not yet verified. Please check your email and click the verification link.');
@@ -207,9 +203,7 @@ class AdminCreateAccountViewModel {
     }
   };
 
-  /**
-   * Resend Firebase verification email (user stays signed in)
-   */
+ 
   resendVerificationEmail = async () => {
     this.setSendingVerification(true);
     this.setGlobalError('');

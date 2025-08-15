@@ -1,9 +1,9 @@
-// src/Repositories/MarketingContentRepository.js
+
 import FirebaseMarketingContentService from '../Services/FirebaseMarketingContentService';
 import MarketingContentModel from '../Models/MarketingContentModel';
 
 class MarketingContentRepository {
-    // Accept db and auth from the higher layer (ViewModel)
+    
     constructor(firestoreInstance, authInstance, service) {
         this.service = service || new FirebaseMarketingContentService(firestoreInstance, authInstance);
     }
@@ -12,7 +12,7 @@ class MarketingContentRepository {
         return this.service.fetchContent();
     }
 
-    // Renamed for clarity to match the service's `onContentChange`
+    
     subscribeToMarketingContent(callback) {
         return this.service.onContentChange(callback);
     }
@@ -22,8 +22,8 @@ class MarketingContentRepository {
     }
 
     async updateAllMarketingContent(contentObject) {
-        // Create an instance of the model to ensure all properties, including the new ones,
-        // are present before sending to the service. This standardizes the data.
+        
+        
         const modelInstance = contentObject instanceof MarketingContentModel ? contentObject : new MarketingContentModel(contentObject);
         return this.service.updateAllContent(modelInstance);
     }

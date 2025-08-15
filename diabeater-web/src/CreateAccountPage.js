@@ -275,7 +275,7 @@ function CreateAccountPage({ onBackToLogin }) {
     </div>
 )}
 
-{/* Enhanced Application Success Modal */}
+
 {viewModel.showPendingApprovalModal && (
     <div className="create-account-modal-overlay">
         <div className="create-account-modal-content success-modal">
@@ -303,7 +303,7 @@ function CreateAccountPage({ onBackToLogin }) {
     </div>
 )}
 
-{/* Enhanced Certificate Requirements Modal */}
+
 {viewModel.showInfoModal && (
     <div className="create-account-modal-overlay">
         <div className="create-account-modal-content">
@@ -344,7 +344,7 @@ function CreateAccountPage({ onBackToLogin }) {
         </div>
     </div>
 )}
-                {/* Terms and Conditions Modal */}
+          
                 <TermsAndConditionsModal
                     isOpen={showTermsModal}
                     onClose={() => setShowTermsModal(false)}
@@ -355,5 +355,5 @@ function CreateAccountPage({ onBackToLogin }) {
     );
 }
 
-// Wrap the component with observer to enable MobX reactivity
+
 export default observer(CreateAccountPage);

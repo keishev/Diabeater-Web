@@ -1,10 +1,10 @@
 import AdminStatService from '../Services/AdminStatService';
-import SubscriptionService from '../Services/SubscriptionService'; // Still needed if AdminStatService doesn't completely replace its functions
+import SubscriptionService from '../Services/SubscriptionService'; 
 
 class AdminStatRepository {
     constructor() {
         this.adminStatService = AdminStatService;
-        this.subscriptionService = SubscriptionService; // Keep if other parts use it
+        this.subscriptionService = SubscriptionService; 
     }
 
     async getAllUserAccounts() {
@@ -16,7 +16,7 @@ class AdminStatRepository {
     }
 
     async getAllSubscriptions() {
-        // This is the method that provides the raw data for monthlyRevenue and cancelledSubscriptionsCount
+        
         return this.adminStatService.getAllSubscriptions();
     }
 
@@ -40,16 +40,16 @@ class AdminStatRepository {
         return this.adminStatService.getWeeklyTopMealPlans();
     }
 
-    // This method is for specific monthly breakdowns, not currently used by the
-    // main dashboard's monthlyRevenue/cancelledSubscriptionsCount directly,
-    // as those are aggregated from getAllSubscriptions in the ViewModel.
+    
+    
+    
     async getMonthlySubscriptionStats(year, month) {
         try {
             const result = await this.adminStatService.getSubscriptionsByMonth(year, month);
             if (result.success) {
-                // Calculate total new subscriptions and revenue
+                
                 const newSubscriptionsCount = result.subscriptions.length;
-                // Ensure 'price' field exists and is a number, default to 0 if not
+                
                 const totalRevenue = result.subscriptions.reduce((sum, sub) => sum + (typeof sub.price === 'number' ? sub.price : 0), 0);
 
                 return {
@@ -58,15 +58,15 @@ class AdminStatRepository {
                     year: year,
                     newSubscriptionsCount: newSubscriptionsCount,
                     totalRevenue: totalRevenue,
-                    subscriptions: result.subscriptions // Optionally return subs for more detailed view later
+                    subscriptions: result.subscriptions 
                 };
             } else {
-                // Propagate error from service
+                
                 throw new Error(result.error || 'Failed to fetch monthly subscriptions.');
             }
         } catch (error) {
             console.error("[AdminStatRepository] Error getting monthly subscription stats:", error);
-            // Return a consistent error structure
+            
             return { success: false, error: error.message, newSubscriptionsCount: 0, totalRevenue: 0 };
         }
     }

@@ -1,5 +1,5 @@
-// src/repositories/RewardRepository.js
-// No changes needed for this file. It correctly interfaces with the service.
+
+
 import RewardService from '../Services/RewardService';
 import { BasicReward, PremiumReward } from '../Models/Reward';
 
@@ -18,14 +18,14 @@ class RewardRepository {
 
     async getConfiguredBasicRewards() {
         const data = await this.rewardService.getConfiguredBasicRewards();
-        // Ensure that the data returned from service is converted back to model instances if needed
+        
         return data.map(item => new BasicReward(item.id, item.name, item.quantity, item.pointsNeeded));
     }
 
     async addBasicReward(rewardData) {
         const newReward = new BasicReward(null, rewardData.name, rewardData.quantity, rewardData.pointsNeeded, rewardData.featureKey, rewardData.description);
         const addedReward = await this.rewardService.addBasicReward(newReward);
-        // The service returns the data with an ID, convert back to a model instance
+        
         return new BasicReward(addedReward.id, addedReward.name, addedReward.quantity, addedReward.pointsNeeded, addedReward.featureKey, addedReward.description);
     }
 
@@ -39,7 +39,7 @@ class RewardRepository {
 
     async getConfiguredPremiumRewards() {
         const data = await this.rewardService.getConfiguredPremiumRewards();
-        // Ensure that the data returned from service is converted back to model instances if needed
+        
         return data.map(item => new PremiumReward(item.id, item.reward, item.discount, item.pointsNeeded));
     }
 
