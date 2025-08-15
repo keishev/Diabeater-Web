@@ -9,7 +9,7 @@ import { observer } from 'mobx-react-lite';
 import moment from 'moment';
 
 const AdminStatDashboard = observer(() => {
-    
+
     const {
         loading,
         error,
@@ -22,7 +22,7 @@ const AdminStatDashboard = observer(() => {
         dailySignupsData,
         weeklyTopMealPlans,
         monthlyRevenue,
-        cancelledSubscriptionsCount, 
+        cancelledSubscriptionsCount,
         selectedUserForManagement,
         selectedUserForHistory,
         setError,
@@ -36,7 +36,7 @@ const AdminStatDashboard = observer(() => {
 
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
-    
+
     const formatDate = (dateValue) => {
         if (!dateValue) return 'N/A';
         const date = dateValue.toDate ? dateValue.toDate() : dateValue;
@@ -48,7 +48,7 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-    
+
     const formatRenewalDate = (endDateValue) => {
         if (!endDateValue) return 'N/A';
         const endDate = endDateValue.toDate ? endDateValue.toDate() : endDateValue;
@@ -60,12 +60,12 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-    
+
     const handleLoadDashboardData = useCallback(async () => {
         await loadDashboardData();
     }, [loadDashboardData]);
 
-    
+
     useEffect(() => {
         handleLoadDashboardData();
     }, [handleLoadDashboardData]);
@@ -78,22 +78,22 @@ const AdminStatDashboard = observer(() => {
     const handleCloseUserModal = () => {
         setIsUserModalOpen(false);
         clearSelectedUserForManagement();
-        handleLoadDashboardData(); 
+        handleLoadDashboardData();
     };
 
     const handleOpenHistoryModal = (user) => {
         setSelectedUserForHistory(user);
     };
 
-    
+
     const chartDataArray = dailySignupsData
         ? Object.entries(dailySignupsData)
-              .map(([date, count]) => ({
-                  date,
-                  value: count,
-                  month: moment(date).format('MMM')
-              }))
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .map(([date, count]) => ({
+                date,
+                value: count,
+                month: moment(date).format('MMM')
+            }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
         : [];
 
     const chartPadding = { top: 20, right: 30, bottom: 30, left: 35 };
@@ -169,20 +169,20 @@ const AdminStatDashboard = observer(() => {
         };
     }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScaleFactor]);
 
-    
+
     const insightsData = [
         { value: `${((totalSubscriptions / (totalUsers || 1)) * 100 || 0).toFixed(0)}%`, label: 'Subscription Rate', change: 0, type: 'neutral', period: 'overall' },
         {
-            
+
             value: typeof monthlyRevenue === 'number' && !isNaN(monthlyRevenue)
                 ? (monthlyRevenue >= 1000
-                    ? `$${(monthlyRevenue / 1000).toFixed(1)}K` 
-                    : `$${monthlyRevenue.toFixed(2)}`)          
-                : 'N/A', 
-            
+                    ? `$${(monthlyRevenue / 1000).toFixed(1)}K`
+                    : `$${monthlyRevenue.toFixed(2)}`)
+                : 'N/A',
+
             label: 'Monthly Revenue',
-            change: 0, 
-            type: 'neutral', 
+            change: 0,
+            type: 'neutral',
             period: 'last month'
         },
         {
@@ -191,10 +191,10 @@ const AdminStatDashboard = observer(() => {
             change: 0, type: 'neutral', period: 'last week'
         },
         {
-            value: cancelledSubscriptionsCount, 
+            value: cancelledSubscriptionsCount,
             label: 'Cancelled Subscriptions',
-            change: 0, 
-            type: 'neutral', 
+            change: 0,
+            type: 'neutral',
             period: 'last month'
         },
         { value: `${((totalApprovedMealPlans / ((totalApprovedMealPlans + totalPendingMealPlans) || 1)) * 100 || 0).toFixed(0)}%`, label: 'Meal Plan Approval Rate', change: 0, type: 'neutral', period: 'overall' },
@@ -241,35 +241,35 @@ const AdminStatDashboard = observer(() => {
                     <div className="stat-value">{totalUsers}</div>
                     <div className="stat-label">Total Users</div>
                     <div className="stat-change neutral">
-                
+
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalNutritionists}</div>
                     <div className="stat-label">Total Nutritionists</div>
                     <div className="stat-change neutral">
-                        
+
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalSubscriptions}</div>
                     <div className="stat-label">Active Subscriptions</div>
                     <div className="stat-change neutral">
-                      
+
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalApprovedMealPlans}</div>
                     <div className="stat-label">Approved Meal Plans</div>
                     <div className="stat-change neutral">
-                        
+
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{totalPendingMealPlans}</div>
                     <div className="stat-label">Pending Meal Plans</div>
                     <div className="stat-change neutral">
-                     
+
                     </div>
                 </div>
             </div>

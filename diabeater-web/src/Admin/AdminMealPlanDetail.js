@@ -55,44 +55,44 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
     };
 
     const handleApprove = useCallback(async () => {
-    const confirmed = await window.showConfirm({
-        title: "Approve Meal Plan",
-        message: `Are you sure you want to approve "${mealPlan.name}"?`,
-        confirmText: "Yes, Approve",
-        cancelText: "Cancel",
-        type: "info" 
-    });
+        const confirmed = await window.showConfirm({
+            title: "Approve Meal Plan",
+            message: `Are you sure you want to approve "${mealPlan.name}"?`,
+            confirmText: "Yes, Approve",
+            cancelText: "Cancel",
+            type: "info"
+        });
 
-    if (!confirmed) {
-        return;
-    }
+        if (!confirmed) {
+            return;
+        }
 
-    setLocalLoading(true);
-    try {
-        const success = await mealPlanViewModel.approveOrRejectMealPlan(
-            mealPlan._id,
-            'APPROVED',
-            mealPlan.authorId,
-            mealPlanViewModel.currentUserName,
-            mealPlanViewModel.currentUserId
-        );
-        if (success) {
-            onClose();
+        setLocalLoading(true);
+        try {
+            const success = await mealPlanViewModel.approveOrRejectMealPlan(
+                mealPlan._id,
+                'APPROVED',
+                mealPlan.authorId,
+                mealPlanViewModel.currentUserName,
+                mealPlanViewModel.currentUserId
+            );
+            if (success) {
+                onClose();
+            }
+        } catch (err) {
+            console.error("Failed to approve meal plan from detail view:", err);
+
+
+            const errorMessage = mealPlanViewModel.error || 'Failed to approve meal plan.';
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage);
+            }
+        } finally {
+            setLocalLoading(false);
         }
-    } catch (err) {
-        console.error("Failed to approve meal plan from detail view:", err);
-        
-        
-        const errorMessage = mealPlanViewModel.error || 'Failed to approve meal plan.';
-        if (window.showError) {
-            window.showError(errorMessage);
-        } else {
-            alert(errorMessage); 
-        }
-    } finally {
-        setLocalLoading(false);
-    }
-}, [mealPlan, onClose]);
+    }, [mealPlan, onClose]);
 
     const handleRejectClick = useCallback(() => {
         setSelectedRejectReason('');
@@ -151,7 +151,7 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         setOtherReasonText('');
     }, []);
 
-    
+
     const categoriesToDisplay = Array.isArray(mealPlan.categories)
         ? mealPlan.categories
         : (typeof mealPlan.category === 'string' ? [mealPlan.category] : []);
@@ -248,10 +248,10 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                             </button>
                         </div>
                     )}
-                    
+
                     {(mealPlan.status === 'APPROVED' || mealPlan.status === 'REJECTED') && (
                         <div className="detail-actions admin-actions">
-                           
+
                         </div>
                     )}
                 </div>

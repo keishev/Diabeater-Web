@@ -133,20 +133,20 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     const handleGenerateDummyData = async (count = 10, useUnsplash = true) => {
     setIsDummyDataGenerating(true);
     try {
-        console.log(`🚀 Generating ${count} dummy meal plans with ${useUnsplash ? 'Unsplash' : 'generated'} images...`);
+        console.log(`Generating ${count} dummy meal plans with ${useUnsplash ? 'Unsplash' : 'generated'} images...`);
         const result = await createDummyMealPlans(count, useUnsplash);
-        console.log(`✅ Created ${result.results.length} meal plans`);
-        console.log(`❌ Failed: ${result.errors.length} meal plans`);
+        console.log(`Created ${result.results.length} meal plans`);
+        console.log(`Failed: ${result.errors.length} meal plans`);
         
         // Enhanced refresh strategy with detailed logging
-        console.log('🔄 Starting refresh process...');
+        console.log('Starting refresh process...');
         
         // Wait for Firestore to be consistent
-        console.log('⏳ Waiting for Firestore consistency...');
+        console.log('Waiting for Firestore consistency...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Log current state before refresh
-        console.log('📊 BEFORE refresh:');
+        console.log('BEFORE refresh:');
         console.log(`   - Total meal plans: ${MealPlanViewModel.mealPlans?.length || 0}`);
         console.log(`   - Filtered meal plans: ${MealPlanViewModel.filteredMealPlans?.length || 0}`);
         console.log(`   - Current tab: ${MealPlanViewModel.adminActiveTab}`);
@@ -154,19 +154,19 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         
         // Force refresh meal plans based on current tab
         const currentTab = MealPlanViewModel.adminActiveTab;
-        console.log(`🔄 Fetching data for tab: ${currentTab}`);
+        console.log(`Fetching data for tab: ${currentTab}`);
         
         try {
             await MealPlanViewModel.fetchAdminMealPlans();
             await MealPlanViewModel.fetchMealCategories();
         } catch (fetchError) {
-            console.error('❌ Error during refresh:', fetchError);
+            console.error('Error during refresh:', fetchError);
         }
         
         // Wait a bit more and log final state
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        console.log('📊 AFTER refresh:');
+        console.log('AFTER refresh:');
         console.log(`   - Total meal plans: ${MealPlanViewModel.mealPlans?.length || 0}`);
         console.log(`   - Filtered meal plans: ${MealPlanViewModel.filteredMealPlans?.length || 0}`);
         console.log(`   - Pending count: ${MealPlanViewModel.pendingCount}`);
@@ -177,18 +177,18 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         const unsplashCount = result.results.filter(r => r.imageSource === 'unsplash').length;
         const generatedCount = result.results.length - unsplashCount;
         
-        const successMessage = `✅ Successfully created ${result.results.length} meal plans!\n\n` +
-            `📸 Unsplash images: ${unsplashCount}\n` +
-            `🎨 Generated images: ${generatedCount}\n` +
-            `❌ Failed: ${result.errors.length}\n\n` +
+        const successMessage = `Successfully created ${result.results.length} meal plans!\n\n` +
+            `Unsplash images: ${unsplashCount}\n` +
+            `Generated images: ${generatedCount}\n` +
+            `Failed: ${result.errors.length}\n\n` +
             `Total meal plans in system: ${MealPlanViewModel.mealPlans?.length || 0}\n\n` +
             `Check the ${currentTab} tab to see your new meal plans!`;
         
         alert(successMessage);
         
     } catch (error) {
-        console.error('❌ Error generating dummy data:', error);
-        alert(`❌ Error generating dummy data: ${error.message}\n\nCheck the browser console for details.`);
+        console.error('Error generating dummy data:', error);
+        alert(`Error generating dummy data: ${error.message}\n\nCheck the browser console for details.`);
     } finally {
         setIsDummyDataGenerating(false);
     }
@@ -196,30 +196,30 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
 
 // Enhanced cleanup function (FIXED VERSION)
 const handleCleanupDummyData = async () => {
-    if (window.confirm('⚠️ Are you sure you want to delete all dummy data?\n\nThis will remove all meal plans marked as dummy data.\nThis action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete all dummy data?\n\nThis will remove all meal plans marked as dummy data.\nThis action cannot be undone.')) {
         setIsDummyDataGenerating(true);
         try {
-            console.log('🗑️ Starting cleanup of dummy data...');
+            console.log('Starting cleanup of dummy data...');
             
             // Log current state
-            console.log(`📊 BEFORE cleanup: ${MealPlanViewModel.mealPlans?.length || 0} total meal plans`);
+            console.log(`BEFORE cleanup: ${MealPlanViewModel.mealPlans?.length || 0} total meal plans`);
             
             await cleanupDummyData();
             
             // Refresh data after cleanup
-            console.log('🔄 Refreshing data after cleanup...');
+            console.log('Refreshing data after cleanup...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             await MealPlanViewModel.fetchAdminMealPlans();
             await MealPlanViewModel.fetchMealCategories();
             
             // Log final state
-            console.log(`📊 AFTER cleanup: ${MealPlanViewModel.mealPlans?.length || 0} total meal plans`);
+            console.log(`AFTER cleanup: ${MealPlanViewModel.mealPlans?.length || 0} total meal plans`);
             
-            alert(`✅ Dummy data cleanup complete!\n\nRemaining meal plans: ${MealPlanViewModel.mealPlans?.length || 0}`);
+            alert(`Dummy data cleanup complete!\n\nRemaining meal plans: ${MealPlanViewModel.mealPlans?.length || 0}`);
             
         } catch (error) {
-            console.error('❌ Error cleaning up dummy data:', error);
-            alert(`❌ Error cleaning up dummy data: ${error.message}`);
+            console.error('Error cleaning up dummy data:', error);
+            alert(`Error cleaning up dummy data: ${error.message}`);
         } finally {
             setIsDummyDataGenerating(false);
         }
@@ -241,7 +241,7 @@ const handleDebugInfo = () => {
         selectedCategory: MealPlanViewModel.selectedCategory
     };
     
-    console.log('🔍 Debug Info:', debugInfo);
+    console.log('Debug Info:', debugInfo);
     
     alert(`Debug Info:\n\n` +
         `Total meal plans: ${debugInfo.totalMealPlans}\n` +
@@ -638,53 +638,53 @@ const handleDebugInfo = () => {
             </div>
 
             {/* Add dummy data controls */}
-            <div className="dummy-data-controls" style={{ padding: '10px', margin: '10px 0', backgroundColor: '#f8f9fa', borderRadius: '5px', border: '1px solid #dee2e6' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: '#495057' }}>🧪 Dummy Data Controls (Development Only)</h4>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button
-                        onClick={() => handleGenerateDummyData(10)}
-                        disabled={isDummyDataGenerating}
-                        style={{
-                            padding: '8px 16px',
-                            backgroundColor: isDummyDataGenerating ? '#6c757d' : '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: isDummyDataGenerating ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {isDummyDataGenerating ? '⏳ Generating...' : '🍽️ Create 10 Dummy Meals'}
-                    </button>
-                    <button
-                        onClick={() => handleGenerateDummyData(25)}
-                        disabled={isDummyDataGenerating}
-                        style={{
-                            padding: '8px 16px',
-                            backgroundColor: isDummyDataGenerating ? '#6c757d' : '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: isDummyDataGenerating ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {isDummyDataGenerating ? '⏳ Generating...' : '🍽️ Create 25 Dummy Meals'}
-                    </button>
-                    <button
-                        onClick={handleCleanupDummyData}
-                        disabled={isDummyDataGenerating}
-                        style={{
-                            padding: '8px 16px',
-                            backgroundColor: isDummyDataGenerating ? '#6c757d' : '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: isDummyDataGenerating ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {isDummyDataGenerating ? '⏳ Cleaning...' : '🗑️ Clean Up Dummy Data'}
-                    </button>
-                </div>
-            </div>
+            {/*<div className="dummy-data-controls" style={{ padding: '10px', margin: '10px 0', backgroundColor: '#f8f9fa', borderRadius: '5px', border: '1px solid #dee2e6' }}>*/}
+            {/*    <h4 style={{ margin: '0 0 10px 0', color: '#495057' }}>🧪 Dummy Data Controls (Development Only)</h4>*/}
+            {/*    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>*/}
+            {/*        <button*/}
+            {/*            onClick={() => handleGenerateDummyData(10)}*/}
+            {/*            disabled={isDummyDataGenerating}*/}
+            {/*            style={{*/}
+            {/*                padding: '8px 16px',*/}
+            {/*                backgroundColor: isDummyDataGenerating ? '#6c757d' : '#28a745',*/}
+            {/*                color: 'white',*/}
+            {/*                border: 'none',*/}
+            {/*                borderRadius: '4px',*/}
+            {/*                cursor: isDummyDataGenerating ? 'not-allowed' : 'pointer'*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            {isDummyDataGenerating ? '⏳ Generating...' : '🍽️ Create 10 Dummy Meals'}*/}
+            {/*        </button>*/}
+            {/*        <button*/}
+            {/*            onClick={() => handleGenerateDummyData(25)}*/}
+            {/*            disabled={isDummyDataGenerating}*/}
+            {/*            style={{*/}
+            {/*                padding: '8px 16px',*/}
+            {/*                backgroundColor: isDummyDataGenerating ? '#6c757d' : '#007bff',*/}
+            {/*                color: 'white',*/}
+            {/*                border: 'none',*/}
+            {/*                borderRadius: '4px',*/}
+            {/*                cursor: isDummyDataGenerating ? 'not-allowed' : 'pointer'*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            {isDummyDataGenerating ? '⏳ Generating...' : '🍽️ Create 25 Dummy Meals'}*/}
+            {/*        </button>*/}
+            {/*        <button*/}
+            {/*            onClick={handleCleanupDummyData}*/}
+            {/*            disabled={isDummyDataGenerating}*/}
+            {/*            style={{*/}
+            {/*                padding: '8px 16px',*/}
+            {/*                backgroundColor: isDummyDataGenerating ? '#6c757d' : '#dc3545',*/}
+            {/*                color: 'white',*/}
+            {/*                border: 'none',*/}
+            {/*                borderRadius: '4px',*/}
+            {/*                cursor: isDummyDataGenerating ? 'not-allowed' : 'pointer'*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            {isDummyDataGenerating ? '⏳ Cleaning...' : '🗑️ Clean Up Dummy Data'}*/}
+            {/*        </button>*/}
+            {/*    </div>*/}
+            {/*</div>*/}
 
             {localLoading || MealPlanViewModel.loading ? (
                 <div className="loading-container">
