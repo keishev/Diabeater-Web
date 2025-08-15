@@ -1,22 +1,22 @@
-/* src/Admin/AdminProfile.css */
 
-/* --- Variables for consistent theming --- */
+
+
 :root {
-  --theme-bg-light: #FFFAF3; /* Creamy white background */
-  --theme-orange: #F79554;   /* Accent/Button color */
-  --theme-orange-hover: #e07f43; /* Darker orange for hover */
-  --theme-blue-dark: #1E525C; /* Dark blue for primary text/borders */
-  --theme-grey-dark: #4c4c4c; /* General content text */
-  --theme-grey-light: #a0a0a0; /* Placeholder text / secondary */
-  --table-header-bg: #FFE0B2; /* Lighter orange for table headers */
-  --active-orange: #E65100; /* Even darker orange for active states */
+  --theme-bg-light: #FFFAF3;
+  --theme-orange: #F79554;  
+  --theme-orange-hover: #e07f43;
+  --theme-blue-dark: #1E525C;
+  --theme-grey-dark: #4c4c4c;
+  --theme-grey-light: #a0a0a0;
+  --table-header-bg: #FFE0B2;
+  --active-orange: #E65100;
   --success-green: #4CAF50;
   --error-red: #F44336;
   --red-hover: #D32F2F;
   --green-hover: #388E3C;
 }
 
-/* Base layout for the admin dashboard */
+
 .admin-dashboard-page {
     display: flex;
     min-height: 100vh;
@@ -24,7 +24,7 @@
     margin-left: 40px;
 }
 
-/* Admin Sidebar Styling */
+
 .admin-sidebar {
     width: 250px;
     background-color: var(--theme-bg-light);
@@ -38,7 +38,7 @@
     overflow-y: auto;
 }
 
-/* Admin Main Content Area */
+
 .admin-main-content {
     margin-left: 250px;
     flex-grow: 1;
@@ -49,7 +49,7 @@
     background-color: var(--theme-bg-light);
 }
 
-/* Logo in Sidebar */
+
 .admin-sidebar .logo {
     margin-bottom: 40px;
     margin-top: 20px;
@@ -71,7 +71,7 @@
     color: var(--theme-blue-dark);
 }
 
-/* Navigation in Sidebar */
+
 .admin-sidebar .navigation {
     display: flex;
     flex-direction: column;
@@ -109,7 +109,7 @@
     color: var(--active-orange);
 }
 
-/* Logout Button */
+
 .admin-sidebar .logout-button {
     background-color: var(--theme-orange);
     color: var(--theme-bg-light);
@@ -130,7 +130,7 @@
     background-color: var(--active-orange);
 }
 
-/* --- ADMIN PROFILE STYLES --- */
+
 .my-profile-content {
     background-color: var(--theme-bg-light);
     min-height: 100vh;
@@ -150,12 +150,29 @@
 
 .admin-profile-page-title {
     font-size: 32px;
-    color: var(--theme-orange);
+     background: linear-gradient(135deg, #1e525c 0%, #2c3e50 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
+    background-clip: text;
+    margin-bottom: 20px;
     font-weight: 700;
+    margin-left: 40px;
+    letter-spacing: 2px;
+    position: relative;
     letter-spacing: 1px;
-    margin-top: -50px;
+    margin-top: -20px;
     margin-left: -300px;
+}
+.admin-profile-page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+    border-radius: 2px;
 }
 
 .profile-card {
@@ -353,7 +370,7 @@
     box-shadow: none;
 }
 
-/* Error message styling */
+
 .error-message {
     color: var(--error-red);
     text-align: center;
@@ -364,7 +381,7 @@
     margin: 20px;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .admin-sidebar {
         width: 60px;

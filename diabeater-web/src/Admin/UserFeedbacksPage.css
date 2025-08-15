@@ -1,4 +1,4 @@
-/* src/Admin/UserFeedbacksPage.css */
+
 
 .user-feedbacks-page {
     padding: 40px;
@@ -32,7 +32,7 @@
     border-radius: 2px;
 }
 
-/* Marketing Section Styling */
+
 .marketing-section {
     margin: 40px;
     background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
@@ -147,7 +147,7 @@
     border-bottom: 2px solid rgba(255, 152, 0, 0.3);
 }
 
-/* Column widths - Updated for 6 columns */
+
 .feedbacks-table th:nth-child(1),
 .feedbacks-table td:nth-child(1) {
     width: 12%;
@@ -190,7 +190,7 @@
     transform: scale(1.002);
 }
 
-/* Button Styles */
+
 .approve-button, .retrack-button {
     background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
     color: white;
@@ -264,7 +264,7 @@
     transform: none;
 }
 
-/* Feedback Status Styling */
+
 .feedback-status {
     padding: 8px 16px;
     border-radius: 20px;
@@ -296,7 +296,7 @@
     border: 1px solid rgba(114, 28, 36, 0.2);
 }
 
-/* Star Rating */
+
 .star-rating, .stars-container {
     display: flex;
     justify-content: center;
@@ -331,7 +331,7 @@
     box-shadow: 0 2px 6px rgba(245, 127, 23, 0.2);
 }
 
-/* Empty state */
+
 .no-feedbacks {
     text-align: center;
     padding: 60px 30px;
@@ -343,7 +343,7 @@
     margin: 20px 40px;
 }
 
-/* Loading and Error states */
+
 .user-feedbacks-page.loading,
 .user-feedbacks-page.error {
     display: flex;
@@ -380,7 +380,7 @@
     gap: 20px;
 }
 
-/* Responsive Design */
+
 @media (max-width: 1200px) {
     .feedbacks-table {
         min-width: 1000px;
@@ -424,7 +424,7 @@
     }
 }
 
-/* Scrollbar Styling */
+
 .feedbacks-table-container::-webkit-scrollbar {
     height: 8px;
 }

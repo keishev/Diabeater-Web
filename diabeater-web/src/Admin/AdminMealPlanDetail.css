@@ -1,4 +1,4 @@
-/* src/Admin/AdminMealPlanDetail.css */
+
 
 .meal-plan-detail-container {
     background: #fffaf3;
@@ -48,7 +48,7 @@
     padding: 40px 32px;
 }
 
-/* Left Column */
+
 .detail-left-column {
     display: flex;
     flex-direction: column;
@@ -178,7 +178,7 @@
     border-left: 4px solid #ff6b35;
 }
 
-/* Right Column */
+
 .detail-right-column {
     display: flex;
     flex-direction: column;
@@ -234,7 +234,7 @@
     border-left: 4px solid #ff6b35;
 }
 
-/* Nutrients Display */
+
 .nutrients-display-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -319,7 +319,7 @@
     letter-spacing: 0.5px;
 }
 
-/* Category Section */
+
 .category-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -344,7 +344,7 @@
     box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
 }
 
-/* Admin Actions */
+
 .detail-actions {
     margin-top: 24px;
 }
@@ -414,7 +414,7 @@
     box-shadow: none !important;
 }
 
-/* Modal Styling */
+
 .reject-modal-overlay {
     position: fixed;
     top: 0;
@@ -562,7 +562,7 @@
     box-shadow: none;
 }
 
-/* Responsive Design */
+
 @media (max-width: 1200px) {
     .detail-main-layout {
         grid-template-columns: 1fr 360px;

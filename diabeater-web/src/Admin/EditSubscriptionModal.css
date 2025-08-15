@@ -1,4 +1,4 @@
-/* src/Admin/EditSubscriptionModal.css */
+
 
 .edit-modal-overlay {
     position: fixed;
@@ -6,11 +6,11 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1001; /* Higher z-index than UserDetailModal if both can open (though usually one at a time) */
+    z-index: 1001;
     backdrop-filter: blur(2px);
 }
 
@@ -20,9 +20,9 @@
     padding: 30px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 400px; /* Slightly smaller than UserDetailModal */
+    max-width: 400px;
     position: relative;
-    animation: fadeInScale 0.3s ease-out; /* Re-using existing animation */
+    animation: fadeInScale 0.3s ease-out;
 }
 
 .edit-modal-close-button {
@@ -87,30 +87,30 @@
 }
 
 .edit-price-input {
-    width: 80%; /* Adjust width as needed */
+    width: 80%;
     padding: 8px 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 16px;
     text-align: right;
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    box-sizing: border-box;
 }
 
 .edit-price-input:focus {
     outline: none;
-    border-color: #ff9800; /* Highlight on focus */
+    border-color: #ff9800;
     box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
 }
 
 .edit-currency {
     font-size: 16px;
     color: #333;
-    margin-left: 5px; /* Space between input and currency */
+    margin-left: 5px;
 }
 
 .edit-modal-actions {
     display: flex;
-    justify-content: space-between; /* Space out Save and Cancel buttons */
+    justify-content: space-between;
     gap: 15px;
 }
 
@@ -123,21 +123,21 @@
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
-    flex: 1; /* Make buttons take equal width */
+    flex: 1;
 }
 
 .edit-save-button {
-    background-color: #ff9800; /* Orange color from your theme */
+    background-color: #ff9800;
     color: #fff;
 }
 
 .edit-save-button:hover {
-    background-color: #e68900; /* Slightly darker orange */
+    background-color: #e68900;
     transform: translateY(-1px);
 }
 
 .edit-cancel-button {
-    background-color: #e0e0e0; /* Light grey */
+    background-color: #e0e0e0;
     color: #555;
 }
 
@@ -146,7 +146,7 @@
     transform: translateY(-1px);
 }
 
-/* Re-using the animation from UserDetailModal.css */
+
 @keyframes fadeInScale {
     from {
         opacity: 0;

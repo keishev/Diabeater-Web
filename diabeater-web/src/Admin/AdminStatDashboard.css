@@ -1,30 +1,49 @@
-/* src/Admin/AdminStatDashboard.css */
 
-/* Specific styling for the main content area of the AdminStatDashboard */
+
+
 .admin-dashboard-main-content-area {
-    /* This class is used in AdminStatDashboard.js as a wrapper.
-       No specific styles needed here if admin-main-content already provides padding etc.
-       It's more for logical grouping. */
-    /* If you want to differentiate its background or other base styles from other views,
-       you can add them here, e.g.: */
-    /* background-color: #f7f7f7; */
+   
+   
+   
 }
 
-/* Header for the dashboard (STATISTICS title and date) */
+
 .admin-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end; /* Align title and date at the bottom */
+    align-items: flex-end;
     margin-bottom: 30px;
-    padding-bottom: 10px; /* Space below header */
-    border-bottom: 1px solid #eee; /* Subtle separator */
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
 }
 
 .admin-page-title {
-    font-size: 28px;
-    color: #ff9800; /* DiaBeater orange */
-    margin: 0; /* Remove default margin */
+  font-size: 32px;
+     background: linear-gradient(135deg, #1e525c 0%, #2c3e50 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    background-clip: text;
+    margin-bottom: 20px;
+    font-weight: 700;
+    margin-left: 40px;
+    letter-spacing: 2px;
+    position: relative;
+    letter-spacing: 1px;
+    margin-top: -20px;
+    margin-left: -300px;
 }
+.admin-page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+    border-radius: 2px;
+}
+
 
 .data-as-at {
     font-size: 14px;
@@ -35,55 +54,55 @@
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    flex: 1; /* Allows it to grow and take available space */
-    min-width: 300px; /* Adjust as needed */
+    flex: 1;
+    min-width: 300px;
     display: flex;
-    flex-direction: column; /* Arrange content vertically */
+    flex-direction: column;
 }
 
 .daily-signups-chart-section .section-title {
     font-size: 22px;
-    color: var(--theme-blue-dark); /* Using variable from :root */
+    color: var(--theme-blue-dark);
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid var(--theme-orange); /* Using variable from :root */
+    border-bottom: 2px solid var(--theme-orange);
 }
 
 .chart-placeholder {
     width: 100%;
-    /* height: 200px; Remove fixed height, let SVG handle it */
+   
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 15px; /* Space between chart and insights */
+    margin-bottom: 15px;
 }
 
 .chart-placeholder svg {
     max-width: 100%;
     height: auto;
-    border: none; /* REMOVE BORDER around the chart area */
+    border: none;
     border-radius: 8px;
-    box-sizing: border-box; /* Ensure padding/border included in width/height */
+    box-sizing: border-box;
 }
 
-/* Styling for the chart path and points */
+
 .chart-line {
     fill: none;
-    stroke: #ff9800; /* Main line color */
+    stroke: #ff9800;
     stroke-width: 2;
 }
 
 .chart-area {
-    fill: url(#chartGradient); /* Apply the gradient fill */
+    fill: url(#chartGradient);
 }
 
 .chart-point {
-    fill: #ff9800; /* Color for the circles at data points */
-    stroke: #fff; /* White stroke for the circles */
+    fill: #ff9800;
+    stroke: #fff;
     stroke-width: 2;
 }
 
-/* Axis labels */
+
 .chart-x-axis-label {
     font-size: 10px;
     fill: #888;
@@ -98,12 +117,12 @@
 
 .chart-insights {
     display: flex;
-    justify-content: space-around; /* Distribute insights evenly */
-    flex-wrap: wrap; /* Allow insights to wrap on smaller screens */
-    gap: 10px; /* Space between insight items */
-    margin-top: auto; /* Push insights to the bottom of the section */
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: auto;
     padding-top: 15px;
-    border-top: 1px dashed #eee; /* Separator from the chart */
+    border-top: 1px dashed #eee;
 }
 
 .chart-insight-item {
@@ -111,14 +130,14 @@
     padding: 5px 10px;
     border-radius: 5px;
     background-color: #f7f7f7;
-    flex-grow: 1; /* Allow items to grow to fill space */
-    min-width: 100px; /* Minimum width for each insight item */
+    flex-grow: 1;
+    min-width: 100px;
 }
 
 .chart-insight-label {
     font-size: 0.85em;
     color: #888;
-    display: block; /* Ensure label is on its own line */
+    display: block;
     margin-bottom: 3px;
 }
 
@@ -128,88 +147,88 @@
     color: var(--theme-blue-dark);
 }
 
-/* Ensure dashboard-sections-row is correctly configured to display side-by-side */
+
 .dashboard-sections-row {
     display: flex;
-    gap: 30px; /* Space between meal plans and signups sections */
+    gap: 30px;
     margin-bottom: 30px;
-    flex-wrap: wrap; /* Allow sections to wrap on smaller screens */
+    flex-wrap: wrap;
 }
 
-/* Ensure that AdminInsights also takes up available space as before */
+
 .admin-insights-section {
-    /* Your existing styles for AdminInsights */
+   
     background-color: #fff;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     margin-bottom: 30px;
-    flex: 1 1 100%; /* Allow it to take full width when needed, or flex as a block */
+    flex: 1 1 100%;
     min-width: 300px;
 }
 
 @media (max-width: 768px) {
     .dashboard-sections-row {
-        flex-direction: column; /* Stack sections vertically on small screens */
+        flex-direction: column;
         gap: 20px;
     }
     .daily-signups-chart-section,
     .admin-insights-section {
-        min-width: unset; /* Remove min-width on small screens */
+        min-width: unset;
     }
     .chart-insights {
-        justify-content: center; /* Center insights on small screens */
+        justify-content: center;
     }
 }
 
-/* Statistics Cards Container */
+
 .stats-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid for cards */
-    gap: 20px; /* Space between cards */
-    margin-bottom: 40px; /* Space below stat cards */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
 }
 
 .stat-card {
     background-color: #fff;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
     position: relative;
-    overflow: hidden; /* Hide anything overflowing, like the background graph icon */
+    overflow: hidden;
 }
 
 .stat-card::after {
-    /* Optional: Add the background graph icon for the cards */
-    content: '\f201'; /* FontAwesome chart-line icon */
+   
+    content: '\f201';
     font-family: 'Font Awesome 5 Free';
     font-weight: 900;
     position: absolute;
-    bottom: -10px; /* Adjust position as needed */
-    right: -10px; /* Adjust position as needed */
-    font-size: 80px; /* Large icon size */
-    color: rgba(255, 152, 0, 0.1); /* Very light orange, almost transparent */
+    bottom: -10px;
+    right: -10px;
+    font-size: 80px;
+    color: rgba(255, 152, 0, 0.1);
     z-index: 0;
 }
 
 .stat-card:nth-child(2)::after {
-    content: '\f155'; /* FontAwesome dollar-sign icon */
+    content: '\f155';
 }
 .stat-card:nth-child(3)::after {
-    content: '\f0c0'; /* FontAwesome users icon */
+    content: '\f0c0';
 }
 
 
 .stat-value {
     font-size: 36px;
     font-weight: bold;
-    color: #ff9800; /* Orange color */
+    color: #ff9800;
     margin-bottom: 5px;
-    z-index: 1; /* Ensure text is above the background icon */
+    z-index: 1;
 }
 
 .stat-label {
@@ -228,26 +247,26 @@
 }
 
 .stat-change.increase {
-    color: #4CAF50; /* Green for increase */
+    color: #4CAF50;
 }
 
 .stat-change.decrease {
-    color: #F44336; /* Red for decrease (though not shown in screenshot, good to have) */
+    color: #F44336;
 }
 
 .stat-change i {
     margin-right: 5px;
 }
 
-/* Dashboard Sections Row (for Weekly Meal Plans and Daily Signups) */
+
 .dashboard-sections-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(45%, 1fr)); /* Two columns, responsive */
-    gap: 30px; /* Space between sections */
+    grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
+    gap: 30px;
     margin-bottom: 40px;
 }
 
-/* --- Adjustments for "Weekly Top Meal Plans" height --- */
+
 .weekly-meal-plans-section {
     background-color: #fff;
     padding: 25px;
@@ -257,42 +276,42 @@
 
 .section-title {
     font-size: 22px;
-    color: #1e525c; /* Darker blue/green from logo text */
+    color: #1e525c;
     margin-bottom: 20px;
     margin-top: 20px;
     font-weight: 600;
 }
 
-/* Weekly Top Meal Plans List */
+
 .meal-plans-list {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Reduced gap between items from 15px to 10px to save space */
+    gap: 10px;
 }
 
 .meal-plan-item {
     display: flex;
     align-items: center;
-    gap: 10px; /* Reduced gap within item from 15px to 10px */
-    padding: 8px 0; /* Reduced vertical padding from 10px to 8px */
+    gap: 10px;
+    padding: 8px 0;
     border-bottom: 1px solid #eee;
 }
 
 .meal-plan-item:last-child {
-    border-bottom: none; /* No border for the last item */
+    border-bottom: none;
 }
 
 .meal-plan-rank {
     font-size: 18px;
     font-weight: bold;
     color: #ff9800;
-    min-width: 30px; /* Ensure space for rank */
+    min-width: 30px;
     text-align: center;
 }
 
 .admin-meal-plan-image {
-    width: 150px; /* Reduced image size from 100px to 80px */
-    height: 180px; /* Reduced image size from 100px to 80px */
+    width: 150px;
+    height: 180px;
     object-fit: cover;
     border-radius: 8px;
 }
@@ -303,25 +322,25 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Add or modify this style for the title within the weekly-meal-plans-section */
-.weekly-meal-plans-section .section-title { /* Added this specific selector */
+
+.weekly-meal-plans-section .section-title {
     font-size: 22px;
-    color: #1e525c; /* Darker blue/green from logo text */
+    color: #1e525c;
     margin-bottom: 20px;
     margin-top: 16px;
     font-weight: 600;
-    padding-bottom: 10px; /* Add padding to the bottom */
-    border-bottom: 2px solid var(--theme-orange); /* Add the orange border line */
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--theme-orange);
 }
 .meal-plan-info {
     flex-grow: 1;
 }
 .daily-signups-chart-section {
-    position: relative; /* Add this line */
-    /* ... existing styles for this section ... */
+    position: relative;
+   
 }
 
-/* --- Tooltip Styles --- */
+
 #chart-tooltip {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.8);
@@ -354,7 +373,7 @@
     margin-left: -20px;
 }
 
-/* Daily Signups Chart Placeholder */
+
 .daily-signups-section .chart-placeholder {
     width: 100%;
     height: 200px;
@@ -426,7 +445,7 @@
     border-bottom: none;
 }
 
-/* Status dots */
+
 .status-dot {
     display: inline-block;
     width: 8px;
@@ -437,22 +456,22 @@
 }
 
 .status-active {
-    color: #4CAF50; /* Green */
+    color: #4CAF50;
 }
 
 .status-inactive {
-    color: #F44336; /* Red */
+    color: #F44336;
 }
 
 .status-cancelled {
-    color: #F44336; /* Red */
+    color: #F44336;
 }
 
 .status-expired {
-    color: #F44336; /* Red */
+    color: #F44336;
 }
 
-/* View buttons */
+
 .action-button.view-button {
     background-color: #ff9800;
     color: white;

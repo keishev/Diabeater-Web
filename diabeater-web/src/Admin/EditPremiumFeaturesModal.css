@@ -1,4 +1,4 @@
-/* src/Admin/EditPremiumFeaturesModal.css */
+
 
 .edit-modal-overlay {
     position: fixed;
@@ -12,7 +12,7 @@
     align-items: center;
     z-index: 1000;
     padding: 20px;
-    overflow-y: auto; /* Allow scrolling for small screens */
+    overflow-y: auto;
 }
 
 .edit-modal-content {
@@ -23,7 +23,7 @@
     width: 90%;
     max-width: 600px;
     position: relative;
-    max-height: 90vh; /* Limit height and enable internal scrolling if content overflows */
+    max-height: 90vh;
     overflow-y: auto;
 }
 
@@ -112,7 +112,7 @@ button[type="submit"],
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.3s ease;
-    margin-right: 10px; /* Space between buttons */
+    margin-right: 10px;
 }
 
 button[type="submit"],
@@ -163,7 +163,7 @@ button[type="submit"]:disabled,
 .features-list {
     list-style: none;
     padding: 0;
-    max-height: 300px; /* Limit height for scrollable list */
+    max-height: 300px;
     overflow-y: auto;
     border: 1px solid #eee;
     border-radius: 5px;
@@ -198,23 +198,23 @@ button[type="submit"]:disabled,
     display: flex;
     align-items: center;
     width: 100%;
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    flex-wrap: wrap;
 }
 
 .edit-feature-form .form-group {
     flex-grow: 1;
     margin-right: 10px;
-    margin-bottom: 0; /* Remove bottom margin for inline layout */
+    margin-bottom: 0;
 }
 
 .edit-feature-form .form-group label {
-    display: none; /* Hide label for inline editing */
+    display: none;
 }
 
 .edit-feature-form input {
     flex-grow: 1;
     margin-right: 10px;
-    min-width: 150px; /* Ensure input is not too small */
+    min-width: 150px;
 }
 
 .modal-actions {

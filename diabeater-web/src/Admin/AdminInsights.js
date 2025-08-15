@@ -1,6 +1,6 @@
-// src/Admin/AdminInsights.js
+
 import React from 'react';
-import './AdminInsights.css'; // We'll create this CSS file next
+import './AdminInsights.css'; 
 
 const AdminInsights = ({ data }) => {
     return (

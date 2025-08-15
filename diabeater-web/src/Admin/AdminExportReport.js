@@ -1,4 +1,4 @@
-// src/Admin/AdminExportReport.js
+
 import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import adminReportViewModel from '../ViewModels/AdminReportViewModel';
@@ -35,7 +35,7 @@ const AdminExportReport = observer(() => {
     return (
         <div className="admin-export-report-content">
             <header className="report-header">
-                <h1 className="report-page-title">Business Analytics & Export Reports</h1>
+                <h1 className="report-page-title">BUSINESS ANALYTICS & EXPORT REPORTS</h1>
                 <p className="report-subtitle">Comprehensive business metrics and performance analytics</p>
             </header>
 

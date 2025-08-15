@@ -1,25 +1,25 @@
-/* src/Admin/Tooltip.css */
+
 
 .tooltip-container {
     position: relative;
-    display: inline-block; /* Essential to wrap the content and position tooltip correctly */
-    cursor: pointer; /* Indicate it's interactive */
+    display: inline-block;
+    cursor: pointer;
 }
 
 .tooltip-content {
     position: absolute;
-    background-color: #333; /* Dark background */
-    color: #fff; /* White text */
+    background-color: #333;
+    color: #fff;
     padding: 10px;
     border-radius: 5px;
-    font-size: 0.85em; /* Smaller font for tooltip */
-    white-space: nowrap; /* Keep content on a single line if short, or adjust as needed */
-    z-index: 1001; /* Ensure it's above other elements */
-    bottom: 120%; /* Position above the element */
+    font-size: 0.85em;
+    white-space: nowrap;
+    z-index: 1001;
+    bottom: 120%;
     left: 50%;
-    transform: translateX(-50%); /* Center horizontally */
+    transform: translateX(-50%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    /* Add a small arrow */
+   
     &::after {
         content: "";
         position: absolute;
@@ -27,15 +27,15 @@
         height: 0;
         border-left: 6px solid transparent;
         border-right: 6px solid transparent;
-        border-top: 6px solid #333; /* Color of the arrow */
-        bottom: -6px; /* Position at the bottom of the tooltip */
+        border-top: 6px solid #333;
+        bottom: -6px;
         left: 50%;
         transform: translateX(-50%);
     }
 
-    /* Styling for the content inside the tooltip */
+   
     p {
-        margin: 0; /* Remove default paragraph margins */
+        margin: 0;
         line-height: 1.4;
         color: #eee;
     }

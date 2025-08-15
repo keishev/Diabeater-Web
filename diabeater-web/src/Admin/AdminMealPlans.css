@@ -869,17 +869,15 @@
   gap: var(--spacing-sm);
 }
 
-.modal-title::before {
-  content: '⚠️';
-  font-size: var(--font-size-2xl);
-}
 
-.modal-subtitle {
+
+.admin-meal-modal-subtitle {
   font-size: var(--font-size-sm);
   opacity: 0.9;
   margin-top: var(--spacing-sm);
   font-weight: 400;
   position: relative;
+  align-self:  center;
   z-index: 1;
 }
 
@@ -1042,11 +1040,12 @@
   border-top: 1px solid var(--border-light);
 }
 
-.modal-actions {
+.admin-meal-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-md);
   margin: 0;
+  margin-right: 100px;
 }
 
 

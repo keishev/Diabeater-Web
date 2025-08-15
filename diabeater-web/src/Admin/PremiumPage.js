@@ -1,4 +1,4 @@
-// src/Pages/PremiumPage.js
+
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import premiumStatViewModel from '../ViewModels/PremiumStatViewModel';
@@ -8,9 +8,9 @@ import UserHistoryModal from '../Admin/UserHistoryModal';
 import '../Admin/PremiumPage.css';
 
 const PremiumPage = observer(() => {
-    // Local state for price update input
+    
     const [newPriceInput, setNewPriceInput] = useState('');
-    // Local state for feature management inputs
+    
     const [newFeatureName, setNewFeatureName] = useState('');
     const [editingFeature, setEditingFeature] = useState(null);
 
@@ -18,7 +18,7 @@ const PremiumPage = observer(() => {
         premiumStatViewModel.loadPremiumData();
     }, []);
 
-    // --- Handlers for Subscription Table ---
+    
     const handleSearchChange = (e) => {
         premiumStatViewModel.setSearchQuery(e.target.value);
     };
@@ -33,7 +33,7 @@ const PremiumPage = observer(() => {
         await premiumStatViewModel.openUserHistoryModal(user);
     };
 
-    // --- Placeholder handlers for UserDetailModal actions ---
+    
     const handleApproveNutritionist = (userId) => {
         alert(`Approve Nutritionist with ID: ${userId}`);
         premiumStatViewModel.closeUserDetailModal();
@@ -56,7 +56,7 @@ const PremiumPage = observer(() => {
         alert(`View Document for User ID: ${userId}`);
     };
 
-    // --- Handlers for Premium Price Management ---
+    
     const handlePriceChange = (e) => {
         setNewPriceInput(e.target.value);
     };
@@ -73,7 +73,7 @@ const PremiumPage = observer(() => {
         }
     };
 
-    // --- Handlers for Premium Feature Management ---
+    
     const handleAddFeature = async () => {
         if (!newFeatureName.trim()) {
             premiumStatViewModel.setError("Feature name cannot be empty.");
@@ -104,13 +104,21 @@ const PremiumPage = observer(() => {
         setEditingFeature(null);
     };
 
-    const handleDeleteFeature = async (featureName) => {
-        if (window.confirm(`Are you sure you want to delete the feature "${featureName}"?`)) {
-            await premiumStatViewModel.removePremiumFeature(featureName);
-        }
-    };
+   const handleDeleteFeature = async (featureName) => {
+    const confirmed = await window.showConfirm({
+        title: "Delete Feature",
+        message: `Are you sure you want to delete the feature "${featureName}"?`,
+        confirmText: "Yes, Delete",
+        cancelText: "Cancel",
+        type: "danger"
+    });
 
-    // Debug log to check modal states - fixed to show actual values
+    if (confirmed) {
+        await premiumStatViewModel.removePremiumFeature(featureName);
+    }
+};
+
+    
     console.log("PremiumPage render - Modal states:", {
         isUserDetailModalOpen: premiumStatViewModel.isUserDetailModalOpen,
         isUserHistoryModalOpen: premiumStatViewModel.isUserHistoryModalOpen,
@@ -123,14 +131,14 @@ const PremiumPage = observer(() => {
         historyError: premiumStatViewModel.historyError
     });
 
-    // --- Loading and Error States ---
+    
     if (premiumStatViewModel.loading && premiumStatViewModel.allPremiumUserAccounts.length === 0) {
         return <div className="premium-loading-message">Loading Premium Admin Data...</div>;
     }
 
     return (
         <div className="premium-page-container">
-            <h1 className="premium-page-title">Admin Dashboard - Premium Management</h1>
+            <h1 className="premium-page-title">PREMIUM MANAGEMENT</h1>
 
             {/* General Loading, Error, Success Messages */}
             <div className="premium-status-messages">

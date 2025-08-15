@@ -1,11 +1,11 @@
-/* src/Components/Modals/UserHistoryModal.css */
 
-/* --- Universal Box Sizing --- */
+
+
 *, *::before, *::after {
     box-sizing: border-box;
 }
 
-/* --- Modal Overlay --- */
+
 .user-history-modal-overlay {
     position: fixed;
     top: 0;
@@ -32,7 +32,7 @@
     }
 }
 
-/* --- Modal Content Container --- */
+
 .user-history-modal-content {
     background: linear-gradient(135deg, #ffffff, #fffbf8);
     border-radius: 20px;
@@ -61,7 +61,7 @@
     }
 }
 
-/* --- Modal Header --- */
+
 .user-history-modal-header {
     background: linear-gradient(135deg, #ff9800, #ffb74d, #ffc107);
     padding: 24px 30px;
@@ -111,7 +111,7 @@
     font-weight: 500;
 }
 
-/* --- Modal Body --- */
+
 .user-history-modal-body {
     padding: 30px;
     flex-grow: 1;
@@ -119,7 +119,7 @@
     background: linear-gradient(135deg, #ffffff, #fffbf8);
 }
 
-/* --- Debug Info --- */
+
 .user-history-debug-info {
     background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
     border: 2px solid #2196f3;
@@ -148,7 +148,7 @@
     margin-bottom: 0;
 }
 
-/* --- Status Messages --- */
+
 .user-history-loading {
     text-align: center;
     padding: 40px 20px;
@@ -200,7 +200,7 @@
     opacity: 0.8;
 }
 
-/* --- History Summary --- */
+
 .user-history-summary {
     background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
     border: 2px solid #4caf50;
@@ -233,14 +233,14 @@
     color: #1b5e20;
 }
 
-/* --- History List --- */
+
 .user-history-list {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* --- Individual History Item --- */
+
 .user-history-item {
     background: linear-gradient(135deg, #ffffff, #fffef7);
     border: 2px solid #f0f0f0;
@@ -273,7 +273,7 @@
     width: 8px;
 }
 
-/* --- Item Header --- */
+
 .user-history-item-header {
     display: flex;
     justify-content: space-between;
@@ -302,7 +302,7 @@
     text-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
 }
 
-/* --- Item Status --- */
+
 .user-history-item-status {
     display: flex;
     align-items: center;
@@ -378,7 +378,7 @@
     color: #666666;
 }
 
-/* --- Item Details Grid --- */
+
 .user-history-item-details {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -418,7 +418,7 @@
     text-align: right;
 }
 
-/* --- Plan Name Special Styling --- */
+
 .user-history-plan-name {
     font-size: 18px;
     font-weight: 700;
@@ -427,7 +427,7 @@
     text-transform: capitalize;
 }
 
-/* --- Date Range Special Styling --- */
+
 .user-history-date-range {
     font-size: 16px;
     color: #666;
@@ -435,7 +435,7 @@
     margin-bottom: 12px;
 }
 
-/* --- Scrollbar Styling --- */
+
 .user-history-modal-body::-webkit-scrollbar {
     width: 8px;
 }
@@ -454,7 +454,7 @@
     background: linear-gradient(135deg, #e65100, #ff9800);
 }
 
-/* --- Responsive Design --- */
+
 @media (max-width: 768px) {
     .user-history-modal-content {
         width: 98%;
@@ -678,7 +678,7 @@
     }
 }
 
-/* --- Animation Classes --- */
+
 .user-history-fade-in {
     animation: fadeInUp 0.4s ease-out forwards;
 }
@@ -711,7 +711,7 @@
     }
 }
 
-/* --- Utility Classes --- */
+
 .user-history-text-center {
     text-align: center;
 }

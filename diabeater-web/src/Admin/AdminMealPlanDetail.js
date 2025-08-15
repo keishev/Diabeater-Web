@@ -1,4 +1,4 @@
-// src/Admin/AdminMealPlanDetail.js
+
 import React, { useState, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 import mealPlanViewModel from '../ViewModels/MealPlanViewModel';
@@ -55,28 +55,44 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
     };
 
     const handleApprove = useCallback(async () => {
-        if (!window.confirm(`Are you sure you want to approve "${mealPlan.name}"?`)) {
-            return;
+    const confirmed = await window.showConfirm({
+        title: "Approve Meal Plan",
+        message: `Are you sure you want to approve "${mealPlan.name}"?`,
+        confirmText: "Yes, Approve",
+        cancelText: "Cancel",
+        type: "info" 
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    setLocalLoading(true);
+    try {
+        const success = await mealPlanViewModel.approveOrRejectMealPlan(
+            mealPlan._id,
+            'APPROVED',
+            mealPlan.authorId,
+            mealPlanViewModel.currentUserName,
+            mealPlanViewModel.currentUserId
+        );
+        if (success) {
+            onClose();
         }
-        setLocalLoading(true);
-        try {
-            const success = await mealPlanViewModel.approveOrRejectMealPlan(
-                mealPlan._id,
-                'APPROVED',
-                mealPlan.authorId,
-                mealPlanViewModel.currentUserName,
-                mealPlanViewModel.currentUserId
-            );
-            if (success) {
-                onClose();
-            }
-        } catch (err) {
-            console.error("Failed to approve meal plan from detail view:", err);
-            alert(mealPlanViewModel.error || 'Failed to approve meal plan.');
-        } finally {
-            setLocalLoading(false);
+    } catch (err) {
+        console.error("Failed to approve meal plan from detail view:", err);
+        
+        
+        const errorMessage = mealPlanViewModel.error || 'Failed to approve meal plan.';
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); 
         }
-    }, [mealPlan, onClose]);
+    } finally {
+        setLocalLoading(false);
+    }
+}, [mealPlan, onClose]);
 
     const handleRejectClick = useCallback(() => {
         setSelectedRejectReason('');
@@ -135,7 +151,7 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
         setOtherReasonText('');
     }, []);
 
-    // Fixed: Remove the ingredients array safeguard since ingredients is now a string
+    
     const categoriesToDisplay = Array.isArray(mealPlan.categories)
         ? mealPlan.categories
         : (typeof mealPlan.category === 'string' ? [mealPlan.category] : []);

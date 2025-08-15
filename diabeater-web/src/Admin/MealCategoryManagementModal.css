@@ -1,6 +1,6 @@
-/* src/Components/MealCategoryManagementModal.css */
+
 :root {
-    /* Meal Category Management Color Palette */
+   
     --mcm-primary-color: #007bff;
     --mcm-secondary-color: #6c757d;
     --mcm-success-color: #28a745;
@@ -385,7 +385,7 @@
     border: 2px dashed var(--mcm-border-light);
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .meal-category-modal-content {
         padding: 24px;

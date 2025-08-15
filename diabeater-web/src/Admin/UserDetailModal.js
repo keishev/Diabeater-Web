@@ -1,10 +1,10 @@
-// src/Components/Modals/UserDetailModal.js
+
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import './UserDetailModal.css';
-import moment from 'moment'; // For date formatting
+import moment from 'moment'; 
 
-// Destructure all expected props
+
 const UserDetailModal = observer(({
     user,
     onClose,
@@ -114,9 +114,9 @@ const UserDetailModal = observer(({
         }
     };
 
-    // Helper to format user since date consistently
+    
     const formatUserSince = (userSince, createdAt) => {
-        // Try userSince first, then fallback to createdAt, then show N/A
+        
         if (userSince) {
             return userSince;
         } else if (createdAt) {

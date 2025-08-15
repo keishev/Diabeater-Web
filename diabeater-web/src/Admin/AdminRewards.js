@@ -1,14 +1,14 @@
-// src/AdminRewards.js
+
 import React, { useState, useEffect, useCallback } from 'react';
 import RewardModal from './RewardModal';
 import './AdminRewards.css';
 import './RewardModal.css';
 
-// Import the ViewModel instance
+
 import adminRewardsViewModel from '../ViewModels/AdminRewardsViewModel';
 
 const AdminRewards = () => {
-    // UI state (collapsed/expanded sections, modal visibility)
+    
     const [basicUserExpanded, setBasicUserExpanded] = useState(true);
     const [premiumUserExpanded, setPremiumUserExpanded] = useState(true);
 
@@ -17,28 +17,28 @@ const AdminRewards = () => {
     const [modalUserType, setModalUserType] = useState(null);
     const [isModalEditing, setIsModalEditing] = useState(false);
 
-    // Data states (will be populated from ViewModel)
+    
     const [availableBasicRewards, setAvailableBasicRewards] = useState([]);
     const [availablePremiumRewards, setAvailablePremiumRewards] = useState([]);
     const [configuredBasicRewards, setConfiguredBasicRewards] = useState([]);
     const [configuredPremiumRewards, setConfiguredPremiumRewards] = useState([]);
 
-    // Loading and error states
+    
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Function to fetch all rewards from the ViewModel
+    
     const fetchAllRewards = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // Fetch all data using the ViewModel's methods
+            
             const availableBasic = await adminRewardsViewModel.getAvailableBasicRewards();
             const availablePremium = await adminRewardsViewModel.getAvailablePremiumRewards();
             const configuredBasic = await adminRewardsViewModel.getConfiguredBasicRewards();
             const configuredPremium = await adminRewardsViewModel.getConfiguredPremiumRewards();
 
-            // Update local component state
+            
             setAvailableBasicRewards(availableBasic);
             setAvailablePremiumRewards(availablePremium);
             setConfiguredBasicRewards(configuredBasic);
@@ -52,7 +52,7 @@ const AdminRewards = () => {
         }
     }, []);
 
-    // useEffect to run fetchAllRewards on component mount
+    
     useEffect(() => {
         fetchAllRewards();
     }, [fetchAllRewards]);
@@ -86,23 +86,47 @@ const AdminRewards = () => {
         setShowRewardModal(true);
     };
 
-    const handleDeleteReward = async (id, type) => {
-        if (window.confirm('Are you sure you want to delete this reward?')) {
-            setLoading(true);
-            setError(null);
-            try {
-                await adminRewardsViewModel.deleteReward(id, type);
-                alert('Reward deleted successfully!');
-                await fetchAllRewards(); // Re-fetch all data 
-            } catch (err) {
-                console.error("Error deleting reward:", err);
-                setError(err.message || "Failed to delete reward.");
-                alert(err.message || "Failed to delete reward.");
-            } finally {
-                setLoading(false);
-            }
+  const handleDeleteReward = async (id, type) => {
+    const confirmed = await window.showConfirm({
+        title: "Delete Reward",
+        message: "Are you sure you want to delete this reward?",
+        confirmText: "Yes, Delete",
+        cancelText: "Cancel",
+        type: "danger"
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+        await adminRewardsViewModel.deleteReward(id, type);
+        
+        
+        if (window.showSuccess) {
+            window.showSuccess('Reward deleted successfully!');
+        } else {
+            alert('Reward deleted successfully!'); 
         }
-    };
+        
+        await fetchAllRewards(); 
+    } catch (err) {
+        console.error("Error deleting reward:", err);
+        setError(err.message || "Failed to delete reward.");
+        
+        
+        const errorMessage = err.message || "Failed to delete reward.";
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); 
+        }
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handleConfirmReward = async (updatedReward) => {
         const { type, ...rewardData } = updatedReward;
@@ -123,11 +147,11 @@ const AdminRewards = () => {
                 }
                 alert(`Reward updated successfully!`);
             } else {
-                // For adding a new reward from available list
-                // We pass the name/reward and the quantity/discount and points needed from the modal.
+                
+                
                 if (type === 'basic') {
                     await adminRewardsViewModel.addReward({
-                        name: rewardData.name, // Original name from AvailableReward
+                        name: rewardData.name, 
                         quantity: rewardData.quantity,
                         pointsNeeded: rewardData.pointsNeeded,
                         featureKey: currentRewardForModal.featureKey,
@@ -135,8 +159,8 @@ const AdminRewards = () => {
                     }, 'basic');
                 } else if (type === 'premium') {
                     await adminRewardsViewModel.addReward({
-                        reward: rewardData.reward, // Original reward name from AvailableReward (used for premium type)
-                        discount: rewardData.quantity, // quantity from modal is discount for premium
+                        reward: rewardData.reward, 
+                        discount: rewardData.quantity, 
                         pointsNeeded: rewardData.pointsNeeded,
                         featureKey: currentRewardForModal.featureKey,
                         description: currentRewardForModal.description,
@@ -145,7 +169,7 @@ const AdminRewards = () => {
                 alert(`${rewardData.name || rewardData.reward} added successfully!`);
             }
             handleCloseModal();
-            await fetchAllRewards(); // Re-fetch all data to update UI
+            await fetchAllRewards(); 
         } catch (err) {
             console.error("Error confirming reward:", err);
             setError(err.message || "Failed to confirm reward.");

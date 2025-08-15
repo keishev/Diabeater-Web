@@ -1,18 +1,18 @@
-// src/Components/Modals/UserHistoryModal.js
+
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import moment from 'moment';
 import './UserHistoryModal.css';
 
 const UserHistoryModal = observer(({
-    user, // The selected user object
-    history, // The array of subscription history records
-    loading, // Loading state for history
-    error, // Error message for history loading
-    onClose // Callback to close the modal
+    user, 
+    history, 
+    loading, 
+    error, 
+    onClose 
 }) => {
 
-    // Debug log to see if component is rendering and what props it receives
+    
     console.log("[UserHistoryModal] Component is rendering with props:", {
         user: user ? { _id: user._id, email: user.email } : null,
         historyLength: history?.length || 0,

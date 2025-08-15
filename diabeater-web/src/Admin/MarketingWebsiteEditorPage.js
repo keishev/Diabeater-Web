@@ -2,25 +2,25 @@ import React, { useState } from 'react';
 import MarketingEditorSection from './components/MarketingEditorSection';
 import MarketingWebsiteSimulator from './components/MarketingWebsiteSimulator';
 import ConfirmationModal from './components/ConfirmationModal';
-import './MarketingWebsiteEditorPage.css'; // Editor-specific CSS
-import './components/MarketingWebsiteSimulator.css'; // Simulator wrapper CSS
-import './components/simulator/index.css'; // Simulator content general CSS
+import './MarketingWebsiteEditorPage.css'; 
+import './components/MarketingWebsiteSimulator.css'; 
+import './components/simulator/index.css'; 
 
-// Correctly import the named exports from the ViewModel file
+
 import { useWebsiteContent, saveContentField, stopHostingWebsite } from '../ViewModels/MarketingWebsiteEditorViewModel';
 
 function MarketingWebsiteEditorPage() {
-    // Use the custom hook directly. No need to instantiate a class.
+    
     const { websiteContent, loading, error, setWebsiteContent } = useWebsiteContent();
     const [showStopHostingModal, setShowStopHostingModal] = useState(false);
 
-    // This handler now receives the Firestore key directly
+    
    const handleSaveContent = async (key, value) => {
-    // Handle array fields specially
+    
     let processedValue = value;
     
     if (key === 'basicFeatureList' || key === 'premiumFeatureList') {
-        // Convert comma-separated string to array
+        
         processedValue = typeof value === 'string' 
             ? value.split(',').map(item => item.trim()).filter(item => item.length > 0)
             : (Array.isArray(value) ? value : []);
@@ -28,25 +28,25 @@ function MarketingWebsiteEditorPage() {
         console.log(`Processing ${key}:`, value, '→', processedValue);
     }
     
-    // Optimistic UI update: Update React state immediately
+    
     setWebsiteContent(prevContent => ({
         ...prevContent,
         [key]: processedValue,
     }));
     
     try {
-        // Call the exported function directly with processed value
+        
         await saveContentField(key, processedValue);
         console.log(`Successfully saved ${key}:`, processedValue);
-        return true; // Indicate success
+        return true; 
     } catch (err) {
         console.error("MarketingWebsiteEditorPage: Failed to save content:", err);
-        // Revert local state if save fails
+        
         setWebsiteContent(prevContent => ({
             ...prevContent,
-            [key]: websiteContent[key], // Revert to original value
+            [key]: websiteContent[key], 
         }));
-        throw err; // Propagate error
+        throw err; 
     }
 };
     const handleStopHostingClick = () => {
@@ -55,7 +55,7 @@ function MarketingWebsiteEditorPage() {
 
     const confirmStopHosting = async () => {
         try {
-            // Call the exported function directly
+            
             await stopHostingWebsite();
             alert("Marketing website hosting stopped! (Action triggered)");
         } catch (error) {
@@ -79,7 +79,7 @@ function MarketingWebsiteEditorPage() {
 
     return (
         <div className="marketing-editor-page">
-            <h1 className="editor-main-title">Edit Marketing Website Content</h1>
+            <h1 className="editor-main-title">EDIT MARKETING WEBSITE</h1>
 
             <div className="editor-sections-container">
                 {/* Each MarketingEditorSection now explicitly gets a contentKey */}

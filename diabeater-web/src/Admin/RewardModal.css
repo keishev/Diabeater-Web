@@ -1,6 +1,6 @@
-/* src/RewardModal.css */
 
-/* --- Variables for consistent theming --- */
+
+
 :root {
   --theme-bg-light: #FFFAF3;
   --theme-orange: #F79554;
@@ -12,7 +12,7 @@
   --error-red: #F44336;
 }
 
-/* Main overlay for the modal */
+
 .reward-modal-overlay {
     position: fixed;
     top: 0;
@@ -29,7 +29,7 @@
     pointer-events: auto;
 }
 
-/* Main modal container */
+
 .reward-modal-content {
     background: #ffffff;
     border-radius: 20px;
@@ -44,7 +44,7 @@
     border: 1px solid rgba(247, 149, 84, 0.2);
 }
 
-/* Animation for modal appearance */
+
 @keyframes rewardModalFadeInScale {
     from {
         opacity: 0;
@@ -56,7 +56,7 @@
     }
 }
 
-/* Modal header */
+
 .reward-modal-header {
     display: flex;
     align-items: center;
@@ -99,7 +99,7 @@
     transform: rotate(90deg);
 }
 
-/* Modal body */
+
 .reward-modal-body {
     margin-bottom: 30px;
     display: flex;
@@ -107,7 +107,7 @@
     gap: 20px;
 }
 
-/* Form row styling */
+
 .reward-modal-row {
     display: flex;
     align-items: center;
@@ -125,7 +125,7 @@
     margin: 0;
 }
 
-/* Input styling */
+
 .reward-modal-input {
     flex: 1;
     width: 350px;
@@ -162,12 +162,12 @@
     box-shadow: none;
 }
 
-/* Number input specific styling */
+
 .reward-modal-input[type="number"] {
     text-align: center;
 }
 
-/* Action buttons container */
+
 .reward-modal-actions {
     display: flex;
     justify-content: center;
@@ -176,7 +176,7 @@
     margin-top: 10px;
 }
 
-/* Confirm button styling */
+
 .reward-modal-confirm-button {
     background-color: var(--theme-orange);
     color: #ffffff;
@@ -203,7 +203,7 @@
     box-shadow: 0 2px 8px rgba(247, 149, 84, 0.3);
 }
 
-/* Cancel button styling */
+
 .reward-modal-cancel-button {
     background-color: var(--theme-blue-dark);
     color: #ffffff;
@@ -230,7 +230,7 @@
     box-shadow: 0 2px 8px rgba(30, 82, 92, 0.3);
 }
 
-/* Disabled button state */
+
 .reward-modal-confirm-button:disabled,
 .reward-modal-cancel-button:disabled {
     background-color: var(--theme-grey-light);
@@ -240,19 +240,19 @@
     opacity: 0.6;
 }
 
-/* Form group styling for better spacing */
+
 .reward-modal-form-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-/* Ensure body doesn't scroll when modal is open */
+
 body.reward-modal-open {
     overflow: hidden;
 }
 
-/* Responsive design for smaller screens */
+
 @media (max-width: 768px) {
     .reward-modal-content {
         max-width: 90%;
@@ -334,12 +334,12 @@ body.reward-modal-open {
     }
 }
 
-/* Focus trap styling for accessibility */
+
 .reward-modal-overlay:focus {
     outline: none;
 }
 
-/* Loading state for buttons */
+
 .reward-modal-confirm-button.reward-modal-loading,
 .reward-modal-cancel-button.reward-modal-loading {
     position: relative;

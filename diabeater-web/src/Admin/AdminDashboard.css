@@ -1,13 +1,13 @@
-/* src/Admin/AdminDashboard.css */
 
-/* Base layout for the admin dashboard */
+
+
 .admin-dashboard-page {
     display: flex;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* Admin Sidebar Styling */
+
 .admin-sidebar {
     width: 250px;
     background-color: #fffaf3;
@@ -21,7 +21,7 @@
     overflow-y: auto;
 }
 
-/* Admin Main Content Area */
+
 .admin-main-content {
     margin-left: 250px;
     width: calc(100% - 250px);
@@ -34,7 +34,7 @@
     flex: 1;
 }
 
-/* Logo in Sidebar */
+
 .admin-sidebar .logo {
     margin-bottom: 40px;
     margin-top: 20px;
@@ -56,7 +56,7 @@
     color: #1e525c;
 }
 
-/* Navigation in Sidebar */
+
 .admin-sidebar .navigation {
     display: flex;
     flex-direction: column;
@@ -96,7 +96,7 @@
     color: #fffaf3;
 }
 
-/* Logout Button */
+
 .admin-sidebar .logout-button {
     background: linear-gradient(135deg, #ff9800, #e65100);
     color: white;
@@ -121,7 +121,7 @@
     box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
 }
 
-/* Header for User Accounts Content */
+
 .admin-header {
     display: flex;
     align-items: center;
@@ -134,13 +134,17 @@
 }
 
 .admin-page-title {
-    font-size: 28px;
-    color: #ff9800;
-    white-space: nowrap;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+      font-size: 32px;
+     background: linear-gradient(135deg, #1e525c 0%, #2c3e50 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
-    margin-left: -20px;
+    background-clip: text;
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    position: relative;
+    letter-spacing: 1px;
 }
 
 .admin-search-bar {
@@ -173,7 +177,7 @@
     font-size: 18px;
 }
 
-/* Tabs Styling */
+
 .admin-tabs {
     display: flex;
     gap: 0;
@@ -212,7 +216,7 @@
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Table Styling */
+
 .table-container {
     background-color: #fff;
     border-radius: 16px;
@@ -442,7 +446,7 @@ table tbody tr:last-child td {
     50% { opacity: 0.7; }
 }
 
-/* Pagination */
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -496,7 +500,7 @@ table tbody tr:last-child td {
     text-align: center;
 }
 
-/* Button disabled states */
+
 .action-button:disabled,
 .doc-action-button:disabled {
     background: #e0e0e0 !important;
@@ -507,7 +511,7 @@ table tbody tr:last-child td {
     border-color: #e0e0e0 !important;
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
     .admin-sidebar {
         width: 80px;
@@ -584,7 +588,7 @@ table tbody tr:last-child td {
     }
 }
 
-/* Beautiful Admin Create Account Styles */
+
 
 .admin-create-account-content {
     padding: 30px;
@@ -596,7 +600,7 @@ table tbody tr:last-child td {
     align-items: center;
 }
 
-/* Form Section - Modern Card Design */
+
 .create-admin-form-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
@@ -661,7 +665,7 @@ table tbody tr:last-child td {
     font-size: 18px;
 }
 
-/* Form Styling */
+
 .admin-create-form {
     max-width: 100%;
     text-align: left;
@@ -735,7 +739,7 @@ table tbody tr:last-child td {
     font-size: 12px;
 }
 
-/* Create Button - Stunning Design */
+
 .create-admin-button {
     background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
     color: white;
@@ -790,7 +794,7 @@ table tbody tr:last-child td {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Verification Section - Glass Card */
+
 .verification-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
@@ -839,7 +843,7 @@ table tbody tr:last-child td {
     line-height: 1.6;
 }
 
-/* Verification Flow Steps */
+
 .verification-flow {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -899,7 +903,7 @@ table tbody tr:last-child td {
     line-height: 1.4;
 }
 
-/* Verification Actions */
+
 .verification-actions {
     display: flex;
     flex-wrap: wrap;
@@ -969,7 +973,7 @@ table tbody tr:last-child td {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Verification Help */
+
 .verification-help {
     background: linear-gradient(135deg, #fff8f1, #fef3e8);
     border: none;
@@ -1009,7 +1013,7 @@ table tbody tr:last-child td {
     font-weight: bold;
 }
 
-/* Success Section - Celebration Style */
+
 .success-section {
     background: white;
     border-radius: 20px;
@@ -1104,7 +1108,7 @@ table tbody tr:last-child td {
     background: linear-gradient(135deg, #1e525c, #2a6c78);
 }
 
-/* Message Styles - Enhanced */
+
 .error-message,
 .success-message {
     border-radius: 12px;
@@ -1150,7 +1154,7 @@ table tbody tr:last-child td {
     background: rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .admin-create-account-content {
         padding: 15px;
@@ -1201,7 +1205,7 @@ table tbody tr:last-child td {
 @media (max-width: 480px) {
     .form-group input {
         padding: 14px 16px;
-        font-size: 16px; /* Prevent zoom on iOS */
+        font-size: 16px;
     }
     
     .create-admin-button {
@@ -1218,7 +1222,7 @@ table tbody tr:last-child td {
 }
 
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .admin-create-account-content {
         padding: 10px;

@@ -1,4 +1,4 @@
-// src/Admin/AdminMealPlans.js
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
@@ -7,7 +7,7 @@ import AdminMealPlanDetail from './AdminMealPlanDetail';
 import MealCategoryManagementModal from './MealCategoryManagementModal';
 import './AdminMealPlans.css';
 
-// Popular Section Component
+
 const PopularSection = ({ title, mealPlans, onCardClick, emptyMessage = "No meal plans available" }) => {
     const displayPlans = mealPlans.slice(0, 3);
     const emptySlots = Math.max(0, 3 - displayPlans.length);
@@ -87,7 +87,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
     const processedMealPlanId = useRef(null);
 
-    // Destructure the computed counts from MealPlanViewModel
+    
     const { searchTerm, selectedCategory, error, pendingCount, approvedCount, rejectedCount } = MealPlanViewModel;
 
     const rejectionReasons = [
@@ -100,8 +100,8 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     ];
 
     useEffect(() => {
-        // Fetch all admin meal plans on component mount to ensure all counts are available
-        MealPlanViewModel.fetchAdminMealPlans(); // Fetch without a specific status filter
+        
+        MealPlanViewModel.fetchAdminMealPlans(); 
         MealPlanViewModel.fetchMealCategories();
 
         const handleClickOutside = (event) => {
@@ -116,7 +116,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         };
     }, []);
 
-    // Determine current tab from URL or prop
+    
     const getCurrentTab = () => {
         if (activeMealPlanTab) {
             const tabMap = {
@@ -133,20 +133,20 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         if (pathname.includes('/meal-plans/approved')) return 'APPROVED';
         if (pathname.includes('/meal-plans/rejected')) return 'REJECTED';
         if (pathname.includes('/meal-plan-detail')) return 'DETAIL_VIEW';
-        return 'POPULAR'; // default
+        return 'POPULAR'; 
     };
 
     const currentTab = getCurrentTab();
 
-    // Update ViewModel tab when URL changes
+    
     useEffect(() => {
         if (currentTab !== 'DETAIL_VIEW') {
             MealPlanViewModel.setAdminActiveTab(currentTab);
         }
     }, [currentTab]);
 
-    // Handle meal plan detail view from URL parameter
-    // Handle meal plan detail view from URL parameter
+    
+    
     useEffect(() => {
         const loadDetailFromParams = async () => {
             if (params.mealPlanId &&
@@ -165,7 +165,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     }, [params.mealPlanId, showDetailView]);
 
     const handleApproveClick = useCallback((id, event) => {
-        console.log('Approve clicked for plan:', id); // Debug log
+        console.log('Approve clicked for plan:', id); 
         event.preventDefault();
         event.stopPropagation();
         setSelectedPlanToApprove(id);
@@ -270,7 +270,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         setOtherReasonText('');
     }, []);
 
-    // Updated tab navigation handlers to use URL routing
+    
     const handleTabNavigation = (tab) => {
         const routeMap = {
             'POPULAR': '/admin/meal-plans/popular',
@@ -284,7 +284,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         }
     };
 
-    // Updated card click handler to navigate to detail URL
+    
     const handleCardClick = useCallback(async (id) => {
         await MealPlanViewModel.loadMealPlanDetails(id);
         if (MealPlanViewModel.selectedMealPlanForDetail) {
@@ -298,7 +298,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         setShowDetailView(false);
         processedMealPlanId.current = null; 
 
-        // Navigate back to the current tab
+        
         const currentTabRoute = {
             'POPULAR': '/admin/meal-plans/popular',
             'PENDING_APPROVAL': '/admin/meal-plans/pending',
@@ -318,7 +318,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         MealPlanViewModel.fetchMealCategories();
     }, []);
 
-    // Show detail view if we're on detail route or if showDetailView is true
+    
     if ((params.mealPlanId || showDetailView) && MealPlanViewModel.selectedMealPlanForDetail) {
         return (
             <AdminMealPlanDetail
@@ -328,9 +328,9 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
         );
     }
 
-    // Helper function to categorize popular meal plans
+    
     const categorizePopularMealPlans = (mealPlans) => {
-        // Filter only approved meal plans for popular sections
+        
         const approvedPlans = mealPlans.filter(plan => plan.status === 'APPROVED');
         
         const categories = {
@@ -370,7 +370,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
     };
 
 
-    // Get categorized popular meal plans
+    
     const popularCategories = categorizePopularMealPlans(MealPlanViewModel.mealPlans);
 
     return (
@@ -598,7 +598,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
       {/* Modal Header */}
       <div className="reject-modal-header">
         <h2 className="reject-modal-title">Reject Meal Plan</h2>
-        <p className="modal-subtitle">Please select a reason for rejecting this meal plan</p>
+        <p className="admin-meal-modal-subtitle">Please select a reason for rejecting this meal plan</p>
       </div>
 
       {/* Modal Body */}
@@ -686,7 +686,7 @@ const AdminMealPlans = observer(({ activeMealPlanTab }) => {
                     }}>
                         <h2 className="modal-title">Accept Meal Plan</h2>
                         <p>Are you sure you want to approve this meal plan?</p>
-                        <div className="modal-actions" style={{ 
+                        <div className="admin-meal-modal-actions" style={{ 
                             display: 'flex', 
                             justifyContent: 'flex-end', 
                             gap: '10px', 

@@ -1,12 +1,12 @@
-// src/RewardModal.js
+
 import React, { useState, useEffect } from 'react';
 import './RewardModal.css';
 
 const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditing }) => {
-    // Determine what text to show for the "Reward" field and whether it's editable
+    
     const rewardNameDisplay = rewardData?.name || rewardData?.reward || '';
 
-    // Determine the label for the quantity/discount field
+    
     const quantityLabel = rewardType === 'premium' ? 'Discount (%)' : 'Quantity';
 
     const [currentQuantity, setCurrentQuantity] = useState(
@@ -19,8 +19,8 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
         rewardData?.pointsNeeded ?? ''
     );
 
-    // useEffect to reset internal state when the modal is shown with new data (e.g., editing a different reward)
-    // or when switching between add/edit modes.
+    
+    
     useEffect(() => {
         setCurrentQuantity(
             rewardType === 'premium'
@@ -31,13 +31,13 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
     }, [rewardData, rewardType]);
 
 
-    // --- Now, the conditional return can safely go here ---
+    
     if (!show) {
         return null;
     }
     console.log('RewardModal rendered');
 
-    // Handler for clicking outside the modal to close
+    
     const handleOverlayClick = (e) => {
         if (e.target.classList.contains('reward-modal-overlay')) {
             onClose();
@@ -48,12 +48,12 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
     const confirmButtonText = isEditing ? 'Update Reward' : 'Add Reward';
 
     const handleConfirmClick = () => {
-        // Basic validation (you can expand this)
+        
         if (!currentQuantity || currentPointsNeeded === '') {
             alert('Please enter both quantity/discount and points needed.');
             return;
         }
-        // Ensure numeric inputs
+        
         if (isNaN(parseFloat(currentQuantity)) || isNaN(parseInt(currentPointsNeeded, 10))) {
             alert('Quantity/Discount and Points Needed must be valid numbers.');
             return;
@@ -62,10 +62,10 @@ const RewardModal = ({ show, onClose, onConfirm, rewardData, rewardType, isEditi
 
         onConfirm({
             type: rewardType,
-            id: rewardData?.id, // Only present for existing rewards (editing)
-            name: rewardData?.name, // For basic rewards when adding/editing
-            reward: rewardData?.reward, // For premium rewards when adding/editing
-            quantity: parseFloat(currentQuantity), // Use quantity for both, convert if needed
+            id: rewardData?.id, 
+            name: rewardData?.name, 
+            reward: rewardData?.reward, 
+            quantity: parseFloat(currentQuantity), 
             pointsNeeded: parseInt(currentPointsNeeded, 10),
         });
     };

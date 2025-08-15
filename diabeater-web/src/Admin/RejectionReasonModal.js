@@ -1,4 +1,4 @@
-// src/Admin/RejectionReasonModal.js - FIXED VERSION
+
 import React, { useState, useEffect } from 'react';
 import './RejectionReasonModal.css';
 
@@ -14,7 +14,7 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
         'Application does not meet eligibility criteria'
     ];
 
-    // FIXED: Sync local state with parent prop
+    
     useEffect(() => {
         if (reason) {
             const isPredefined = predefinedReasons.includes(reason);
@@ -31,11 +31,11 @@ const RejectionReasonModal = ({ reason, setReason, onConfirm, onClose }) => {
     const handleReasonChange = (value) => {
         setSelectedReason(value);
         if (value === 'custom') {
-            // When switching to custom, use the current custom reason
+            
             const finalReason = customReason || '';
             setReason(finalReason);
         } else {
-            // When selecting a predefined reason, use that
+            
             setReason(value);
             setCustomReason('');
         }

@@ -1,11 +1,11 @@
-// src/Admin/EditSubscriptionModal.js
+
 import React, { useState, useEffect } from 'react';
-import './EditSubscriptionModal.css'; // We'll create this CSS next
+import './EditSubscriptionModal.css'; 
 
 const EditSubscriptionModal = ({ isOpen, onClose, initialPrice, onSave }) => {
     const [price, setPrice] = useState(initialPrice);
 
-    // Update internal price state if initialPrice prop changes (e.g., when modal is opened for a new value)
+    
     useEffect(() => {
         setPrice(initialPrice);
     }, [initialPrice]);
@@ -15,12 +15,12 @@ const EditSubscriptionModal = ({ isOpen, onClose, initialPrice, onSave }) => {
     }
 
     const handleSave = () => {
-        onSave(parseFloat(price)); // Convert to number before saving
+        onSave(parseFloat(price)); 
         onClose();
     };
 
     const handleCancel = () => {
-        setPrice(initialPrice); // Reset price to initial value on cancel
+        setPrice(initialPrice); 
         onClose();
     };
 
@@ -40,7 +40,7 @@ const EditSubscriptionModal = ({ isOpen, onClose, initialPrice, onSave }) => {
                         <span className="edit-label">Price</span>
                         <input
                             type="number"
-                            step="0.01" // Allows decimal values for price
+                            step="0.01" 
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                             className="edit-price-input"

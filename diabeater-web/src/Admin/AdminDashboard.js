@@ -1,12 +1,12 @@
-// src/AdminDashboard.js
+
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; // Ensure this path is correct
-import AdminViewModel from '../ViewModels/AdminViewModel'; // Ensure this path is correct
-import adminCreateAccountVM from '../ViewModels/AdminCreateAccountViewModel'; // Add this import
-import UserDetailModal from './UserDetailModal'; // Ensure this path is correct
-import RejectionReasonModal from './RejectionReasonModal'; // Ensure this path is correct
+import AdminDashboardViewModel from '../ViewModels/AdminDashboardViewModel'; 
+import AdminViewModel from '../ViewModels/AdminViewModel'; 
+import adminCreateAccountVM from '../ViewModels/AdminCreateAccountViewModel'; 
+import UserDetailModal from './UserDetailModal'; 
+import RejectionReasonModal from './RejectionReasonModal'; 
 import AdminProfile from './AdminProfile';
 import AdminStatDashboard from './AdminStatDashboard';
 import AdminMealPlans from './AdminMealPlans';
@@ -21,12 +21,12 @@ import premiumStatViewModel from '../ViewModels/PremiumStatViewModel';
 import './AdminDashboard.css';
 import './AdminStatDashboard.css';
 
-// Admin Sidebar Component - Updated to use React Router navigation
+
 const AdminSidebar = observer(({ onLogout }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Map URL paths to view names for active state
+    
     const getViewFromPath = (pathname) => {
         if (pathname.includes('/admin/profile')) return 'myProfile';
         if (pathname.includes('/admin/dashboard')) return 'dashboard';
@@ -418,8 +418,8 @@ const AdminCreateAccountContent = observer(() => {
         </div>
     );
 });
-// User Account Table Row Component (no changes needed for this specific task)
-// Updated UserAccountRow Component with separate action columns
+
+
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
@@ -498,7 +498,7 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     );
 });
 
-// FIXED PAGINATION COMPONENT WITH 10 ITEMS LOGIC
+
 const Pagination = observer(({ currentData, itemsPerPage = 10, onPageChange, currentPage = 1 }) => {
     const totalItems = currentData?.length || 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
@@ -519,7 +519,7 @@ const Pagination = observer(({ currentData, itemsPerPage = 10, onPageChange, cur
         onPageChange(pageNumber);
     };
 
-    // Calculate page numbers to show
+    
     const getPageNumbers = () => {
         const pages = [];
         const maxVisiblePages = 5;
@@ -575,7 +575,7 @@ const Pagination = observer(({ currentData, itemsPerPage = 10, onPageChange, cur
     );
 });
 
-// FIXED USER ACCOUNTS CONTENT WITH PROPER PAGINATION AND URL ROUTING
+
 const UserAccountsContent = observer(({ activeUserAccountTab }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -603,11 +603,11 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         error: userAccountsError,
     } = userAccountsVM;
 
-    // PAGINATION STATE
+    
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Determine current tab from URL or prop
+    
     const getCurrentTab = () => {
         if (activeUserAccountTab) {
             const tabMap = {
@@ -622,12 +622,12 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         if (pathname.includes('/user-accounts/pending')) return 'PENDING_APPROVAL';
         if (pathname.includes('/user-accounts/create-admin')) return 'CREATE_ADMIN';
         if (pathname.includes('/user-accounts/all')) return 'ALL_ACCOUNTS';
-        return 'ALL_ACCOUNTS'; // default
+        return 'ALL_ACCOUNTS'; 
     };
 
     const currentTab = getCurrentTab();
 
-    // Update ViewModel tab when URL changes
+    
     useEffect(() => {
         AdminDashboardViewModel.setActiveTab(currentTab);
     }, [currentTab]);
@@ -636,12 +636,12 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         AdminDashboardViewModel.fetchAccounts();
     }, [activeTab]);
 
-    // Reset to page 1 when tab changes or data changes
+    
     useEffect(() => {
         setCurrentPage(1);
     }, [activeTab, searchTerm]);
 
-    // Updated tab navigation handlers to use URL routing
+    
     const handleTabNavigation = (tab) => {
         const routeMap = {
             'ALL_ACCOUNTS': '/admin/user-accounts/all',
@@ -658,21 +658,21 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         console.log("[AdminDashboard] Opening user detail modal for:", user);
 
         try {
-            // First set the basic user data
+            
             setSelectedUser(user);
 
-            // Try to enrich the user with premium subscription data
+            
             if (user.id || user._id) {
                 const userId = user.id || user._id;
 
-                // Check if premiumStatViewModel has the required methods
+                
                 if (typeof premiumStatViewModel.loadPremiumData === 'function') {
-                    // Load premium data if not already loaded
+                    
                     if (premiumStatViewModel.allPremiumUserAccounts.length === 0) {
                         await premiumStatViewModel.loadPremiumData();
                     }
 
-                    // Find the user in premium accounts
+                    
                     const premiumUser = premiumStatViewModel.allPremiumUserAccounts.find(
                         premiumAccount => premiumAccount._id === userId || premiumAccount.id === userId
                     );
@@ -682,7 +682,7 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                         setSelectedUser(premiumUser);
                     } else {
                         console.log("[AdminDashboard] No premium data found for user, using basic data");
-                        // Enrich basic user data with default premium structure
+                        
                         const enrichedUser = {
                             ...user,
                             _id: userId,
@@ -700,12 +700,12 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 }
             }
 
-            // Open the modal
+            
             setShowUserDetailModal(true);
 
         } catch (error) {
             console.error("[AdminDashboard] Error enriching user data:", error);
-            // Still open the modal with basic user data even if premium data fetch fails
+            
             setShowUserDetailModal(true);
         }
     };
@@ -727,7 +727,7 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
     };
      const handleRejectNutritionist = async (userId, reasonParam) => {
         try {
-            // Use the reason parameter if provided, otherwise fall back to state
+            
             const finalReason = reasonParam || rejectionReason;
             
             console.log('Rejecting nutritionist:', userId, 'with reason:', finalReason);
@@ -737,15 +737,15 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                 return;
             }
             
-            // Call the rejection method from AdminDashboardViewModel
+            
             await AdminDashboardViewModel.rejectNutritionist(userId, finalReason.trim());
             
-            // Close the modal and reset state
+            
             setShowRejectionReasonModal(false);
             setSelectedUser(null);
             setRejectionReason('');
             
-            // Refresh the data
+            
             await AdminDashboardViewModel.fetchAccounts();
             
             alert('Nutritionist has been rejected and notification email sent!');
@@ -794,12 +794,12 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
         }
     };
 
-    // Get current data based on active tab for pagination
+    
     const getCurrentData = () => {
         return activeTab === 'ALL_ACCOUNTS' ? filteredAllAccounts : filteredPendingAccounts;
     };
 
-    // PAGINATION LOGIC
+    
     const currentData = getCurrentData();
     const totalItems = currentData.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -937,7 +937,7 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
                     reason={rejectionReason}
                     setReason={(value) => setRejectionReason(value)}
                     onConfirm={(reasonFromModal) => {
-                        // Handle both parameter and state-based reason
+                        
                         const finalReason = reasonFromModal || rejectionReason;
                         handleRejectNutritionist(selectedUser.id, finalReason);
                     }}
@@ -952,7 +952,7 @@ const UserAccountsContent = observer(({ activeUserAccountTab }) => {
     );
 });
 
-// AdminDashboard Main Component
+
 const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab, activeUserAccountTab }) => {
     const location = useLocation();
 
@@ -968,7 +968,7 @@ const AdminDashboard = observer(({ onLogout, activeSection, activeMealPlanTab, a
         if (pathname.includes('/admin/rewards')) return 'rewards';
         if (pathname.includes('/admin/edit-website')) return 'editWebsite';
         if (pathname.includes('/admin/user-feedbacks')) return 'userFeedbacks';
-        return 'dashboard'; // default to dashboard
+        return 'dashboard'; 
     };
 
     const currentView = getCurrentView();

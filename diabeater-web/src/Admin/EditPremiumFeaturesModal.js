@@ -1,14 +1,14 @@
-// src/Admin/EditPremiumFeaturesModal.js
+
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import './EditPremiumFeaturesModal.css';
 
 const EditPremiumFeaturesModal = observer(({ isOpen, onClose, adminStatViewModel }) => {
     const [newFeatureName, setNewFeatureName] = useState('');
-    const [editingFeatureName, setEditingFeatureName] = useState(null); // The original string being edited
-    const [editFeatureNewName, setEditFeatureNewName] = useState(''); // The new string value for the feature
+    const [editingFeatureName, setEditingFeatureName] = useState(null); 
+    const [editFeatureNewName, setEditFeatureNewName] = useState(''); 
 
-    // Effect to reset state when modal opens or closes
+    
     useEffect(() => {
         if (isOpen) {
             setNewFeatureName('');
@@ -37,8 +37,8 @@ const EditPremiumFeaturesModal = observer(({ isOpen, onClose, adminStatViewModel
 
     const handleEditClick = (featureName) => {
         setEditingFeatureName(featureName);
-        setEditFeatureNewName(featureName); // Initialize edit field with current name
-        adminStatViewModel.setError(null); // Clear any previous errors
+        setEditFeatureNewName(featureName); 
+        adminStatViewModel.setError(null); 
     };
 
     const handleUpdateFeature = async (e, oldFeatureName) => {
@@ -56,7 +56,7 @@ const EditPremiumFeaturesModal = observer(({ isOpen, onClose, adminStatViewModel
 
         const result = await adminStatViewModel.editPremiumFeature(oldFeatureName, editFeatureNewName.trim());
         if (result.success) {
-            setEditingFeatureName(null); // Exit edit mode
+            setEditingFeatureName(null); 
             setEditFeatureNewName('');
         }
     };

@@ -9,7 +9,7 @@ import { observer } from 'mobx-react-lite';
 import moment from 'moment';
 
 const AdminStatDashboard = observer(() => {
-    // Destructure directly from the singleton ViewModel instance
+    
     const {
         loading,
         error,
@@ -22,7 +22,7 @@ const AdminStatDashboard = observer(() => {
         dailySignupsData,
         weeklyTopMealPlans,
         monthlyRevenue,
-        cancelledSubscriptionsCount, // <--- This is correctly observed now
+        cancelledSubscriptionsCount, 
         selectedUserForManagement,
         selectedUserForHistory,
         setError,
@@ -36,7 +36,7 @@ const AdminStatDashboard = observer(() => {
 
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
-    // Helper function to format any date value (Firestore Timestamp or JS Date)
+    
     const formatDate = (dateValue) => {
         if (!dateValue) return 'N/A';
         const date = dateValue.toDate ? dateValue.toDate() : dateValue;
@@ -48,7 +48,7 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-    // Helper function to calculate and format the renewal date (endDate + 1 day)
+    
     const formatRenewalDate = (endDateValue) => {
         if (!endDateValue) return 'N/A';
         const endDate = endDateValue.toDate ? endDateValue.toDate() : endDateValue;
@@ -60,12 +60,12 @@ const AdminStatDashboard = observer(() => {
         }
     };
 
-    // Use useCallback for memoizing the data loading function
+    
     const handleLoadDashboardData = useCallback(async () => {
         await loadDashboardData();
     }, [loadDashboardData]);
 
-    // Initial data load on component mount
+    
     useEffect(() => {
         handleLoadDashboardData();
     }, [handleLoadDashboardData]);
@@ -78,14 +78,14 @@ const AdminStatDashboard = observer(() => {
     const handleCloseUserModal = () => {
         setIsUserModalOpen(false);
         clearSelectedUserForManagement();
-        handleLoadDashboardData(); // Reload data after user modal closes
+        handleLoadDashboardData(); 
     };
 
     const handleOpenHistoryModal = (user) => {
         setSelectedUserForHistory(user);
     };
 
-    // --- Chart Data Processing (Keeping as is) ---
+    
     const chartDataArray = dailySignupsData
         ? Object.entries(dailySignupsData)
               .map(([date, count]) => ({
@@ -169,20 +169,20 @@ const AdminStatDashboard = observer(() => {
         };
     }, [dailySignupsData, chartWidth, chartHeight, chartPadding, xScale, yScaleFactor]);
 
-    // Data for AdminInsights component
+    
     const insightsData = [
         { value: `${((totalSubscriptions / (totalUsers || 1)) * 100 || 0).toFixed(0)}%`, label: 'Subscription Rate', change: 0, type: 'neutral', period: 'overall' },
         {
-            // --- MODIFIED THIS BLOCK FOR MONTHLY REVENUE DISPLAY ---
+            
             value: typeof monthlyRevenue === 'number' && !isNaN(monthlyRevenue)
                 ? (monthlyRevenue >= 1000
-                    ? `$${(monthlyRevenue / 1000).toFixed(1)}K` // For thousands, use one decimal place and 'K'
-                    : `$${monthlyRevenue.toFixed(2)}`)          // For less than thousands, show exact value with two decimal places
-                : 'N/A', // If monthlyRevenue is not a valid number
-            // --- END MODIFIED BLOCK ---
+                    ? `$${(monthlyRevenue / 1000).toFixed(1)}K` 
+                    : `$${monthlyRevenue.toFixed(2)}`)          
+                : 'N/A', 
+            
             label: 'Monthly Revenue',
-            change: 0, // Placeholder, actual change calculation would require historical data
-            type: 'neutral', // Placeholder
+            change: 0, 
+            type: 'neutral', 
             period: 'last month'
         },
         {
@@ -191,10 +191,10 @@ const AdminStatDashboard = observer(() => {
             change: 0, type: 'neutral', period: 'last week'
         },
         {
-            value: cancelledSubscriptionsCount, // This correctly uses the value from ViewModel
+            value: cancelledSubscriptionsCount, 
             label: 'Cancelled Subscriptions',
-            change: 0, // You can add logic for change if you track previous month's cancellations
-            type: 'neutral', // Adjust type based on change if implemented
+            change: 0, 
+            type: 'neutral', 
             period: 'last month'
         },
         { value: `${((totalApprovedMealPlans / ((totalApprovedMealPlans + totalPendingMealPlans) || 1)) * 100 || 0).toFixed(0)}%`, label: 'Meal Plan Approval Rate', change: 0, type: 'neutral', period: 'overall' },

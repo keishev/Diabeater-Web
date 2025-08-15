@@ -1,4 +1,4 @@
-// src/ViewModels/AdminDashboardViewModel.js
+
 import { makeAutoObservable, runInAction } from 'mobx';
 import { getAuth } from 'firebase/auth';
 import nutritionistApplicationRepository from '../Repositories/NutritionistApplicationRepository';
@@ -6,20 +6,20 @@ import userAccountsViewModel from './UserAccountsViewModel';
 import premiumAccountsViewModelInstance from './PremiumAccountsViewModel';
 
 class AdminDashboardViewModel {
-    // State for pending nutritionist applications
+    
     pendingAccounts = [];
 
-    // Overall dashboard UI state
+    
     activeTab = 'ALL_ACCOUNTS';
     currentView = 'dashboard';
 
-    // Modals and selected user state
+    
     selectedUser = null;
     showUserDetailModal = false;
     showRejectionReasonModal = false;
     rejectionReason = '';
 
-    // Loading and error states
+    
     isLoading = false;
     error = '';
 
@@ -30,13 +30,13 @@ class AdminDashboardViewModel {
         makeAutoObservable(this);
     }
 
-    // Helper method to format dates consistently
+    
     formatDate(timestamp, format = 'short') {
         if (!timestamp) return 'N/A';
         
         let date;
         if (timestamp && typeof timestamp.toDate === 'function') {
-            // Firestore Timestamp
+            
             date = timestamp.toDate();
         } else if (timestamp instanceof Date) {
             date = timestamp;
@@ -67,7 +67,7 @@ class AdminDashboardViewModel {
         return date.toLocaleDateString('en-SG');
     }
 
-    // --- State Setters ---
+    
     setPendingAccounts = (accounts) => {
         this.pendingAccounts = accounts;
     }
@@ -118,42 +118,38 @@ class AdminDashboardViewModel {
         this.error = message;
     }
 
-    // --- Computed Properties ---
-   // Updated filteredPendingAccounts getter in AdminDashboardViewModel.js
+    
+   
 get filteredPendingAccounts() {
     const lowerCaseSearchTerm = this.userAccountsVM.searchTerm.toLowerCase();
     
     return this.pendingAccounts.filter(user => {
-        // Create a combined full name from firstName and lastName
+        
         const fullName = user.firstName && user.lastName 
             ? `${user.firstName} ${user.lastName}`.toLowerCase()
             : '';
         
-        // Also try the reverse order (lastName firstName)
+        
         const reverseName = user.firstName && user.lastName 
             ? `${user.lastName} ${user.firstName}`.toLowerCase()
             : '';
         
-        // Check if search term matches any of these fields:
+        
         return (
-            // Individual first name
+            
             (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Individual last name
+            
             (user.lastName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Combined full name (firstName lastName)
+            
             fullName.includes(lowerCaseSearchTerm) ||
-            // Reverse full name (lastName firstName)
+      
             reverseName.includes(lowerCaseSearchTerm) ||
-            // Email
+       
             (user.email?.toLowerCase().includes(lowerCaseSearchTerm))
         );
     });
 }
 
-    /**
-     * Fetches both pending nutritionist accounts and all general user accounts.
-     * The latter is delegated to UserAccountsViewModel.
-     */
     fetchAccounts = async () => {
         this.setLoading(true);
         this.setError('');
@@ -167,9 +163,9 @@ get filteredPendingAccounts() {
                         ...n,
                         id: n.id,
                         name: `${n.firstName} ${n.lastName}`,
-                        // Use appliedDate first, then fallback to createdAt
+                        
                         appliedDate: this.formatDate(n.appliedDate || n.createdAt, 'short'),
-                        signedUpAt: this.formatDate(n.appliedDate || n.createdAt, 'long') // For display in modal
+                        signedUpAt: this.formatDate(n.appliedDate || n.createdAt, 'long') 
                     }));
                 this.setPendingAccounts(pending);
             });
@@ -186,153 +182,189 @@ get filteredPendingAccounts() {
         }
     }
 
-    /**
-     * Approves a pending nutritionist.
-     * Updates Firestore, sets custom claims, and sends approval email.
-     */
-    approveNutritionist = async (userId) => {
-        if (!userId) {
-            this.setError("Invalid user ID");
-            return;
-        }
-
-        this.setLoading(true);
-        this.setError('');
-        
-        try {
-            // Check admin authentication
-            const auth = getAuth();
-            const user = auth.currentUser;
-
-            if (!user) {
-                console.error("APPROVE_NUTRITIONIST_CALL: No user logged in.");
-                this.setError("Failed to approve: No user logged in. Please log in.");
-                alert("Please log in as an administrator to approve.");
-                return;
-            }
-
-            // Verify admin privileges
-            const idTokenResult = await user.getIdTokenResult(true);
-            if (idTokenResult.claims.admin !== true) {
-                console.warn("APPROVE_NUTRITIONIST_CALL: User is not an admin. Access denied.");
-                this.setError("Access Denied: You must be an administrator to approve accounts.");
-                alert("Access Denied: You must be an administrator to approve accounts.");
-                return;
-            }
-
-            console.log(`Admin ${user.uid} attempting to approve nutritionist ${userId}`);
-
-            // Call the repository method which handles database updates and email sending
-            const result = await nutritionistApplicationRepository.approveNutritionist(userId);
-            
-            runInAction(() => {
-                // Remove from pending accounts
-                this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
-                // Refresh all accounts to show the updated status
-                this.userAccountsVM.fetchAccounts();
-                // Close modals
-                this.setShowUserDetailModal(false);
-                this.setSelectedUser(null);
-            });
-
-            // Show success message
-            const successMessage = result.emailSent 
-                ? "Nutritionist account has been approved and notification email sent!"
-                : "Nutritionist account has been approved! (Note: Email notification may have failed)";
-            alert(successMessage);
-            
-            console.log("Nutritionist approved successfully:", userId, result);
-            
-        } catch (error) {
-            console.error("Error approving nutritionist:", error);
-            this.setError(`Failed to approve: ${error.message}`);
-            alert(`Failed to approve user: ${error.message}`);
-        } finally {
-            runInAction(() => {
-                this.setLoading(false);
-            });
-        }
+   approveNutritionist = async (userId) => {
+    if (!userId) {
+        this.setError("Invalid user ID");
+        return;
     }
 
-    /**
-     * Rejects a pending nutritionist.
-     * Updates Firestore, removes user account, and sends rejection email.
-     */
-    rejectNutritionist = async (userId) => {
-        if (!userId) {
-            this.setError("Invalid user ID");
+    this.setLoading(true);
+    this.setError('');
+    
+    try {
+    
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+            console.error("APPROVE_NUTRITIONIST_CALL: No user logged in.");
+            this.setError("Failed to approve: No user logged in. Please log in.");
+            
+            const errorMessage = "Please log in as an administrator to approve.";
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); 
+            }
             return;
         }
 
-        if (!this.rejectionReason.trim()) {
-            this.setError("Please provide a reason for rejection");
-            alert("Please provide a reason for rejection");
+   
+        const idTokenResult = await user.getIdTokenResult(true);
+        if (idTokenResult.claims.admin !== true) {
+            console.warn("APPROVE_NUTRITIONIST_CALL: User is not an admin. Access denied.");
+            this.setError("Access Denied: You must be an administrator to approve accounts.");
+            
+            const errorMessage = "Access Denied: You must be an administrator to approve accounts.";
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); 
+            }
             return;
         }
 
-        this.setLoading(true);
-        this.setError('');
+        console.log(`Admin ${user.uid} attempting to approve nutritionist ${userId}`);
+
+   
+        const result = await nutritionistApplicationRepository.approveNutritionist(userId);
         
-        try {
-            // Check admin authentication
-            const auth = getAuth();
-            const user = auth.currentUser;
+        runInAction(() => {
+ 
+            this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
+          
+            this.userAccountsVM.fetchAccounts();
+   
+            this.setShowUserDetailModal(false);
+            this.setSelectedUser(null);
+        });
 
-            if (!user) {
-                console.error("REJECT_NUTRITIONIST_CALL: No user logged in.");
-                this.setError("Failed to reject: No user logged in. Please log in.");
-                alert("Please log in as an administrator to reject.");
-                return;
-            }
-
-            // Verify admin privileges
-            const idTokenResult = await user.getIdTokenResult(true);
-            if (idTokenResult.claims.admin !== true) {
-                console.warn("REJECT_NUTRITIONIST_CALL: User is not an admin. Access denied.");
-                this.setError("Access Denied: You must be an administrator to reject accounts.");
-                alert("Access Denied: You must be an administrator to reject accounts.");
-                return;
-            }
-
-            console.log(`Admin ${user.uid} attempting to reject nutritionist ${userId} with reason: ${this.rejectionReason}`);
-
-            // Call the repository method which handles database updates and email sending
-            const result = await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason);
-            
-            runInAction(() => {
-                // Remove from pending accounts
-                this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
-                // Refresh all accounts (though the user should be deleted)
-                this.userAccountsVM.fetchAccounts();
-                // Close modals and reset form
-                this.setShowRejectionReasonModal(false);
-                this.setShowUserDetailModal(false);
-                this.setRejectionReason('');
-                this.setSelectedUser(null);
-            });
-
-            // Show success message
-            const successMessage = result.emailSent 
-                ? "Nutritionist account has been rejected and notification email sent!"
-                : "Nutritionist account has been rejected! (Note: Email notification may have failed)";
+    
+        const successMessage = result.emailSent 
+            ? "Nutritionist account has been approved and notification email sent!"
+            : "Nutritionist account has been approved! (Note: Email notification may have failed)";
+        
+        if (window.showSuccess) {
+            window.showSuccess(successMessage);
+        } else {
             alert(successMessage);
-            
-            console.log("Nutritionist rejected successfully:", userId, result);
-            
-        } catch (error) {
-            console.error("Error rejecting nutritionist:", error);
-            this.setError(`Failed to reject: ${error.message}`);
-            alert(`Failed to reject user: ${error.message}`);
-        } finally {
-            runInAction(() => {
-                this.setLoading(false);
-            });
         }
+        
+        console.log("Nutritionist approved successfully:", userId, result);
+        
+    } catch (error) {
+        console.error("Error approving nutritionist:", error);
+        this.setError(`Failed to approve: ${error.message}`);
+        
+        const errorMessage = `Failed to approve user: ${error.message}`;
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); 
+        }
+    } finally {
+        runInAction(() => {
+            this.setLoading(false);
+        });
+    }
+}
+
+rejectNutritionist = async (userId) => {
+    if (!userId) {
+        this.setError("Invalid user ID");
+        return;
     }
 
-    /**
-     * Fetches a signed URL for a nutritionist's certificate from Firebase Storage.
-     */
+    if (!this.rejectionReason.trim()) {
+        this.setError("Please provide a reason for rejection");
+        
+        const errorMessage = "Please provide a reason for rejection";
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage);
+        }
+        return;
+    }
+
+    this.setLoading(true);
+    this.setError('');
+    
+    try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+            console.error("REJECT_NUTRITIONIST_CALL: No user logged in.");
+            this.setError("Failed to reject: No user logged in. Please log in.");
+            
+            const errorMessage = "Please log in as an administrator to reject.";
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); 
+            }
+            return;
+        }
+        const idTokenResult = await user.getIdTokenResult(true);
+        if (idTokenResult.claims.admin !== true) {
+            console.warn("REJECT_NUTRITIONIST_CALL: User is not an admin. Access denied.");
+            this.setError("Access Denied: You must be an administrator to reject accounts.");
+            
+            const errorMessage = "Access Denied: You must be an administrator to reject accounts.";
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage);
+            }
+            return;
+        }
+
+        console.log(`Admin ${user.uid} attempting to reject nutritionist ${userId} with reason: ${this.rejectionReason}`);
+
+        const result = await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason);
+        
+        runInAction(() => {
+       
+            this.setPendingAccounts(this.pendingAccounts.filter(u => u.id !== userId));
+         
+            this.userAccountsVM.fetchAccounts();
+     
+            this.setShowRejectionReasonModal(false);
+            this.setShowUserDetailModal(false);
+            this.setRejectionReason('');
+            this.setSelectedUser(null);
+        });
+
+       
+        const successMessage = result.emailSent 
+            ? "Nutritionist application has been rejected and notification email sent!"
+            : "Nutritionist application has been rejected! (Note: Email notification may have failed)";
+        
+        if (window.showSuccess) {
+            window.showSuccess(successMessage);
+        } else {
+            alert(successMessage); 
+        }
+        
+        console.log("Nutritionist rejected successfully:", userId, result);
+        
+    } catch (error) {
+        console.error("Error rejecting nutritionist:", error);
+        this.setError(`Failed to reject: ${error.message}`);
+        
+        const errorMessage = `Failed to reject user: ${error.message}`;
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); 
+        }
+    } finally {
+        runInAction(() => {
+            this.setLoading(false);
+        });
+    }
+}
     viewCertificate = async (userId) => {
         if (!userId) {
             this.setError("Invalid user ID");
@@ -379,10 +411,6 @@ get filteredPendingAccounts() {
         }
     }
 
-    /**
-     * Checks if the currently logged-in user has admin claims.
-     * Useful for conditional rendering of admin-only UI elements.
-     */
     checkAdminStatus = async () => {
         try {
             const auth = getAuth();

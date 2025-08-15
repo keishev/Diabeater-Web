@@ -255,35 +255,41 @@ class NutritionistApplicationViewModel {
     }
 
     async resendVerificationEmail() {
-        if (!this.tempUser) {
-            this.setError('No verification in progress.');
-            return;
-        }
-
-        this.setLoading(true);
-        this.setError('');
-
-        try {
-            const auth = getAuth();
-            
-            // Sign in to resend verification
-            const userCredential = await signInWithEmailAndPassword(
-                auth,
-                this.application.email,
-                this.application.password
-            );
-            
-            await sendEmailVerification(userCredential.user);
-            await signOut(auth);
-            
-            alert('Verification email sent again. Please check your email.');
-        } catch (error) {
-            console.error("Resend verification error:", error);
-            this.setError('Failed to resend verification email.');
-        } finally {
-            this.setLoading(false);
-        }
+    if (!this.tempUser) {
+        this.setError('No verification in progress.');
+        return;
     }
+
+    this.setLoading(true);
+    this.setError('');
+
+    try {
+        const auth = getAuth();
+        
+        // Sign in to resend verification
+        const userCredential = await signInWithEmailAndPassword(
+            auth,
+            this.application.email,
+            this.application.password
+        );
+        
+        await sendEmailVerification(userCredential.user);
+        await signOut(auth);
+        
+        // Use custom alert instead of browser alert
+        const message = 'Verification email sent again. Please check your email.';
+        if (window.showSuccess) {
+            window.showSuccess(message);
+        } else {
+            alert(message); // Fallback
+        }
+    } catch (error) {
+        console.error("Resend verification error:", error);
+        this.setError('Failed to resend verification email.');
+    } finally {
+        this.setLoading(false);
+    }
+}
 
     async submitApplication() {
         this.setLoading(true);
@@ -336,112 +342,188 @@ class NutritionistApplicationViewModel {
     }
 
     async viewCertificate(userId) {
-        this.setLoading(true);
-        this.setError('');
+    this.setLoading(true);
+    this.setError('');
 
-        try {
-            const auth = getAuth();
-            const user = auth.currentUser;
+    try {
+        const auth = getAuth();
+        const user = auth.currentUser;
 
-            console.log('user', user);
+        console.log('user', user);
 
-            if (!user) {
-                this.setError("Please log in to view the certificate.");
-                alert("Please log in to view the certificate.");
-                return;
-            }
-
-            const idTokenResult = await user.getIdTokenResult(true);
-            if (idTokenResult.claims.admin !== true) {
-                this.setError("Access Denied: You must be an administrator to view this certificate.");
-                alert("Access Denied: You must be an administrator to view this certificate.");
-                return;
-            }
-
-            const url = await NutritionistApplicationRepository.getNutritionistCertificateUrl(userId);
-            if (url) {
-                window.open(url, '_blank');
+        if (!user) {
+            const errorMessage = "Please log in to view the certificate.";
+            this.setError(errorMessage);
+            
+            if (window.showError) {
+                window.showError(errorMessage);
             } else {
-                this.setError("Certificate URL not found.");
-                alert("Certificate URL not found for this user.");
+                alert(errorMessage); // Fallback
             }
-
-        } catch (error) {
-            console.error("viewCertificate error:", error);
-            this.setError(`Failed to fetch certificate: ${error.message}`);
-            alert(`Failed to fetch certificate: ${error.message}`);
-        } finally {
-            this.setLoading(false);
+            return;
         }
-    }
 
-    async approveNutritionist(userId) {
-        this.setLoading(true);
-        this.setError('');
-
-        try {
-            const auth = getAuth();
-            const user = auth.currentUser;
-
-            if (!user) {
-                alert("Please log in as an administrator.");
-                this.setError("No user logged in.");
-                return;
+        const idTokenResult = await user.getIdTokenResult(true);
+        if (idTokenResult.claims.admin !== true) {
+            const errorMessage = "Access Denied: You must be an administrator to view this certificate.";
+            this.setError(errorMessage);
+            
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); // Fallback
             }
-
-            const token = await user.getIdTokenResult(true);
-            if (!token.claims.admin) {
-                alert("Access Denied: You must be an administrator.");
-                this.setError("Unauthorized");
-                return;
-            }
-
-            await nutritionistApplicationRepository.approveNutritionist(userId);
-            await AdminDashboardViewModel.fetchAccounts(); 
-
-            alert("Nutritionist has been approved!");
-        } catch (error) {
-            console.error("Error approving nutritionist:", error);
-            this.setError(error.message || "Approval failed.");
-            alert(`Failed to approve: ${error.message}`);
-        } finally {
-            this.setLoading(false);
+            return;
         }
-    }
 
-    async rejectNutritionist(userId) {
-        this.setLoading(true);
-        this.setError('');
-
-        try {
-            const auth = getAuth();
-            const user = auth.currentUser;
-
-            if (!user) {
-                alert("Please log in as an administrator.");
-                this.setError("No user logged in.");
-                return;
+        const url = await NutritionistApplicationRepository.getNutritionistCertificateUrl(userId);
+        if (url) {
+            window.open(url, '_blank');
+        } else {
+            const errorMessage = "Certificate URL not found for this user.";
+            this.setError(errorMessage);
+            
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); // Fallback
             }
-
-            const token = await user.getIdTokenResult(true);
-            if (!token.claims.admin) {
-                alert("Access Denied: You must be an administrator.");
-                this.setError("Unauthorized");
-                return;
-            }
-
-            await nutritionistApplicationRepository.rejectNutritionist(userId, this.rejectionReason || "");
-            await AdminDashboardViewModel.fetchAccounts(); 
-
-            alert("Nutritionist has been rejected!");
-        } catch (error) {
-            console.error("Error rejecting nutritionist:", error);
-            this.setError(error.message || "Rejection failed.");
-            alert(`Failed to reject: ${error.message}`);
-        } finally {
-            this.setLoading(false);
         }
+
+    } catch (error) {
+        console.error("viewCertificate error:", error);
+        const errorMessage = `Failed to fetch certificate: ${error.message}`;
+        this.setError(errorMessage);
+        
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); // Fallback
+        }
+    } finally {
+        this.setLoading(false);
     }
+}
+
+async approveNutritionist(userId) {
+    this.setLoading(true);
+    this.setError('');
+
+    try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+            const errorMessage = "Please log in as an administrator.";
+            this.setError("No user logged in.");
+            
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); // Fallback
+            }
+            return;
+        }
+
+        const token = await user.getIdTokenResult(true);
+        if (!token.claims.admin) {
+            const errorMessage = "Access Denied: You must be an administrator.";
+            this.setError("Unauthorized");
+            
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); // Fallback
+            }
+            return;
+        }
+
+        await nutritionistApplicationRepository.approveNutritionist(userId);
+        await AdminDashboardViewModel.fetchAccounts(); 
+
+        // Custom success message for approval
+        const successMessage = "Nutritionist account has been approved and notification email sent!";
+        
+        if (window.showSuccess) {
+            window.showSuccess(successMessage);
+        } else {
+            alert(successMessage); // Fallback
+        }
+    } catch (error) {
+        console.error("Error approving nutritionist:", error);
+        this.setError(error.message || "Approval failed.");
+        
+        const errorMessage = `Failed to approve nutritionist: ${error.message}`;
+        
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); // Fallback
+        }
+    } finally {
+        this.setLoading(false);
+    }
+}
+
+async rejectNutritionist(userId, rejectionReason = '') {
+    this.setLoading(true);
+    this.setError('');
+
+    try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+            const errorMessage = "Please log in as an administrator.";
+            this.setError("No user logged in.");
+            
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); // Fallback
+            }
+            return;
+        }
+
+        const token = await user.getIdTokenResult(true);
+        if (!token.claims.admin) {
+            const errorMessage = "Access Denied: You must be an administrator.";
+            this.setError("Unauthorized");
+            
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else {
+                alert(errorMessage); // Fallback
+            }
+            return;
+        }
+
+        await nutritionistApplicationRepository.rejectNutritionist(userId, rejectionReason);
+        await AdminDashboardViewModel.fetchAccounts(); 
+
+        // Custom success message for rejection
+        const successMessage = "Nutritionist application has been rejected and notification email sent!";
+        
+        if (window.showSuccess) {
+            window.showSuccess(successMessage);
+        } else {
+            alert(successMessage); // Fallback
+        }
+    } catch (error) {
+        console.error("Error rejecting nutritionist:", error);
+        this.setError(error.message || "Rejection failed.");
+        
+        const errorMessage = `Failed to reject nutritionist: ${error.message}`;
+        
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); // Fallback
+        }
+    } finally {
+        this.setLoading(false);
+    }
+}
 }
 
 export default NutritionistApplicationViewModel;

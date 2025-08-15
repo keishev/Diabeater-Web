@@ -1,13 +1,13 @@
-/* src/Admin/AdminInsights.css */
+
 
 .admin-insights-section {
     background-color: #fff;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 30px; /* Space below this section */
-    flex: 1; /* Allow it to take up available space */
-    min-width: 300px; /* Adjust as needed */
+    margin-bottom: 30px;
+    flex: 1;
+    min-width: 300px;
 }
 
 .admin-insights-section .section-title {
@@ -20,12 +20,12 @@
 
 .insights-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid */
-    gap: 20px; /* Space between insight cards */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
 }
 
 .insight-card {
-    background-color: #fffaf3; /* Light background for cards */
+    background-color: #fffaf3;
     padding: 15px;
     border-radius: 8px;
     text-align: center;
@@ -40,7 +40,7 @@
 .insight-value {
     font-size: 2em;
     font-weight: bold;
-    color: #1e525c; /* Darker blue/green */
+    color: #1e525c;
     margin-bottom: 5px;
 }
 
@@ -56,9 +56,9 @@
 }
 
 .insight-change.increase {
-    color: #4CAF50; /* Green */
+    color: #4CAF50;
 }
 
 .insight-change.decrease {
-    color: #F44336; /* Red */
+    color: #F44336;
 }

@@ -1,6 +1,6 @@
 // src/Admin/Tooltip.js
 import React, { useState } from 'react';
-import './Tooltip.css'; // We'll create this CSS file next
+import './Tooltip.css'; 
 
 const Tooltip = ({ children, content }) => {
     const [show, setShow] = useState(false);

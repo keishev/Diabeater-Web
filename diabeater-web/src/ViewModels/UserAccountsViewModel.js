@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction, observable } from 'mobx';
+import { makeAutoObservable, runInAction, observable, action } from 'mobx';
 import UserAccountRepository from '../Repositories/UserAccountRepository';
 
 class UserAccountsViewModel {
@@ -12,9 +12,7 @@ class UserAccountsViewModel {
     currentUserId = null;
 
     constructor() {
-        makeAutoObservable(this, {
-            profile: observable,
-        });
+        makeAutoObservable(this);
     }
 
     setAllAccounts(accounts) {
@@ -32,43 +30,48 @@ class UserAccountsViewModel {
     setError(message) {
         this.error = message;
     }
-
-    // Updated filteredAllAccounts getter in UserAccountsViewModel.js
-get filteredAllAccounts() {
-    const lowerCaseSearchTerm = this.searchTerm.toLowerCase();
-    
-    return this.allAccounts.filter(user => {
-        // Create a combined full name from firstName and lastName
-        const fullName = user.firstName && user.lastName 
-            ? `${user.firstName} ${user.lastName}`.toLowerCase()
-            : '';
-        
-        // Also try the reverse order (lastName firstName)
-        const reverseName = user.firstName && user.lastName 
-            ? `${user.lastName} ${user.firstName}`.toLowerCase()
-            : '';
-        
-        // Check if search term matches any of these fields:
-        return (
-            // Individual first name
-            (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Individual last name  
-            (user.lastName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Combined full name (firstName lastName)
-            fullName.includes(lowerCaseSearchTerm) ||
-            // Reverse full name (lastName firstName)
-            reverseName.includes(lowerCaseSearchTerm) ||
-            // Legacy name field (if it exists)
-            (user.name?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Email
-            (user.email?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Role
-            (user.role?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            // Status
-            (user.status?.toLowerCase().includes(lowerCaseSearchTerm))
-        );
-    });
+     getUserDisplayName(user) {
+    if (user.firstName && user.lastName) {
+        return `${user.firstName} ${user.lastName}`;
+    }
+    if (user.name) {
+        return user.name;
+    }
+    if (user.email) {
+        return user.email;
+    }
+    return 'Unknown User';
 }
+
+findUserById(userId) {
+    return this.allAccounts.find(u => u.id === userId);
+}
+
+
+    get filteredAllAccounts() {
+        const lowerCaseSearchTerm = this.searchTerm.toLowerCase();
+        
+        return this.allAccounts.filter(user => {
+            const fullName = user.firstName && user.lastName 
+                ? `${user.firstName} ${user.lastName}`.toLowerCase()
+                : '';
+            
+            const reverseName = user.firstName && user.lastName 
+                ? `${user.lastName} ${user.firstName}`.toLowerCase()
+                : '';
+            
+            return (
+                (user.firstName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                (user.lastName?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                fullName.includes(lowerCaseSearchTerm) ||
+                reverseName.includes(lowerCaseSearchTerm) ||
+                (user.name?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                (user.email?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                (user.role?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                (user.status?.toLowerCase().includes(lowerCaseSearchTerm))
+            );
+        });
+    }
 
     async fetchAccounts() {
         this.setLoading(true);
@@ -88,55 +91,97 @@ get filteredAllAccounts() {
         }
     }
 
-    async suspendUser(userId) {
-        this.setLoading(true);
-        this.setError('');
-        try {
-            const result = await UserAccountRepository.suspendUser(userId);
-            runInAction(() => {
-                const userIndex = this.allAccounts.findIndex(u => u.id === userId);
-                if (userIndex !== -1) {
-                    this.allAccounts[userIndex].status = 'Inactive';
-                    this.allAccounts[userIndex].disabled = true;
-                }
-                alert(result.message || `User ${userId} suspended successfully.`);
-            });
-        } catch (error) {
-            console.error("Error suspending user:", error);
-            this.setError(`Failed to suspend user: ${error.message}`);
-            alert(`Failed to suspend user: ${error.message}`);
-            throw error;
-        } finally {
-            runInAction(() => {
-                this.setLoading(false);
-            });
+     async suspendUser(userId) {
+    this.setLoading(true);
+    this.setError('');
+    
+    // Get user details BEFORE the API call
+    const user = this.findUserById(userId);
+    const userName = this.getUserDisplayName(user);
+    
+    try {
+        const result = await UserAccountRepository.suspendUser(userId);
+        runInAction(() => {
+            const userIndex = this.allAccounts.findIndex(u => u.id === userId);
+            if (userIndex !== -1) {
+                this.allAccounts[userIndex].status = 'Inactive';
+                this.allAccounts[userIndex].disabled = true;
+            }
+            
+            // Custom success message with user name
+            const message = result.message || `${userName} has been successfully suspended.`;
+            
+            // Use custom alert instead of browser alert
+            if (window.showSuccess) {
+                window.showSuccess(message);
+            } else {
+                alert(message); // Fallback
+            }
+        });
+    } catch (error) {
+        console.error("Error suspending user:", error);
+        this.setError(`Failed to suspend user: ${error.message}`);
+        
+        const errorMessage = `Failed to suspend ${userName}: ${error.message}`;
+        
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); // Fallback
         }
+        throw error;
+    } finally {
+        runInAction(() => {
+            this.setLoading(false);
+        });
     }
+}
 
-    async unsuspendUser(userId) {
-        this.setLoading(true);
-        this.setError('');
-        try {
-            const result = await UserAccountRepository.unsuspendUser(userId);
-            runInAction(() => {
-                const userIndex = this.allAccounts.findIndex(u => u.id === userId);
-                if (userIndex !== -1) {
-                    this.allAccounts[userIndex].status = 'Active';
-                    this.allAccounts[userIndex].disabled = false;
-                }
-                alert(result.message || `User ${userId} unsuspended successfully.`);
-            });
-        } catch (error) {
-            console.error("Error unsuspending user:", error);
-            this.setError(`Failed to unsuspend user: ${error.message}`);
-            alert(`Failed to unsuspend user: ${error.message}`);
-            throw error;
-        } finally {
-            runInAction(() => {
-                this.setLoading(false);
-            });
+async unsuspendUser(userId) {
+    this.setLoading(true);
+    this.setError('');
+    
+    // Get user details BEFORE the API call
+    const user = this.findUserById(userId);
+    const userName = this.getUserDisplayName(user);
+    
+    try {
+        const result = await UserAccountRepository.unsuspendUser(userId);
+        runInAction(() => {
+            const userIndex = this.allAccounts.findIndex(u => u.id === userId);
+            if (userIndex !== -1) {
+                this.allAccounts[userIndex].status = 'Active';
+                this.allAccounts[userIndex].disabled = false;
+            }
+            
+            // Custom success message with user name
+            const message = result.message || `${userName} has been successfully reactivated.`;
+            
+            // Use custom alert instead of browser alert
+            if (window.showSuccess) {
+                window.showSuccess(message);
+            } else {
+                alert(message); // Fallback
+            }
+        });
+    } catch (error) {
+        console.error("Error unsuspending user:", error);
+        this.setError(`Failed to unsuspend user: ${error.message}`);
+        
+        const errorMessage = `Failed to reactivate ${userName}: ${error.message}`;
+        
+        if (window.showError) {
+            window.showError(errorMessage);
+        } else {
+            alert(errorMessage); // Fallback
         }
+        throw error;
+    } finally {
+        runInAction(() => {
+            this.setLoading(false);
+        });
     }
+}
 
     async fetchAdminProfile(userId) {
         this.setLoading(true);
@@ -180,12 +225,32 @@ get filteredAllAccounts() {
             runInAction(() => {
                 this.profile = observable(finalData);
                 this.profileImage = profileImageURL;
-                alert("Admin profile updated successfully.");
+                
+                const message = "Admin profile updated successfully.";
+                
+                // Use toast if available, otherwise fallback to alert
+                if (window.showSuccess) {
+                    window.showSuccess(message);
+                } else if (window.showToast) {
+                    window.showToast(message, 'success');
+                } else {
+                    alert(message);
+                }
             });
         } catch (error) {
             console.error("Error updating admin profile:", error);
             this.setError(`Failed to update admin profile: ${error.message}`);
-            alert(`Failed to update admin profile: ${error.message}`);
+            
+            const errorMessage = `Failed to update admin profile: ${error.message}`;
+            
+            // Use toast if available, otherwise fallback to alert
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else if (window.showToast) {
+                window.showToast(errorMessage, 'error');
+            } else {
+                alert(errorMessage);
+            }
         } finally {
             runInAction(() => {
                 this.setLoading(false);
@@ -231,12 +296,32 @@ get filteredAllAccounts() {
             runInAction(() => {
                 this.profile = observable(finalData);
                 this.profileImage = profileImageURL;
-                alert("Nutritionist profile updated successfully.");
+                
+                const message = "Nutritionist profile updated successfully.";
+                
+                // Use toast if available, otherwise fallback to alert
+                if (window.showSuccess) {
+                    window.showSuccess(message);
+                } else if (window.showToast) {
+                    window.showToast(message, 'success');
+                } else {
+                    alert(message);
+                }
             });
         } catch (error) {
             console.error("Error updating nutritionist profile:", error);
             this.setError(`Failed to update nutritionist profile: ${error.message}`);
-            alert(`Failed to update nutritionist profile: ${error.message}`);
+            
+            const errorMessage = `Failed to update nutritionist profile: ${error.message}`;
+            
+            // Use toast if available, otherwise fallback to alert
+            if (window.showError) {
+                window.showError(errorMessage);
+            } else if (window.showToast) {
+                window.showToast(errorMessage, 'error');
+            } else {
+                alert(errorMessage);
+            }
         } finally {
             runInAction(() => {
                 this.setLoading(false);

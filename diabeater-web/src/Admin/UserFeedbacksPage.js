@@ -1,18 +1,18 @@
-// src/Admin/UserFeedbacksPage.js
+
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from './components/ConfirmationModal';
 import SuccessModal from './components/SuccessModal';
-import useUserFeedbackViewModel from '../ViewModels/UserFeedbackViewModel'; // Adjust path
+import useUserFeedbackViewModel from '../ViewModels/UserFeedbackViewModel'; 
 import './UserFeedbacksPage.css';
 
-// Helper function to render stars
+
 const renderStars = (rating) => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
         if (i < rating) {
-            stars.push(<span key={i} className="star filled">&#9733;</span>); // Filled star
+            stars.push(<span key={i} className="star filled">&#9733;</span>); 
         } else {
-            stars.push(<span key={i} className="star">&#9734;</span>); // Empty star
+            stars.push(<span key={i} className="star">&#9734;</span>); 
         }
     }
     return <div className="stars-container">{stars}</div>;
@@ -33,7 +33,7 @@ function UserFeedbacksPage() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
     const [modalMessage, setModalMessage] = useState("");
-    const [confirmAction, setConfirmAction] = useState(() => () => {}); // To store the function to execute on confirm
+    const [confirmAction, setConfirmAction] = useState(() => () => {}); 
 
     const handleToggleMarketingClick = (id, currentDisplayStatus) => {
         setSelectedFeedbackId(id);
@@ -52,7 +52,7 @@ function UserFeedbacksPage() {
                         : "Feedback featured on marketing."
                 );
             } else {
-                alert("Failed to update marketing status."); // Basic error handling
+                alert("Failed to update marketing status."); 
             }
         });
         setShowConfirmModal(true);
@@ -145,7 +145,7 @@ function UserFeedbacksPage() {
                                         disabled={
                                             feedback.rating !== 5 || 
                                             (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
-                                        } // Only allow 5-star feedbacks and max 3 on marketing
+                                        } 
                                     >
                                         {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
                                     </button>
