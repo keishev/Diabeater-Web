@@ -185,7 +185,6 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                     <div className="detail-section general-description-section">
                         <h2>General Description & Notes</h2>
                         <p className="pre-formatted-text">
-                            {/* Fixed: Use description instead of generalNotes */}
                             {mealPlan.description || 'No general description available.'}
                         </p>
                     </div>
@@ -212,17 +211,16 @@ const AdminMealPlanDetail = observer(({ mealPlan, onClose }) => {
                     <div className="detail-section nutrients-section">
                         <h2>Nutrient Information</h2>
                         <div className="nutrients-display-grid">
-                            {/* Fixed: Access nutrients directly instead of nested object */}
-                            <NutrientBox label="Calories" value={mealPlan.calories} unit="kcal" type="circle" />
-                            <NutrientBox label="Protein" value={mealPlan.protein} unit="g" />
-                            <NutrientBox label="Carbs" value={mealPlan.carbohydrates} unit="g" />
-                            <NutrientBox label="Fats" value={mealPlan.fats} unit="g" />
-                            <NutrientBox label="Sugar" value={mealPlan.sugar} unit="g" />
-                            <NutrientBox label="Sat. Fat" value={mealPlan.saturatedFat} unit="g" />
-                            <NutrientBox label="Unsat. Fat" value={mealPlan.unsaturatedFat} unit="g" />
-                            <NutrientBox label="Cholesterol" value={mealPlan.cholesterol} unit="mg" />
-                            <NutrientBox label="Sodium" value={mealPlan.sodium} unit="mg" />
-                            <NutrientBox label="Potassium" value={mealPlan.potassium} unit="mg" />
+                            <NutrientBox label="Calories" value={mealPlan.nutrients.calories} unit="kcal" type="circle" />
+                            <NutrientBox label="Protein" value={mealPlan.nutrients.protein} unit="g" />
+                            <NutrientBox label="Carbs" value={mealPlan.nutrients.carbohydrates} unit="g" />
+                            <NutrientBox label="Fats" value={mealPlan.nutrients.fats} unit="g" />
+                            <NutrientBox label="Sugar" value={mealPlan.nutrients.sugar} unit="g" />
+                            <NutrientBox label="Sat. Fat" value={mealPlan.nutrients.saturatedFat} unit="g" />
+                            <NutrientBox label="Unsat. Fat" value={mealPlan.nutrients.unsaturatedFat} unit="g" />
+                            <NutrientBox label="Cholesterol" value={mealPlan.nutrients.cholesterol} unit="mg" />
+                            <NutrientBox label="Sodium" value={mealPlan.nutrients.sodium} unit="mg" />
+                            <NutrientBox label="Potassium" value={mealPlan.nutrients.potassium} unit="mg" />
                         </div>
                     </div>
 

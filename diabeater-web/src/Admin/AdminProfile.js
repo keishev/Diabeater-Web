@@ -116,16 +116,6 @@ const AdminProfile = observer(() => {
             
           </div>
 
-          {/* <div className="form-group full-width">
-            <label htmlFor="address">Address</label>
-            <input
-              type="text"
-              id="address"
-              value={profile.address || ''}
-              onChange={(e) => vm.setProfileField('address', e.target.value)}
-            />
-          </div> */}
-
           <button className="adminp-save-button" onClick={handleSave} disabled={vm.isLoading}>
             {vm.isLoading ? 'Saving...' : 'Save'}
           </button>
