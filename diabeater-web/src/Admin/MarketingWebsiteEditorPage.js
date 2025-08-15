@@ -165,21 +165,6 @@ function MarketingWebsiteEditorPage() {
                 <MarketingEditorSection title="Footer Privacy Policy Text" initialContent={websiteContent?.footerPrivacyPolicy} onSave={handleSaveContent} contentKey="footerPrivacyPolicy" />
                 <MarketingEditorSection title="Footer Terms of Service Text" initialContent={websiteContent?.footerTermsOfService} onSave={handleSaveContent} contentKey="footerTermsOfService" />
             </div>
-
-            <MarketingWebsiteSimulator content={websiteContent} />
-
-            <div className="stop-hosting-section">
-                <button className="stop-hosting-button" onClick={handleStopHostingClick}>
-                    Stop Hosting Marketing Website
-                </button>
-            </div>
-
-            <ConfirmationModal
-                message="Are you sure you want to stop hosting the marketing website? This action cannot be undone."
-                onConfirm={confirmStopHosting}
-                onCancel={cancelStopHosting}
-                isVisible={showStopHostingModal}
-            />
         </div>
     );
 }
