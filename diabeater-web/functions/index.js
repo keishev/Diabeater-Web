@@ -1,4 +1,3 @@
-
 const { onRequest, onCall } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 const { FieldValue } = require('firebase-admin/firestore');
@@ -724,5 +723,95 @@ exports.addAdminRole = onCall({
             throw new functions.https.HttpsError('not-found', `User ${email} not found`);
         }
         throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+exports.checkEmailVerification = onCall({
+    region: 'us-central1',
+    memory: '256MiB',
+    timeoutSeconds: 30
+}, async (request) => {
+    try {
+        const email = request.data.email;
+        if (!email) {
+            throw new functions.https.HttpsError('invalid-argument', 'Email is required');
+        }
+
+        console.log(`Checking email verification for: ${email}`);
+
+        // Get user by email
+        const user = await auth.getUserByEmail(email);
+        console.log(`Found user: ${user.uid}, emailVerified: ${user.emailVerified}`);
+
+        if (!user.emailVerified) {
+            return {
+                success: false,
+                isVerified: false,
+                message: 'Email not yet verified. Please check your email and click the verification link.'
+            };
+        }
+
+        // Email is verified, now check if this is an admin account
+        const userDoc = await admin.firestore().collection('user_accounts').doc(user.uid).get();
+
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'User account not found in database');
+        }
+
+        const userData = userDoc.data();
+        console.log(`User data:`, userData);
+
+        // If this is an admin account and email is verified, grant admin claims
+        if (userData.role === 'admin') {
+            console.log(`Granting admin claims to: ${email}`);
+
+            // Set admin claims
+            await auth.setCustomUserClaims(user.uid, { admin: true });
+            console.log(`Admin claims granted to: ${email}`);
+
+            // Update user status in Firestore
+            await admin.firestore().collection('user_accounts').doc(user.uid).update({
+                emailVerified: true,
+                status: 'Active',
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`User status updated to Active for: ${email}`);
+
+            // Revoke refresh tokens to force re-authentication with new claims
+            await auth.revokeRefreshTokens(user.uid);
+            console.log(`Refresh tokens revoked for: ${email}`);
+
+            return {
+                success: true,
+                isVerified: true,
+                message: 'Email verified successfully and admin rights granted! The admin account is now ready to use.'
+            };
+        } else {
+            // Regular user account (not admin)
+            await admin.firestore().collection('user_accounts').doc(user.uid).update({
+                emailVerified: true,
+                status: 'Active',
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            return {
+                success: true,
+                isVerified: true,
+                message: 'Email verified successfully!'
+            };
+        }
+
+    } catch (error) {
+        console.error('Error in checkEmailVerification:', error);
+
+        if (error.code === 'auth/user-not-found') {
+            throw new functions.https.HttpsError('not-found', 'No account found with this email address');
+        }
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+
+        throw new functions.https.HttpsError('internal', `Failed to check email verification: ${error.message}`);
     }
 });
