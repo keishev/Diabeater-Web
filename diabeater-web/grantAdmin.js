@@ -1,6 +1,4 @@
-
-
-const admin = require('firebase-admin'); 
+const admin = require('firebase-admin');
 
 
 
@@ -14,25 +12,21 @@ admin.initializeApp({
 
 
 
-const targetEmail = 'liviamanda95@gmail.com'; 
+// Get email from command line argument or use default
+const targetEmail = process.argv[2] || 'liviamanda95@gmail.com';
 
 async function grantAdminRights() {
   try {
-    
+    console.log(`Attempting to grant admin rights to: ${targetEmail}`);
+
     const user = await admin.auth().getUserByEmail(targetEmail);
     console.log(`Found user: ${user.email} with UID: ${user.uid}`);
 
-    
-    
-    
+    // Set custom admin claim
     await admin.auth().setCustomUserClaims(user.uid, { admin: true });
     console.log(`Successfully set 'admin: true' custom claim for ${targetEmail}`);
 
-    
-    
-    
-    
-    
+    // Revoke refresh tokens to force re-authentication with new claims
     await admin.auth().revokeRefreshTokens(user.uid);
     console.log(`Revoked refresh tokens for ${targetEmail}.`);
     console.log(`*** To activate admin rights, this user must log out and then log back in. ***`);
