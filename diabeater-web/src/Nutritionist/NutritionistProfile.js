@@ -114,7 +114,7 @@ const NutritionistProfile = observer(() => {
                 type="email"
                 id="email"
                 value={profile.email || ''}
-                onChange={(e) => vm.setProfileField('email', e.target.value)}
+                readOnly
               />
             </div>
             
