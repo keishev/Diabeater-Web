@@ -94,7 +94,7 @@ app.post('/api/users/suspend', isAuthenticatedAdmin, async (req, res) => {
 
         if (userAccountDoc.exists) {
             await userAccountRef.update({ status: 'Inactive' });
-            console.log(`Backend: Firestore status for user ${userId} updated to 'Inactive'.`);
+            console.log(`Backend: Firestore status for user updated to 'Inactive'.`);
         } else {
             console.warn(`Backend: User account document not found in Firestore for ID: ${userId}. Auth user still disabled.`);
         }
@@ -102,7 +102,7 @@ app.post('/api/users/suspend', isAuthenticatedAdmin, async (req, res) => {
         await auth.revokeRefreshTokens(userId);
         console.log(`Backend: Refresh tokens revoked for user ${userId}.`);
 
-        res.status(200).json({ success: true, message: `User ${userId} has been suspended.` });
+        res.status(200).json({ success: true, message: `User has been suspended.` });
 
     } catch (error) {
         console.error(`Backend: Error suspending user ${userId}:`, error);
@@ -137,7 +137,7 @@ app.post('/api/users/unsuspend', isAuthenticatedAdmin, async (req, res) => {
         await auth.revokeRefreshTokens(userId);
         console.log(`Backend: Refresh tokens revoked for user ${userId}.`);
 
-        res.status(200).json({ success: true, message: `User ${userId} has been unsuspended.` });
+        res.status(200).json({ success: true, message: `User has been unsuspended.` });
 
     } catch (error) {
         console.error(`Backend: Error unsuspending user ${userId}:`, error);
