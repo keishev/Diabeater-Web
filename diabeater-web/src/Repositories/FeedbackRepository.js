@@ -1,4 +1,3 @@
-
 import FeedbackService from '../Services/FeedbackService';
 
 class FeedbackRepository {
@@ -26,85 +25,160 @@ class FeedbackRepository {
         return FeedbackService.getFiveStarFeedbacks();
     }
 
+    // NEW METHOD: Get 5-star compliment feedbacks for automation
+    async getFiveStarComplimentFeedbacks() {
+        return FeedbackService.getFiveStarComplimentFeedbacks();
+    }
+
     async batchUpdateFeedbacks(updates) {
         return FeedbackService.batchUpdateFeedbacks(updates);
     }
 
-    
-    async automateMarketingFeedbacks() {
-        try {
-            console.log('[FeedbackRepository] Starting automated marketing feedback selection...');
-            
-            
-            const fiveStarFeedbacks = await this.getFiveStarFeedbacks();
-            console.log(`[FeedbackRepository] Found ${fiveStarFeedbacks.length} five-star feedbacks`);
+   async automateMarketingFeedbacks() {
+    try {
+        console.log('[FeedbackRepository] Starting automation...');
 
-            
-            const feedbacksByUser = {};
-            fiveStarFeedbacks.forEach(feedback => {
-                if (!feedbacksByUser[feedback.userId]) {
-                    feedbacksByUser[feedback.userId] = [];
-                }
-                feedbacksByUser[feedback.userId].push(feedback);
+        const allFeedbacks = await this.getFeedbacks();
+        console.log('[DEBUG] Total feedbacks found:', allFeedbacks.length);
+        
+        // Log ALL feedback details
+        allFeedbacks.forEach((feedback, index) => {
+            console.log(`[DEBUG] Feedback ${index + 1}:`, {
+                id: feedback.id,
+                name: feedback.userFirstName,
+                rating: feedback.rating,
+                category: feedback.category,
+                message: feedback.message?.substring(0, 50) + '...'
             });
+        });
 
-            
-            const userIds = Object.keys(feedbacksByUser);
-            const shuffledUserIds = userIds.sort(() => Math.random() - 0.5);
-            
-            const selectedFeedbacks = [];
-            
-            
-            for (let i = 0; i < Math.min(3, shuffledUserIds.length); i++) {
-                const userId = shuffledUserIds[i];
-                const userFeedbacks = feedbacksByUser[userId];
-                
-                const randomIndex = Math.floor(Math.random() * userFeedbacks.length);
-                const selectedFeedback = userFeedbacks[randomIndex];
-                selectedFeedbacks.push(selectedFeedback);
+        // Check different case variations
+        const complimentVariations = [
+            'compliment',
+            'Compliment', 
+            'COMPLIMENT',
+            'Compliments',
+            'compliments'
+        ];
+
+        console.log('[DEBUG] Checking different category variations...');
+        
+        complimentVariations.forEach(variation => {
+            const matches = allFeedbacks.filter(f => f.rating === 5 && f.category === variation);
+            console.log(`[DEBUG] 5-star "${variation}" feedbacks:`, matches.length);
+            if (matches.length > 0) {
+                console.log(`[DEBUG] Found matches for "${variation}":`, matches.map(m => m.userFirstName));
             }
+        });
 
-            console.log(`[FeedbackRepository] Selected ${selectedFeedbacks.length} feedbacks for automation from ${selectedFeedbacks.length} different users`);
+        // Show all unique categories
+        const allCategories = [...new Set(allFeedbacks.map(f => f.category))];
+        console.log('[DEBUG] All unique categories in database:', allCategories);
 
+        // Show 5-star feedbacks and their categories
+        const fiveStarFeedbacks = allFeedbacks.filter(f => f.rating === 5);
+        console.log('[DEBUG] All 5-star feedbacks:', fiveStarFeedbacks.map(f => ({
+            name: f.userFirstName,
+            category: f.category,
+            rating: f.rating
+        })));
+
+        // Try the original filter
+        const automationCandidates = allFeedbacks.filter(feedback => {
+            const is5Star = feedback.rating === 5;
+            const isCompliment = feedback.category === 'compliment';
+            return is5Star && isCompliment;
+        });
+
+        console.log(`[DEBUG] Found ${automationCandidates.length} feedbacks with rating=5 AND category="compliment"`);
+
+        if (automationCandidates.length === 0) {
+            // Try with capital C
+            const capitalComplimentCandidates = allFeedbacks.filter(feedback => {
+                const is5Star = feedback.rating === 5;
+                const isCompliment = feedback.category === 'Compliment';
+                return is5Star && isCompliment;
+            });
             
-            const updates = [];
+            console.log(`[DEBUG] Trying "Compliment" (capital C): found ${capitalComplimentCandidates.length}`);
             
-            
-            for (const feedback of fiveStarFeedbacks) {
-                if (feedback.displayOnMarketing) {
+            if (capitalComplimentCandidates.length > 0) {
+                console.log('[DEBUG] SUCCESS! Your category is "Compliment" not "compliment"');
+                // Use these candidates
+                const shuffled = capitalComplimentCandidates.sort(() => Math.random() - 0.5);
+                const selectedFeedbacks = shuffled.slice(0, 3);
+                
+                const updates = [];
+                
+                // Remove current featured
+                for (const feedback of allFeedbacks) {
+                    if (feedback.displayOnMarketing) {
+                        updates.push({
+                            feedbackId: feedback.id,
+                            displayOnMarketing: false
+                        });
+                    }
+                }
+                
+                // Add selected
+                for (const feedback of selectedFeedbacks) {
                     updates.push({
                         feedbackId: feedback.id,
-                        displayOnMarketing: false
+                        displayOnMarketing: true
                     });
                 }
+                
+                if (updates.length > 0) {
+                    await this.batchUpdateFeedbacks(updates);
+                }
+                
+                return {
+                    success: true,
+                    selectedCount: selectedFeedbacks.length,
+                    totalUpdates: updates.length
+                };
             }
-
             
-            for (const feedback of selectedFeedbacks) {
+            throw new Error(`No 5-star compliment feedbacks found. Available categories: ${allCategories.join(', ')}. 5-star categories: ${[...new Set(fiveStarFeedbacks.map(f => f.category))].join(', ')}`);
+        }
+
+        // Rest of original logic...
+        const shuffled = automationCandidates.sort(() => Math.random() - 0.5);
+        const selectedFeedbacks = shuffled.slice(0, 3);
+
+        const updates = [];
+
+        for (const feedback of allFeedbacks) {
+            if (feedback.displayOnMarketing) {
                 updates.push({
                     feedbackId: feedback.id,
-                    status: "Approved", 
-                    displayOnMarketing: true
+                    displayOnMarketing: false
                 });
             }
-
-            
-            if (updates.length > 0) {
-                await this.batchUpdateFeedbacks(updates);
-                console.log(`[FeedbackRepository] Completed automation with ${updates.length} updates`);
-            }
-
-            return {
-                success: true,
-                selectedCount: selectedFeedbacks.length,
-                totalUpdates: updates.length
-            };
-
-        } catch (error) {
-            console.error('[FeedbackRepository] Error in automation:', error);
-            throw error;
         }
+
+        for (const feedback of selectedFeedbacks) {
+            updates.push({
+                feedbackId: feedback.id,
+                displayOnMarketing: true
+            });
+        }
+
+        if (updates.length > 0) {
+            await this.batchUpdateFeedbacks(updates);
+        }
+
+        return {
+            success: true,
+            selectedCount: selectedFeedbacks.length,
+            totalUpdates: updates.length
+        };
+
+    } catch (error) {
+        console.error('[FeedbackRepository] Automation error:', error);
+        throw error;
     }
+}
 }
 
 export default new FeedbackRepository();

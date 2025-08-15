@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from './components/ConfirmationModal';
 import SuccessModal from './components/SuccessModal';
 import useUserFeedbackViewModel from '../ViewModels/UserFeedbackViewModel'; 
 import './UserFeedbacksPage.css';
-
 
 const renderStars = (rating) => {
     const stars = [];
@@ -59,7 +57,7 @@ function UserFeedbacksPage() {
     };
 
     const handleAutomateMarketingClick = () => {
-        setModalMessage("Are you sure you want to automatically feature up to 3 five-star feedbacks on the marketing website?");
+        setModalMessage("Are you sure you want to automatically feature up to 3 five-star compliment feedbacks on the marketing website?");
         setConfirmAction(() => async () => {
             const success = await automateMarketingFeedbacks();
             if (success) {
@@ -105,7 +103,7 @@ function UserFeedbacksPage() {
                     className="automate-marketing-button"
                     onClick={handleAutomateMarketingClick}
                 >
-                    Auto-Feature 5-Star Feedbacks (Max 3)
+                    Auto-Feature 5-Star Compliment Feedbacks (Max 3)
                 </button>
                 <div className="marketing-feedbacks-list">
                     {marketingFeedbacks.length > 0 ? (
@@ -114,10 +112,11 @@ function UserFeedbacksPage() {
                                 <p><strong>{feedback.userFirstName}</strong></p>
                                 {renderStars(feedback.rating)}
                                 <p>"{feedback.message}"</p>
+                                <p><small>Category: {feedback.category || 'N/A'}</small></p>
                             </div>
                         ))
                     ) : (
-                        <p>No 5-star feedbacks currently featured for marketing.</p>
+                        <p>No 5-star compliment feedbacks currently featured for marketing.</p>
                     )}
                 </div>
             </div>
@@ -129,6 +128,8 @@ function UserFeedbacksPage() {
                             <th>Name</th>
                             <th>Feedback</th>
                             <th>Rating</th>
+                            <th>Category</th>
+                            <th>Status</th>
                             <th>Display on Marketing</th>
                         </tr>
                     </thead>
@@ -138,18 +139,25 @@ function UserFeedbacksPage() {
                                 <td>{feedback.userFirstName}</td>
                                 <td>{feedback.message}</td>
                                 <td>{renderStars(feedback.rating)}</td>
+                                <td>{feedback.category || 'N/A'}</td>
+                                <td>{feedback.status || 'N/A'}</td>
                                 <td className="publish-cell">
-                                    <button
-                                        className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
-                                        onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
-                                        disabled={
-                                            feedback.rating !== 5 || 
-                                            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
-                                        } 
-                                    >
-                                        {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
-                                    </button>
-                                </td>
+    <button
+        className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
+        onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
+        disabled={
+            // Only disable if trying to ADD a new one but already have 3 featured
+            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
+        } 
+        title={
+            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3) 
+                ? "Maximum 3 feedbacks can be featured" 
+                : ""
+        }
+    >
+        {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
+    </button>
+</td>
                             </tr>
                         ))}
                     </tbody>

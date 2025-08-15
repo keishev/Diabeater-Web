@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import FeedbackRepository from '../Repositories/FeedbackRepository';
 
@@ -51,60 +50,21 @@ const useUserFeedbackViewModel = () => {
         }
     };
 
+    // FIXED: Use the Repository's automation method
     const automateMarketingFeedbacks = async () => {
         try {
-            const allFeedbacks = await FeedbackRepository.getFeedbacks();
-
+            console.log('[ViewModel] Starting automation via Repository...');
             
-            const fiveStarFeedbacks = allFeedbacks.filter(fb => fb.rating === 5);
+            // Use the Repository's automation method
+            const result = await FeedbackRepository.automateMarketingFeedbacks();
             
+            console.log('[ViewModel] Automation result:', result);
             
-            const feedbacksByUser = {};
-            fiveStarFeedbacks.forEach(feedback => {
-                if (!feedbacksByUser[feedback.userId]) {
-                    feedbacksByUser[feedback.userId] = [];
-                }
-                feedbacksByUser[feedback.userId].push(feedback);
-            });
-
+            // Refresh both feedbacks and marketing feedbacks to show updates
+            await fetchFeedbacks();
+            await fetchMarketingFeedbacks();
             
-            const userIds = Object.keys(feedbacksByUser);
-            const shuffledUserIds = userIds.sort(() => Math.random() - 0.5);
-            
-            const newMarketingFeedbackIds = new Set();
-            
-            
-            for (let i = 0; i < Math.min(3, shuffledUserIds.length); i++) {
-                const userId = shuffledUserIds[i];
-                const userFeedbacks = feedbacksByUser[userId];
-                
-                const randomIndex = Math.floor(Math.random() * userFeedbacks.length);
-                const selectedFeedback = userFeedbacks[randomIndex];
-                newMarketingFeedbackIds.add(selectedFeedback.id);
-            }
-            
-            
-            for (const feedback of allFeedbacks) {
-                const shouldDisplay = newMarketingFeedbackIds.has(feedback.id);
-                
-                
-                if (shouldDisplay) {
-                    
-                    if (!feedback.displayOnMarketing) {
-                        await FeedbackRepository.updateDisplayOnMarketing(feedback.id, true);
-                    }
-                } else {
-                    
-                    if (feedback.displayOnMarketing) {
-                        await FeedbackRepository.updateDisplayOnMarketing(feedback.id, false);
-                    }
-                }
-            }
-
-            await fetchFeedbacks(); 
-            await fetchMarketingFeedbacks(); 
-            
-            return true;
+            return result.success;
         } catch (err) {
             console.error("Error automating marketing feedbacks:", err);
             setError(err);
