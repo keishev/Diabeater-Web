@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
+import { observer } from 'mobx-react-lite';
 import MealPlanViewModel from '../ViewModels/MealPlanViewModel'; 
 
 import './CreateMealPlan.css';
 
-const CreateMealPlan = ({ onMealPlanSubmitted }) => {
+const CreateMealPlan = observer(({ onMealPlanSubmitted }) => {
     const [mealName, setMealName] = useState('');
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [uploadPhoto, setUploadPhoto] = useState(null);
@@ -31,18 +31,22 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    
 
-    const categoryOptions = [
-        'Improved Energy',
-        'Weight Loss',
-        'Weight Management',
-        'Heart Health',
-        'Low Carb',
-        'High Protein',
-        'Gluten-Free',
-        'Snack',
-    ];
+    // Get categories from ViewModel instead of hardcoded options
+    const {
+        allCategories,
+        loadingCategories,
+        categoryError,
+        fetchMealCategories
+    } = MealPlanViewModel;
+
+    // Fetch categories when component mounts
+    useEffect(() => {
+        // Fetch categories if they haven't been loaded yet
+        if (allCategories.length === 0 && !loadingCategories) {
+            fetchMealCategories();
+        }
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -91,7 +95,6 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        
 
         const mealPlanData = {
             name: mealName,
@@ -114,11 +117,11 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         try {
             const result = await MealPlanViewModel.createMealPlan(mealPlanData, uploadPhoto);
             if (result) {
-                
                 if (onMealPlanSubmitted) {
                     onMealPlanSubmitted();
                 }
                 
+                // Reset form
                 setMealName('');
                 setSelectedCategories([]);
                 setUploadPhoto(null);
@@ -154,6 +157,65 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
         } else {
             return `${selectedCategories.length} Categories Selected`;
         }
+    };
+
+    // Show loading state for categories
+    const renderCategoryDropdown = () => {
+        if (loadingCategories) {
+            return (
+                <div className="create-meal-plan-category-loading">
+                    <span>Loading categories...</span>
+                </div>
+            );
+        }
+
+        if (categoryError) {
+            return (
+                <div className="create-meal-plan-category-error">
+                    <span>Error loading categories: {categoryError}</span>
+                    <button 
+                        type="button" 
+                        onClick={fetchMealCategories}
+                        className="create-meal-plan-retry-button"
+                    >
+                        Retry
+                    </button>
+                </div>
+            );
+        }
+
+        if (allCategories.length === 0) {
+            return (
+                <div className="create-meal-plan-no-categories">
+                    <span>No categories available</span>
+                    <button 
+                        type="button" 
+                        onClick={fetchMealCategories}
+                        className="create-meal-plan-retry-button"
+                    >
+                        Refresh
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="create-meal-plan-category-checklist">
+                {allCategories.map((option, index) => (
+                    <div key={index} className="create-meal-plan-checkbox-item">
+                        <input
+                            type="checkbox"
+                            id={`category-${index}`}
+                            name="category"
+                            value={option}
+                            checked={selectedCategories.includes(option)}
+                            onChange={handleCategoryChange}
+                        />
+                        <label htmlFor={`category-${index}`}>{option}</label>
+                    </div>
+                ))}
+            </div>
+        );
     };
 
     return (
@@ -202,32 +264,16 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                                 type="button"
                                 className={`create-meal-plan-dropdown-toggle-button ${isCategoryDropdownOpen ? 'create-meal-plan-open' : ''}`}
                                 onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
+                                disabled={loadingCategories}
                             >
-                                {getCategoryButtonText()}
+                                {loadingCategories ? "Loading..." : getCategoryButtonText()}
                                 <span className="create-meal-plan-dropdown-arrow"></span>
                             </button>
-                            {isCategoryDropdownOpen && (
-                                <div className="create-meal-plan-category-checklist">
-                                    {categoryOptions.map((option, index) => (
-                                        <div key={index} className="create-meal-plan-checkbox-item">
-                                            <input
-                                                type="checkbox"
-                                                id={`category-${index}`}
-                                                name="category"
-                                                value={option}
-                                                checked={selectedCategories.includes(option)}
-                                                onChange={handleCategoryChange}
-                                            />
-                                            <label htmlFor={`category-${index}`}>{option}</label>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            {isCategoryDropdownOpen && renderCategoryDropdown()}
                         </div>
                     </div>
                 </div>
 
-                {/* ⭐ NEW: Split Description Fields ⭐ */}
                 <h3 className="create-meal-plan-section-title">Meal Details</h3>
                 <div className="create-meal-plan-form-group">
                     <label htmlFor="ingredients">Ingredients</label>
@@ -323,7 +369,6 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                     </div>
                 </div>
 
-                {/* ⭐ NEW: Premium Nutritional Information (always shown for input, display logic for premium unlock) ⭐ */}
                 <h3 className="create-meal-plan-section-title">Advanced Nutrients (Optional)</h3>
                 <div className="create-meal-plan-nutrients-grid create-meal-plan-premium-nutrients">
                     <div className="create-meal-plan-nutrient-item">
@@ -401,14 +446,13 @@ const CreateMealPlan = ({ onMealPlanSubmitted }) => {
                 </div>
 
                 {error && <p className="create-meal-plan-error-message">{error}</p>}
-                {/*{success && <p className="create-meal-plan-success-message">{success}</p>}*/}
 
-                <button type="submit" className="create-meal-plan-create-button" disabled={loading}>
+                <button type="submit" className="create-meal-plan-create-button" disabled={loading || loadingCategories}>
                     {loading ? 'Creating...' : '+ CREATE'}
                 </button>
             </form>
         </div>
     );
-};
+});
 
 export default CreateMealPlan;

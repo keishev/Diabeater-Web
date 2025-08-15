@@ -146,7 +146,7 @@ function UserFeedbacksPage() {
         className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
         onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
         disabled={
-            // Only disable if trying to ADD a new one but already have 3 featured
+            
             (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
         } 
         title={

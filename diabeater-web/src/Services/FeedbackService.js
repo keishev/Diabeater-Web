@@ -59,7 +59,7 @@ class FeedbackService {
                 this.feedbackCollectionRef,
                 where("displayOnMarketing", "==", true),
                 where("rating", "==", 5),
-                where("category", "==", "compliment"), // Added category filter
+                where("category", "==", "compliment"), 
                 limit(3)
             );
             const querySnapshot = await getDocs(q);
@@ -99,14 +99,14 @@ class FeedbackService {
     }
 }
 
-// Add this method if it doesn't exist:
+
 async getFiveStarComplimentFeedbacks() {
     try {
         const q = query(
             this.feedbackCollectionRef,
             where("rating", "==", 5),
             where("category", "==", "compliment")
-            // Removed status filter since your data uses "Approved" not "Active"
+            
         );
         const querySnapshot = await getDocs(q);
         const result = querySnapshot.docs.map(doc => ({

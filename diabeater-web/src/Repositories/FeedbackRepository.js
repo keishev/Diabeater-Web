@@ -25,7 +25,7 @@ class FeedbackRepository {
         return FeedbackService.getFiveStarFeedbacks();
     }
 
-    // NEW METHOD: Get 5-star compliment feedbacks for automation
+    
     async getFiveStarComplimentFeedbacks() {
         return FeedbackService.getFiveStarComplimentFeedbacks();
     }
@@ -41,7 +41,7 @@ class FeedbackRepository {
         const allFeedbacks = await this.getFeedbacks();
         console.log('[DEBUG] Total feedbacks found:', allFeedbacks.length);
         
-        // Log ALL feedback details
+        
         allFeedbacks.forEach((feedback, index) => {
             console.log(`[DEBUG] Feedback ${index + 1}:`, {
                 id: feedback.id,
@@ -52,7 +52,7 @@ class FeedbackRepository {
             });
         });
 
-        // Check different case variations
+        
         const complimentVariations = [
             'compliment',
             'Compliment', 
@@ -71,11 +71,11 @@ class FeedbackRepository {
             }
         });
 
-        // Show all unique categories
+        
         const allCategories = [...new Set(allFeedbacks.map(f => f.category))];
         console.log('[DEBUG] All unique categories in database:', allCategories);
 
-        // Show 5-star feedbacks and their categories
+        
         const fiveStarFeedbacks = allFeedbacks.filter(f => f.rating === 5);
         console.log('[DEBUG] All 5-star feedbacks:', fiveStarFeedbacks.map(f => ({
             name: f.userFirstName,
@@ -83,7 +83,7 @@ class FeedbackRepository {
             rating: f.rating
         })));
 
-        // Try the original filter
+        
         const automationCandidates = allFeedbacks.filter(feedback => {
             const is5Star = feedback.rating === 5;
             const isCompliment = feedback.category === 'compliment';
@@ -93,7 +93,7 @@ class FeedbackRepository {
         console.log(`[DEBUG] Found ${automationCandidates.length} feedbacks with rating=5 AND category="compliment"`);
 
         if (automationCandidates.length === 0) {
-            // Try with capital C
+            
             const capitalComplimentCandidates = allFeedbacks.filter(feedback => {
                 const is5Star = feedback.rating === 5;
                 const isCompliment = feedback.category === 'Compliment';
@@ -104,13 +104,13 @@ class FeedbackRepository {
             
             if (capitalComplimentCandidates.length > 0) {
                 console.log('[DEBUG] SUCCESS! Your category is "Compliment" not "compliment"');
-                // Use these candidates
+                
                 const shuffled = capitalComplimentCandidates.sort(() => Math.random() - 0.5);
                 const selectedFeedbacks = shuffled.slice(0, 3);
                 
                 const updates = [];
                 
-                // Remove current featured
+                
                 for (const feedback of allFeedbacks) {
                     if (feedback.displayOnMarketing) {
                         updates.push({
@@ -120,7 +120,7 @@ class FeedbackRepository {
                     }
                 }
                 
-                // Add selected
+                
                 for (const feedback of selectedFeedbacks) {
                     updates.push({
                         feedbackId: feedback.id,
@@ -142,7 +142,7 @@ class FeedbackRepository {
             throw new Error(`No 5-star compliment feedbacks found. Available categories: ${allCategories.join(', ')}. 5-star categories: ${[...new Set(fiveStarFeedbacks.map(f => f.category))].join(', ')}`);
         }
 
-        // Rest of original logic...
+        
         const shuffled = automationCandidates.sort(() => Math.random() - 0.5);
         const selectedFeedbacks = shuffled.slice(0, 3);
 

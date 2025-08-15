@@ -50,17 +50,17 @@ const useUserFeedbackViewModel = () => {
         }
     };
 
-    // FIXED: Use the Repository's automation method
+    
     const automateMarketingFeedbacks = async () => {
         try {
             console.log('[ViewModel] Starting automation via Repository...');
             
-            // Use the Repository's automation method
+            
             const result = await FeedbackRepository.automateMarketingFeedbacks();
             
             console.log('[ViewModel] Automation result:', result);
             
-            // Refresh both feedbacks and marketing feedbacks to show updates
+            
             await fetchFeedbacks();
             await fetchMarketingFeedbacks();
             
