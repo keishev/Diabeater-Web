@@ -289,7 +289,7 @@ const AdminStatDashboard = observer(() => {
                                     />
                                     <div className="meal-plan-info">
                                         <div className="meal-plan-name">{plan.name || 'Untitled Meal Plan'}</div>
-                                        <div className="meal-plan-author">by {plan.authorName || 'N/A'}</div>
+                                        <div className="meal-plan-author">by {plan.author || 'N/A'}</div>
                                     </div>
                                     <div className="meal-plan-views">{plan.saveCount || 0} Save(s)</div>
                                 </div>
