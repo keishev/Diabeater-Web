@@ -1,6 +1,6 @@
 import React from 'react';
 import useAuthViewModel from '../ViewModels/AuthViewModel';
-import loginImage from '../assets/login_image.jpg';
+import loginImage from '../assets/login-image.jpg';
 import bloodDropLogo from '../assets/blood_drop_logo.png';
 import './LoginPage.css';
 
