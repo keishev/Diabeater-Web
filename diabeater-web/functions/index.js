@@ -245,10 +245,17 @@ exports.sendApprovalEmail = onCall({
                     <p>We are pleased to inform you that your nutritionist application has been <strong>approved</strong>!</p>
                     <p>You can now log in to your DiaBeater nutritionist account using your registered email and password.</p>
                     
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://diabeaters-4cf9e.web.app/" 
+                           style="background-color: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; font-size: 16px;">
+                            🚀 Access Your Account
+                        </a>
+                    </div>
+                    
                     <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
                         <h3 style="margin-top: 0; color: #333;">What's Next?</h3>
                         <ul style="margin-bottom: 0;">
-                            <li>Log in to your account</li>
+                            <li>Visit <a href="https://diabeaters-4cf9e.web.app/" style="color: #4CAF50; text-decoration: none;">https://diabeaters-4cf9e.web.app/</a> and log in to your account</li>
                             <li>Complete your profile setup</li>
                             <li>Start helping users with their nutritional goals</li>
                         </ul>
@@ -264,7 +271,8 @@ exports.sendApprovalEmail = onCall({
                     
                     <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
                     <p style="font-size: 12px; color: #666; text-align: center;">
-                        This is an automated message. Please do not reply to this email.
+                        This is an automated message. Please do not reply to this email.<br>
+                        Visit us at <a href="https://diabeaters-4cf9e.web.app/" style="color: #666;">diabeaters-4cf9e.web.app</a>
                     </p>
                 </div>
             `
@@ -363,8 +371,15 @@ exports.sendRejectionEmail = onCall({
                         <ul style="margin-bottom: 0;">
                             <li>Review the reason for rejection above</li>
                             <li>Address any issues with your credentials or application</li>
-                            <li>You may reapply in the future once you meet all requirements</li>
+                            <li>Visit <a href="https://diabeaters-4cf9e.web.app/" style="color: #f44336; text-decoration: none;">https://diabeaters-4cf9e.web.app/</a> to reapply in the future once you meet all requirements</li>
                         </ul>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://diabeaters-4cf9e.web.app/" 
+                           style="background-color: #f44336; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; font-size: 16px;">
+                            🔄 Visit Our Platform
+                        </a>
                     </div>
                     
                     <p>If you believe this decision was made in error or have questions about the review process, please contact our support team.</p>
@@ -377,7 +392,8 @@ exports.sendRejectionEmail = onCall({
                     
                     <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
                     <p style="font-size: 12px; color: #666; text-align: center;">
-                        This is an automated message. Please do not reply to this email.
+                        This is an automated message. Please do not reply to this email.<br>
+                        Visit us at <a href="https://diabeaters-4cf9e.web.app/" style="color: #666;">diabeaters-4cf9e.web.app</a>
                     </p>
                 </div>
             `
