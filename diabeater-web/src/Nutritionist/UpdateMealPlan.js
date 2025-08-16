@@ -247,7 +247,6 @@ const UpdateMealPlan = observer(({ mealPlan, onBack }) => {
         <div className="update-meal-plan-container">
             <header className="update-meal-plan-header">
                 <h1 className="update-meal-plan-page-title">UPDATE MEAL PLAN</h1>
-                <p className="update-meal-plan-subtitle">Editing: {mealPlan.name}</p>
             </header>
 
             {loading && <p className="update-meal-plan-form-message update-meal-plan-loading-message">Updating meal plan...</p>}

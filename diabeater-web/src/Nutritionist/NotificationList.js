@@ -5,12 +5,12 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
     const [selectedNotifications, setSelectedNotifications] = useState(new Set());
     const [hiddenNotifications, setHiddenNotifications] = useState(new Set());
 
-    
+
     const filteredNotifications = useMemo(() => {
         return notifications
             .filter(notification => {
-                
-                const isMealPlanNotification = 
+
+                const isMealPlanNotification =
                     notification.type === 'MEAL_PLAN_STATUS_UPDATE' || 
                     notification.type === 'mealPlanApproval' || 
                     notification.type === 'mealPlanRejection';
@@ -18,7 +18,7 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
                 return isMealPlanNotification && !hiddenNotifications.has(notification._id);
             })
             .sort((a, b) => {
-                
+
                 if (!a.timestamp && !b.timestamp) return 0;
                 if (!a.timestamp) return 1;
                 if (!b.timestamp) return -1;
@@ -114,6 +114,7 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
             </div>
 
             <div className="notification-controls">
+                {/* Commented out selection controls - select all and delete functionality
                 <div className="selection-controls">
                     <button
                         className="control-button select-all-button"
@@ -121,16 +122,18 @@ const NotificationList = ({ notifications, onMarkAsRead }) => {
                     >
                         {selectedNotifications.size === filteredNotifications.length ? 'Deselect All' : 'Select All'}
                     </button>
-                    
+
                     {selectedNotifications.size > 0 && (
                         <button
                             className="control-button delete-selected-button"
                             onClick={handleDeleteSelected}
+                            disabled={isDeleting}
                         >
-                            Delete Selected ({selectedNotifications.size})
+                            {isDeleting ? 'Deleting...' : `Delete Selected (${selectedNotifications.size})`}
                         </button>
                     )}
                 </div>
+                */}
 
                 <div className="action-controls">
                     {unreadNotifications.length > 0 && (
