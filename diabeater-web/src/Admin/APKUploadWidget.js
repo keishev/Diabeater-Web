@@ -9,25 +9,33 @@ const APKUploadWidget = ({ currentAPKUrl, currentFileName, onUpload, onDelete })
     const [success, setSuccess] = useState(null);
     const fileInputRef = useRef(null);
 
+    // File size constants
+    const MAX_FILE_SIZE_MB = 200;
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024; // 200MB in bytes
+
     const handleFileSelect = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Validate file
+        // Clear previous messages
+        setError(null);
+        setSuccess(null);
+
+        // Validate file type
         if (!file.name.endsWith('.apk')) {
             setError('Please select a valid APK file.');
             return;
         }
 
-        if (file.size > 100 * 1024 * 1024) { // 100MB limit
-            setError('File size must be less than 100MB.');
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            setError(`File size (${fileSizeMB}MB) exceeds the maximum limit of ${MAX_FILE_SIZE_MB}MB. Please select a smaller file.`);
             return;
         }
 
         try {
             setIsUploading(true);
-            setError(null);
-            setSuccess(null);
             setUploadProgress(0);
 
             // Simulate upload progress (you can implement real progress tracking with Firebase)
@@ -143,7 +151,7 @@ const APKUploadWidget = ({ currentAPKUrl, currentFileName, onUpload, onDelete })
                         <div className="upload-prompt">
                             <div className="upload-icon">📂</div>
                             <p>Click to select APK file</p>
-                            <small>Maximum file size: 100MB</small>
+                            <small>Maximum file size: 200MB</small>
                         </div>
                     )}
                 </div>
