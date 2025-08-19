@@ -142,22 +142,22 @@ function UserFeedbacksPage() {
                                 <td>{feedback.category || 'N/A'}</td>
                                 <td>{feedback.status || 'N/A'}</td>
                                 <td className="publish-cell">
-    <button
-        className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
-        onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
-        disabled={
-            
-            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
-        } 
-        title={
-            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3) 
-                ? "Maximum 3 feedbacks can be featured" 
-                : ""
-        }
-    >
-        {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
-    </button>
-</td>
+                                    <button
+                                        className={`toggle-marketing-button ${feedback.displayOnMarketing ? 'active' : ''}`}
+                                        onClick={() => handleToggleMarketingClick(feedback.id, feedback.displayOnMarketing)}
+                                        disabled={
+
+                                            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
+                                        }
+                                        title={
+                                            (!feedback.displayOnMarketing && marketingFeedbacks.length >= 3)
+                                                ? "Maximum 3 feedbacks can be featured"
+                                                : ""
+                                        }
+                                    >
+                                        {feedback.displayOnMarketing ? "Remove from Marketing" : "Feature on Marketing"}
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
