@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -424,13 +423,37 @@ const AdminCreateAccountContent = observer(() => {
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
-    return (
-        <tr>
-            <td>
-                <span className="user-name-clickable" onClick={() => onNameClick(user)}>
-                    <i className="fas fa-user-circle user-icon"></i>
-                    {user.firstName ? `${user.firstName} ${user.lastName}` : user.name}
+    const isProfileIncomplete = (user.role !== 'nutritionist' && user.role !== 'admin') &&
+                               (!user.profileCompleted || (!user.firstName && !user.lastName));
+
+    const renderUserName = () => {
+        if (isProfileIncomplete) {
+            return (
+                <span className="user-name-clickable incomplete-profile" onClick={() => onNameClick(user)}>
+                    <i className="fas fa-exclamation-triangle profile-warning-icon"></i>
+                    <span className="incomplete-profile-text">
+                        {user.firstName || user.lastName ?
+                            `${user.firstName || ''} ${user.lastName || ''}`.trim() :
+                            'Profile Incomplete'
+                        }
+                    </span>
+                    <span className="profile-status-badge incomplete">Incomplete</span>
                 </span>
+            );
+        }
+
+        return (
+            <span className="user-name-clickable" onClick={() => onNameClick(user)}>
+                <i className="fas fa-user-circle user-icon"></i>
+                {user.firstName ? `${user.firstName} ${user.lastName}` : user.name}
+            </span>
+        );
+    };
+
+    return (
+        <tr className={isProfileIncomplete ? 'incomplete-profile-row' : ''}>
+            <td>
+                {renderUserName()}
             </td>
             <td>{user.email}</td>
             {type === 'all' && <td>{user.role || 'N/A'}</td>}
@@ -452,10 +475,8 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 </td>
             )}
 
-            {/* FIXED: Separate action columns for pending approval */}
             {type === 'pending' && (
                 <>
-                    {/* Approve Column */}
                     <td>
                         <button
                             className="action-button approve-button"
@@ -481,10 +502,9 @@ const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
                 </>
             )}
 
-            {/* Keep the original single action column for 'all' type */}
             {type === 'all' && (
                 <td>
-                    {user.accountType !== 'admin' && (
+                    {user.role !== 'admin' && (
                         <button
                             className={`action-button ${user.status === 'Active' ? 'suspend-button' : 'unsuspend-button'}`}
                             onClick={() => onAction(user.id, user.status)}

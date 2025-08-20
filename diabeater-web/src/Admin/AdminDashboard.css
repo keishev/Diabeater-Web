@@ -1,6 +1,3 @@
-
-
-
 .admin-dashboard-page {
     display: flex;
     min-height: 100vh;
@@ -1259,4 +1256,79 @@ table tbody tr:last-child td {
     .pending-accounts-table td {
         padding: 8px 10px;
     }
+}
+
+/* Profile completion status styles */
+.incomplete-profile-row {
+    background-color: #fff8e1 !important;
+    border-left: 4px solid #ff9800;
+}
+
+.incomplete-profile-row:hover {
+    background-color: #fff3c4 !important;
+}
+
+.user-name-clickable.incomplete-profile {
+    color: #e65100;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #fff8e1, #ffecb3);
+    border: 1px solid #ffcc02;
+    transition: all 0.3s ease;
+}
+
+.user-name-clickable.incomplete-profile:hover {
+    background: linear-gradient(135deg, #fff3c4, #ffe082);
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+.profile-warning-icon {
+    color: #ff6f00;
+    font-size: 16px;
+    animation: pulse-warning 2s infinite;
+}
+
+.incomplete-profile-text {
+    flex: 1;
+    font-style: italic;
+}
+
+.profile-status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.profile-status-badge.incomplete {
+    background: linear-gradient(135deg, #ff5722, #ff7043);
+    color: white;
+    border: 1px solid #d84315;
+    box-shadow: 0 1px 3px rgba(255, 87, 34, 0.3);
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+.user-icon {
+    color: #4caf50;
+    font-size: 18px;
+    margin-right: 8px;
+    transition: all 0.3s ease;
 }
