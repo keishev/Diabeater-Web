@@ -423,8 +423,7 @@ const AdminCreateAccountContent = observer(() => {
 const UserAccountRow = observer(({ user, onAction, onNameClick, type }) => {
     const statusClass = user.status === 'Active' || user.status === 'approved' ? 'status-active' : 'status-inactive';
 
-    const isProfileIncomplete = (user.role !== 'nutritionist' && user.role !== 'admin') &&
-                               (!user.profileCompleted || (!user.firstName && !user.lastName));
+    const isProfileIncomplete = (user.role === 'basic' || user.role === 'premium') && (!user.profileCompleted || (!user.firstName && !user.lastName));
 
     const renderUserName = () => {
         if (isProfileIncomplete) {
