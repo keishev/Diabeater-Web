@@ -91,7 +91,8 @@ const AdminStatDashboard = observer(() => {
             .map(([date, count]) => ({
                 date,
                 value: count,
-                month: moment(date).format('MMM')
+                month: moment(date).format('MMM'),
+                day: moment(date).format('D')
             }))
             .sort((a, b) => new Date(a.date) - new Date(b.date))
         : [];
@@ -376,7 +377,7 @@ const AdminStatDashboard = observer(() => {
                                 />
                             ))}
 
-                            {/* X-axis labels (months) */}
+                            {/* X-axis labels (day of month) */}
                             {chartDataArray.map((d, i) => (
                                 <text
                                     key={`x-label-${d.date}`}
@@ -384,10 +385,24 @@ const AdminStatDashboard = observer(() => {
                                     y={chartPadding.top + chartHeight + 15}
                                     className="chart-x-axis-label"
                                     textAnchor="middle"
+                                    style={{ fontSize: '10px' }}
                                 >
-                                    {d.month}
+                                    {d.day}
                                 </text>
                             ))}
+
+                            {/* Month label */}
+                            {chartDataArray.length > 0 && (
+                                <text
+                                    x={chartPadding.left + chartWidth / 2}
+                                    y={chartPadding.top + chartHeight + 28}
+                                    className="chart-month-label"
+                                    textAnchor="middle"
+                                    style={{ fontSize: '10px', fill: '#666', fontWeight: 'bold' }}
+                                >
+                                    {chartDataArray[0].month} {moment(chartDataArray[0].date).format('YYYY')}
+                                </text>
+                            )}
                         </svg>
                         <div id="chart-tooltip" className="chart-tooltip" aria-live="polite"></div>
                     </div>
